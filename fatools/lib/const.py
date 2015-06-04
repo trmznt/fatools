@@ -68,5 +68,16 @@ ladders = { 'LIZ600': { 'dye': 'LIZ',
                     },
             'LIZ500': { 'dye': 'LIZ',
                         'sizes': [ 35, 50, 75, 100, 139, 150, 160, 200, 250, 300, 340, 350,
-                        400, 450, 490, 500 ] } }
+                        400, 450, 490, 500 ],
+                        'strict': {
+                            'max_rss': 17.5,
+                            'min_dpscore': 14.0,
+                            'min_sizes': 16
+                        },
+                        'relax': {
+                            'max_rss': 25.0,
+                            'min_dpscore': 13.0,
+                            'min_size': 16
+                        }                   
+    }
 
