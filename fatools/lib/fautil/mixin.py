@@ -202,7 +202,8 @@ class ChannelMixIn(object):
             alleleset = self.new_alleleset()    # create a new alleleset
             ladder_code = self.assay.size_standard
             sizes = ladders[ladder_code]['sizes']
-            params.ladder.max_peak_number = int( len(sizes) * 2 )
+            params.ladder.max_peak_number = len(sizes) * 2
+            params.ladder.expected_peak_number = len(sizes)
 
             alleles = algo.scan_peaks(self, params.ladder, peakdb)
             cerr('ladder: %d; ' % len(alleles), nl=False)
