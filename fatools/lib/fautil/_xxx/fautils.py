@@ -14,6 +14,7 @@ from operator import itemgetter
 from pprint import pprint
 
 from .dpalign import align_peaks, estimate_z
+from .models import *
 
 
 def set_debug(flag):
@@ -25,101 +26,6 @@ def D( *msgs ):
     if __printdebug__:
         print( *msgs )
 
-# basic classes that mimic msdb classes
-
-class Sample(object):
-
-    def __init__(self):
-        self.assays = None
-
-
-class Assay(object):
-
-    def __init__(self):
-        self.channels = None
-
-
-class Channel(object):
-
-    def __init__(self):
-        self.raw_data = None    # raw data from ABI
-        self.data = None        # smoothed data using savitzky-golay and baseline correction
-        self.alleles = None
-
-    def get_allele_class(self):
-        return Allele
-
-
-class Allele(object):
-
-    """ follow the structure of msaf Allele database schema
-    """
-
-    def __init__(self, value=-1, size=-1,
-                rtime=-1, brtime=-1, ertime=-1, wrtime=-1, srtime=-1,
-                height=-1, area=-1, beta=-1, delta=0,
-                    type=None, method=None, marker=None):
-        self.value = value
-        self.size = size
-        self.rtime = rtime
-        self.brtime = brtime
-        self.ertime = ertime
-        self.wrtime = wrtime
-        self.srtime = ertime
-        self.height = height
-        self.area = area
-        self.beta = beta
-        self.delta = delta
-        self.type = type
-        self.method = method
-        self.marker = marker
-
-    def __repr__(self):
-        return '<Allele peak: %d height: %d>' % (self.rtime, self.height)
-
-
-class Marker(object):
-
-    """ Marker information
-    """
-
-    def __init__(self, code, min_size, max_size, repeats, bins):
-        self.code = code
-        self.min_size = min_size
-        self.max_size = max_size
-        self.repeats = repeats
-        self.bins = bins
-        # bins is [ [pos, tag], [pos, tag], ... ]
-
-
-class ScanningParameter(object):
-
-    def __init__(self):
-        self.min_height = 1
-        self.min_size = 100
-        self.max_size = 600
-        self.stutter_threshold = 1.25
-        self.overlap_threshold = 1.10
-        self.bin_relative_ratio = 0.5
-        self.cwt_widths = np.arange( 5, 15 )
-        self.cwt_min_snr = 2.5
-        self.min_relative_ratio = 0
-        self.max_relative_ratio = 0
-        self.min_height_ratio = 0
-        self.max_peak_number = 15
-
-
-class LadderScanningParameter(ScanningParameter):
-
-    def __init__(self):
-        super().__init__()
-        self.min_relative_ratio = 0
-        self.max_relative_ratio = 0
-        self.min_height_ratio = 0
-        self.min_peak_number = 0.85
-        self.ladder_height_win = range(1,500)
-        self.cwt_min_snr = 0.25
-        self.max_peak_number = 0
 
 
 def filter_peak_number( initial_peaks, max_peak_number, ladder_number ):
@@ -136,7 +42,7 @@ def filter_peak_number( initial_peaks, max_peak_number, ladder_number ):
     # gather all possible peak lists
 
     min_height = 0
-    while min_height < 200:
+    while min_height < 5000:
         min_height += 1
         peaks = [ x for x in initial_peaks if x.height >= min_height ]
 
@@ -173,7 +79,11 @@ def filter_retention_time( ladders, peaks, parameter ):
     """ return proper filtered peaks in reversed order
     """
 
-    separation_slope = 1/estimate_slope( ladders, peaks )
+    if parameter.init_separation_time < 0:
+        separation_slope = 1/estimate_slope( ladders, peaks )
+    else:
+        separation_slope = parameter.init_separation_time
+    print("peak count: %d separation_slope: %2.3f" % (len(peaks), separation_slope))
     min_spacing, max_spacing = spacing( ladders )
     min_time_separation = min_spacing * separation_slope * 0.90
     #print('min time separation: %6.3f' % min_time_separation)
@@ -218,7 +128,7 @@ def peak_fit_and_align( simple_fits, ladders ):
     return dp_fits[0]
 
 
-def scan_ladder_peaks( channel, ladders, parameter = None ):
+def xxx_scan_ladder_peaks( channel, ladders, parameter = None ):
 
     if parameter is None:
         parameter = LadderScanningParameter()
@@ -320,14 +230,22 @@ def scan_ladder_peaks( channel, ladders, parameter = None ):
 
     # gather all possible peak lists
 
-    peak_sets = filter_peak_number( initial_peaks,
+    if parameter.height > 0:
+        # just use peaks with this minimal height
+        peak_sets = [ (parameter.height,
+                        list( p for p in initial_peaks if p.height > parameter.height ) ) ]
+
+    else:
+        peak_sets = filter_peak_number( initial_peaks,
                                     len(ladders) * 2,
                                     len(ladders) )
 
     # sanity check
     if len(peak_sets) == 0:
-        return (None, -1, 0, 
+        return (None, -1, 0, -1, 
             ('Not enough initial signals', 'Too much noises or too few signals'), [])
+
+    pprint( peak_sets )
 
 
     separated_peaks = []
@@ -340,7 +258,8 @@ def scan_ladder_peaks( channel, ladders, parameter = None ):
 
 
     if not separated_peaks:
-        return (None, -1, 0, ('Not enough filtered peaks', 'Bad peak separation time'), [])
+        return (None, -1, 0, -1,
+            ('Not enough filtered peaks', 'Bad peak separation time'), [])
 
     print('separated peaks contains %d sets' % len(separated_peaks))
 
@@ -377,10 +296,16 @@ def scan_ladder_peaks( channel, ladders, parameter = None ):
     for (s, p) in optimal_peaks:
         p.size = p.value = s
         p.type = 'peak-ladder'
+
+    for p in proper_peaks:
         p.method = 'allele-autoladder'
+        if p.value is None:
+            p.size = p.value = -1
+            p.type = 'peak-unassigned'
         channel.alleles.append( p )
 
-    pprint(optimal_peaks)
+    pprint(proper_peaks)
+
     print(' => aligned peaks: %d of %d ladders' % (len(optimal_peaks), len(ladders)))
     return (optimal_z, optimal_rss, score, optimal_dpscore, reports, [ p for (s,p) in optimal_peaks ])
 
@@ -1437,3 +1362,67 @@ def simple_fit(ladders, peaks):
     
     return fits
 
+
+# ---------------------------------------------------------------------------------------
+# new strategy for peak alignment
+#
+
+def find_ladder_peak(channel, N, parameter=None):
+    """ return peakset with max_N number
+        return values: [ (used_peak_height, peaks), ... ]
+    """
+
+    if parameter is None:
+        parameter = LadderScanningParameter()
+
+    parameter.min_height = min( parameter.ladder_height_win )
+    initial_peaks = scan_peaks( channel, parameter = parameter )
+
+    # gather all possible peak lists
+
+    if parameter.height > 0:
+        # just use peaks with this minimal height
+        return [ (parameter.height,
+                        list( p for p in initial_peaks if p.height > parameter.height ) ) ]
+
+    else:
+        return = filter_peak_number( initial_peaks,
+                                    N + parameter.additional_peaks,
+                                    N )
+    
+
+
+def scan_ladder_peak_2(channel, ladder, parameter=None, find_peaks = True):
+
+    if parameter = None:
+        parameter = LadderScanningParameter()
+
+    if find_peaks:
+        peak_sets = find_ladder_peak( channel, len(ladder), parameter )
+    else:
+        # use the old peaks, set all into peak-unassigned, and redo the peak alignment
+        pass
+
+
+    results = []
+
+    for peak_set in peak_sets:
+
+        results.append( align_ladder_peaks( peak_set, ladder, parameter ) )
+        
+        # find similarity using PCA-based similarity
+
+        # assign the first peak set for the first iteration of DP
+
+        # do the DP alignment, get the result
+        # use eigenvalues of cosine product to evaluate peak similarity
+
+
+    # for each results, find the least RSS and the highest DP score and quality score
+
+    # set the peaks for peak-ladders
+
+
+def align_ladder_peaks( peak_set, ladder, parameter ):
+
+    pass

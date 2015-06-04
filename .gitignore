@@ -45,3 +45,6 @@ docs/_build/
 .hg
 .hgignore
 
+# vim
+.*.swp
+

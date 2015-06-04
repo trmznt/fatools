@@ -22,9 +22,90 @@ def correct_baseline( signal ):
                 np.repeat([1], int(round(signal.size * _TOPHAT_FACTOR)))
             )
 
+def search_peaks( signal, cwt_widths, min_snr ):
+    """ returns [ (peak, height, area) ], ... ] """
+
+    # find all peaks by cwt-based algorithm
+    indices = find_peaks_cwt( signal, cwt_widths, min_snr=min_snr )
+
+    if not indices:
+        return []
+
+    # find absolute heights
+
+    raw_peaks = []
+    for idx in indices:
+        for i in range(3, -1, -1):
+            try:
+                height, index = max( [ (signal[i], i) for i in range(idx-3, idx+3) ] )
+            except IndexError:
+                continue
+            break
+        if height < params.min_height:
+            continue
+        if index < 0:
+            continue
+        raw_peaks.append( (index, height) )
+
+    if not raw_peaks:
+        return []
+
+
+    # calculate area
+    peaks = []
+    for (peak, height) in raw_peaks:
+        area, brtime, ertime = calculate_area( signal, peak, 5e-2 )
+        peaks.append( (peak, height, area, brtime, ertime) )
+
+
+    return peaks
+
+
+def calculate_area(y, t, threshold):
+    """ return (area, begin_rtime, end_rtime)
+    """
+
+    # right area
+    data = y[t:]
+    r_area, ertime, r_shared = half_area(data, threshold)
+
+    # left area
+    data = y[:t+1][::-1]
+    l_area, brtime, l_shared= half_area(data, threshold)
+
+    return ( l_area + r_area - y[t], t - brtime, ertime + t )
+
+
+
+def half_area(y, threshold):
+    """ return (area, ertime)
+    """
+
+    winsize = 3
+    threshold = threshold/2
+    shared = False
+    area = y[0]
+    edge = float(np.sum(y[0:winsize]))/winsize
+    old_edge = 2 * edge
+
+    index = 1
+    limit = len(y)
+
+    while edge > area * threshold and edge < old_edge and index < limit:
+        old_edge = edge
+        area += y[index]
+        edge = float(np.sum(y[index:index+winsize]))/winsize
+        index += 1
+    if edge >= old_edge:
+        shared = True
+    index -= 1
+
+    return area, index, shared
+
+
 
 def separate_channels( trace ):
-    # return a list of [ 'dye name', dye_wavelength, numpy_array, numpy_smooth ]
+    # return a list of [ 'dye name', dye_wavelength, numpy_array, numpy_smooth_baseline ]
 
     results = []
     for (idx, data_idx) in [ (1,1), (2,2), (3,3), (4,4), (5,105) ]:

@@ -1,6 +1,6 @@
 # traceio.py
 '''
-Copyright (C) 2004, 2007, 2008 Hidayat Trimarsanto <anto@eijkman.go.id>
+Copyright (C) 2004-2015 Hidayat Trimarsanto <anto@eijkman.go.id>
 Eijkman Institute for Molecular Biology
 
 This module is part of seqpy, a set of python scripts for sequence processing
@@ -15,6 +15,7 @@ import bisect
 import sys, os
 import numpy as np
 import re
+import datetime
 from .traceutils import smooth_signal, correct_baseline
 
 DEBUG = False
@@ -43,8 +44,9 @@ abitypes = {
     5: '>%dl',
     7: '>%df',
     8: '>%dd',
-    10: '4s',
-    11: '4s',
+    #10: '4s',
+    10: '>1h2B',
+    11: '>4B',
     13: '%ds',
     1024: '%ds'
     }
@@ -149,6 +151,11 @@ class ABIF(object):
 
         return results
 
+    def get_run_start_time(self):
+
+        rdate = self.get_data( b'RUND1' )
+        rtime = self.get_data( b'RUNT1' )
+        return datetime.datetime(rdate[0], rdate[1], rdate[2], rtime[0], rtime[1], rtime[2])
 
 def read_abif_stream(istream):
 
@@ -189,6 +196,8 @@ def read_abif_stream(istream):
         #D( etype_fmt, alt_type )
         if de.dsize <= 4:
             de.data = struct.unpack( etype_fmt, de.drec[:de.dsize] )
+            if alt_type in [10, 11]:
+                continue
         else:
             offset = struct.unpack('>l', de.drec)[0]
             buf = bdata[offset : offset + de.dsize]

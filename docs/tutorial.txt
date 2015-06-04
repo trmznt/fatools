@@ -1,0 +1,32 @@
+
+How to use FATOOLS
+
+*) init database
+
+$ fatools dbmgr --initdb --sqldb mydata.sql3
+
+
+*) setup markers
+
+$ fatools dbmgr --sqldb mydata.sql3 --importmarker marker.yaml --commit
+
+
+*) init panels
+
+$ fatools dbmgr --sqldb mydata.sql3 --importpanel panel.yaml --commit
+
+
+*) prepare a new batch
+
+$ fatools dbmgr --sqldb mydata.sql3 --initbatch NEWBATCH --commit
+
+*) prepare samples
+
+$ fatools dbmgr --sqldb mydata.sql3 --batch NEWBATCH --initsample sample_List.tab
+
+*) upload FSA
+
+$ fatools dbmgr --sqldb mydata.sql3 --batch NEWBATCH --upload assay_list.tab --fsadir FSA/ --commit
+
+
+

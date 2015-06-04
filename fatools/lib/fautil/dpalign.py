@@ -3,28 +3,24 @@ import numpy as np
 import math
 import pprint
 
+from matplotlib import pylab as plt
+
 # dynamic programming for peak alignment
 #
 # dp: y -> sizes
 #     x -> retention_time
 #
-#
-#
 
 
-def estimate_z( peak_pairs, degree = 3 ):
-    """ estimate z and rss based on [y, x]
-        x: rtime
-        y: ladder sizes
+def estimate_z( x, y, degree = 3 ):
+    """ estimate z and rss
+            x: peak rtime
+            y: standard sizes
         return (z, rss)
-        z is polynomial coefficient for size = poly1d(rtime)
+
+        y ~ f(x) where f = poly1d(z)
+        rss ~ SUM( (f(x) - y)**2 ) for all (x,y)
     """
-
-    x, y = [], []
-    for (s, p) in peak_pairs:
-        x.append( p.rtime )
-        y.append( s )
-
     z = np.polyfit( x, y, degree )
     p = np.poly1d( z )
     y_p = p(x)
@@ -38,7 +34,7 @@ def annotate(M, ladders, peaks):
     return np.insert(M_, 0, values = np.array( [0] + ladders ), axis = 1 )
 
 
-def align_peaks( ladders, peaks, sized_peaks = None, initial_z = None ):
+def align_peaks( ladders, peaks, z, rss ):
     """ align ladders with peaks using dynamic programming (global alignment)
         return (dpscore, RSS, Z, ladder_aligned_peaks)
     """
@@ -46,15 +42,8 @@ def align_peaks( ladders, peaks, sized_peaks = None, initial_z = None ):
     # set initial peak alignment, just align from the biggest peaks
     ladders = list(sorted(ladders, reverse=True))
     peaks = list(sorted( peaks, key = lambda x: x.rtime, reverse = True))
-    if initial_z is None:
-        if sized_peaks is None:
-            sized_peaks = zip( ladders, peaks )
-        sized_peaks.sort( reverse=True )
-        z, rss = estimate_z( sized_peaks )
-    else:
-        z = initial_z
-        rss = -1
-    print('initial RSS: %4.2f' % rss)
+
+    #print('initial RSS: %4.2f' % rss)
     dpscore = -1
 
     while True:
@@ -74,8 +63,9 @@ def align_peaks( ladders, peaks, sized_peaks = None, initial_z = None ):
 
         # realign
 
-        cur_z, cur_rss = estimate_z( aligned_peaks )
-        print('current DP score: %3.3f RSS: %4.2f' % (cur_dpscore, cur_rss))
+        std_size, peak_sizes = zip(*aligned_peaks)
+        cur_z, cur_rss = estimate_z( [x.rtime for x in peak_sizes], std_size )
+        #print('current DP score: %3.3f RSS: %4.2f' % (cur_dpscore, cur_rss))
         #if cur_rss > rss:
         if cur_dpscore < dpscore:
             print('WARNING: algorithm did not converge!!')
@@ -136,6 +126,33 @@ def generate_scores(ladders, peaks, func, tolerance = 4):
         col = 0
 
     return M
+
+
+def plot_z(peaks, ladders, z):
+
+    
+    #x = np.linspace(0, peaks[-1].rtime + 100)
+    
+    x = np.linspace(0, max(ladders))
+    p = np.poly1d( z )
+    y_p = p(x)
+
+    plt.plot(x, y_p)
+    plt.show()
+
+
+def plot_S(S, path=None):
+
+    from matplotlib import pylab as plt
+
+    im1 = plt.imshow(S, interpolation='nearest', cmap='Reds')
+    #im2 = plt.plot(path[0], path[1], 'k')
+    plt.gca().invert_yaxis()
+    plt.xlabel("STD")
+    plt.ylabel("PEAK")
+    plt.grid()
+    plt.colorbar()
+    plt.show()
 
 
 """
@@ -264,4 +281,5 @@ def dp(S, gap_penalty, peak_penalty = 0):
     matches.reverse()
 
     return {'p':p, 'q':q, 'trace':trace, 'matches':matches, 'D':D, 'phi':trace_matrix}
+
 
