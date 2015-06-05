@@ -445,10 +445,11 @@ def call_peaks( channel, params, func, min_rtime, max_rtime ):
         if not min_rtime < allele.rtime < max_rtime:
             allele.type = peaktype.unassigned
             continue
-        size, deviation = func(allele.rtime)
+        size, deviation, qcall = func(allele.rtime)
         allele.size = size
         allele.bin = round(size)
         allele.deviation = deviation
+        allele.qcall = qcall
         allele.type = peaktype.called
 
 
@@ -693,7 +694,8 @@ def least_square( ladder_alleles, z ):
         #            left_ladder.rtime, left_ladder.size,
         #            right_ladder.rtime, right_ladder.size))
 
-        return (size, (left_ladder.deviation + right_ladder.deviation) / 2)
+        return (size, (left_ladder.deviation + right_ladder.deviation) / 2,
+                        min( left_ladder.qscore, right_ladder.qscore ) )
 
     return _f
 
@@ -720,7 +722,8 @@ def cubic_spline( ladder_alleles ):
         left_ladder = ladder_allele_sorted[left_idx]
         right_ladder = ladder_allele_sorted[right_idx]
 
-        return (size, (left_ladder.deviation + right_ladder.deviation) / 2)
+        return (size, (left_ladder.deviation + right_ladder.deviation) / 2,
+                        min( left_ladder.qscore, right_ladder.qscore) )
 
     return _f
 
@@ -743,12 +746,14 @@ def local_southern( ladder_alleles ):
         # left curve
         z1 = np.polyfit( x[idx-2:idx+1], y[idx-2:idx+1], 2)
         size1 = np.poly1d( z1 )(rtime)
+        min_score1 = min( x.qscore for x in ladder_allele_sorted[idx-2:idx+1] )
 
         # right curve
         z2 = np.polyfit( x[idx-1:idx+2], y[idx-1:idx+2], 2)
         size2 = np.poly1d( z2 )(rtime)
+        min_score2 = min( x.qscore for x in ladder_allele_sorted[idx-1:idx+2] )
 
-        return ( (size1 + size2)/2, (size1 - size2) ** 2)
+        return ( (size1 + size2)/2, (size1 - size2) ** 2, (min_score1 + min_score2)/2 )
 
     return _f
 
