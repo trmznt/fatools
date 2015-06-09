@@ -3,6 +3,8 @@ from fatools.lib.fautil import traceio, traceutils
 from fatools.lib.utils import cout, cerr
 from fatools.lib.const import peaktype, channelstatus, assaystatus, dyes, ladders, allelemethod
 from fatools.lib.fautil import algo
+from sortedcontainers import SortedListWithKey
+
 import io, numpy as np
 import pprint, sys
 
@@ -104,6 +106,16 @@ class MarkerMixIn(object):
     def label(self):
         return self.species + '/' + self.code
 
+    @property
+    def sortedbins(self):
+        return SortedListWithKey(self.bins, key = lambda b: b[1])
+
+
+    def initbins(self, start_range, end_range):
+        self.bins = []
+        for size in range(start_range, end_range, self.repeats):
+            self.bins.append( (size, float(size), float(size-1), float(size+1)) )
+
 
 class BatchMixIn(object):
     """ contains Batch methods """
@@ -116,6 +128,13 @@ class BatchMixIn(object):
     def get_marker(self, marker_code, species_code = None):
         """ shortcut to get single Marker instance, otherwise throws exception """
         raise NotImplementedError('PROG/ERR - child class must override this method')
+
+    @property
+    def sample_ids(self):
+        """ this has to override by sub-class to provide more efficient implementation
+            based on the underlying database architecture
+        """
+        return list([ x.id for s in self.samples])
 
 
 
@@ -422,17 +441,17 @@ class AssayMixIn(object):
         self.status = assaystatus.aligned
 
 
-    def call(self, params, method='local_southern'):
+    def call(self, params, method=allelemethod.localsouthern):
         """ determine size of each peaks using ladder channel"""
 
         ladders = [ p for p in self.ladder.alleles if p.size > 0 ]
 
         # check the method
-        if method == 'least_square':
+        if method == allelemethod.leastsquare:
             func = algo.least_square( ladders, self.z)
-        elif method == 'cubic_spline':
+        elif method == allelemethod.cubicspline:
             func = algo.cubic_spline( ladders )
-        elif method == 'local_southern':
+        elif method == allelemethod.localsouthern:
             func = algo.local_southern( ladders )
         else:
             raise RuntimeError
