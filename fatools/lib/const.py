@@ -40,6 +40,9 @@ class assaystatus(object):
 
 class allelemethod(object):
     uncalled = 'allele-uncalled'
+    leastsquare = 'allele-leastsquare'
+    cubicspline = 'allele-cubicspline'
+    localsouthern = 'allele-localsouthern'
 
 
 class binningmethod(object):
