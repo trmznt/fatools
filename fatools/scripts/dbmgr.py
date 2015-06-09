@@ -1,16 +1,20 @@
 
 import sys, argparse, yaml, csv, transaction
-from fatools.lib.utils import cout, cerr, get_dbhandler, tokenize
+from fatools.lib.utils import cout, cerr, cexit, get_dbhandler, tokenize
 
 def init_argparser():
 
     p = argparse.ArgumentParser('dbmgr')
+
+    ## mandatory options
 
     p.add_argument('--sqldb', default=False,
             help = 'Sqlite3 database filename')
 
     p.add_argument('--fsdb', default=False,
             help = 'directory for filesystem-based database')
+
+    ## commands
 
     p.add_argument('--initdb', default=False, action='store_true',
             help = 'initialize database')
@@ -21,33 +25,47 @@ def init_argparser():
     p.add_argument('--importmarker', default=False,
             help = 'importing marker from YAML file')
 
+    p.add_argument('--upload', default=False,
+            help = 'uploading FSA data')
+
+    p.add_argument('--initsample', default=False,
+            help = 'create new sample from sample file')
+
+    p.add_argument('--clearassay', default=False, action='store_true',
+            help = 'clear assay')
+
+    p.add_argument('--initbatch', default=False,
+            help = 'create new batch')
+
+    p.add_argument('--initbin', default=False, action='store_true',
+            help = 'create initial bin')
+
+    p.add_argument('--viewbin', default=False, action='store_true',
+            help = 'view bin')
+
+
+    ## options
+
     p.add_argument('--update', default=False,
             help = 'updating current data in the database')
 
     p.add_argument('--commit', default=False, action='store_true',
             help = 'commit to database')
 
-    p.add_argument('--upload', default=False,
-            help = 'uploading FSA data')
-
-    p.add_argument('--batch', default=False,
+    p.add_argument('-b', '--batch', default=False,
             help = 'batch code')
+
+    p.add_argument('-m', '--marker', default='',
+            help = 'marker list (comma separated)')
 
     p.add_argument('--fsadir', default='.',
             help = 'directory containing FSA files')
 
-    p.add_argument('--initbatch', default=False,
-            help = 'create new batch')
-
-    p.add_argument('--initsample', default=False,
-            help = 'create new sample from sample file')
-
-
-    p.add_argument('--clearassay', default=False, action='store_true',
-            help = 'clear assay')
-
     p.add_argument('--species', default='',
             help = 'species of markers')
+
+    p.add_argument('--range', default=False,
+            help = 'bin range, eg. 200-300')
 
     p.add_argument('--test', default=False, action='store_true',
             help = 'perform test, print error as warning')
@@ -95,6 +113,10 @@ def do_dbmgr(args, dbh = None, warning=True):
         do_initdb(args, dbh)
     elif args.clearassay is not False:
         do_clearassay(args, dbh)
+    elif args.initbin is not False:
+        do_initbin(args, dbh)
+    elif args.viewbin is not False:
+        do_viewbin(args, dbh)
     else:
         if warning:
             cerr('Unknown command, nothing to do!')
@@ -229,6 +251,40 @@ def do_upload(args, dbh):
                 raise
             cerr('ERR - line %d' % line_counter)
             cerr(' => %s' % str(exc))
+
+
+def do_initbin(args, dbh):
+
+    if not args.marker:
+        cexit('ERR - please provide marker code')
+
+    if '-' not in args.range:
+        cexit('ERR - please provide range for bin')
+
+    markers = [ dbh.get_marker(code) for code in args.marker.split(',') ]
+    ranges = args.range.split('-')
+    start_range = int(ranges[0])
+    end_range = int(ranges[1])
+
+    for m in markers:
+        m.initbins(start_range, end_range)
+
+
+def do_viewbin(args, dbh):
+
+    if not args.marker:
+        cexit('ERR - please provide marker code')
+
+    markers = [ dbh.get_marker(code) for code in args.marker.split(',') ]
+
+    for m in markers:
+        cout('Marker: %s' % m.label)
+        cout('    Bin   Mean   25%P   75%P   Width')
+        cout('  ====================================')
+        for binset in m.bins:
+            cout('   %3d  %5.2f  %5.2f  %5.2f  %4.2f' %
+                    (binset[0], binset[1], binset[2], binset[3], binset[3] - binset[2]))
+
 
 
 def do_clearassay(args, dbh):
