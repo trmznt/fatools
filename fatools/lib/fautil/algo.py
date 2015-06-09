@@ -6,7 +6,7 @@ from scipy.signal import find_peaks_cwt
 from scipy.optimize import leastsq, curve_fit
 from scipy.interpolate import UnivariateSpline
 
-from fatools.lib.const import peaktype, binningmethod
+from fatools.lib.const import peaktype, binningmethod, allelemethod
 from fatools.lib.fautil.dpalign import estimate_z, align_peaks, plot_z
 from fatools.lib.utils import cout, cerr
 
@@ -445,21 +445,61 @@ def call_peaks( channel, params, func, min_rtime, max_rtime ):
         if not min_rtime < allele.rtime < max_rtime:
             allele.type = peaktype.unassigned
             continue
-        size, deviation, qcall = func(allele.rtime)
+        size, deviation, qcall, method = func(allele.rtime)
         allele.size = size
         allele.bin = round(size)
         allele.deviation = deviation
         allele.qcall = qcall
         allele.type = peaktype.called
+        allele.method = method
+
+def bin_peaks(channel, params, marker):
+
+    sortedbins = marker.sortedbins
+    threshold = float(marker.repeats)/2 * 1.5
+
+    for peak in channel.alleles:
+        
+        if peak.size < 0: continue
+
+        # check peak type
+        if peak.type in [ peaktype.overlap, peaktype.noise, peaktype.artifact ]:
+            continue
+
+        if not marker.min_size < peak.size < marker.max_size:
+            peak.type = peaktype.unassigned
+            continue
+
+        size = peak.size
+        idx = sortedbins.bisect_key_right( size )
+
+        if idx==0:
+            curr_bin = sortedbins[0]
+        elif idx == len(sortedbins):
+            curr_bin = sortedbins[-1]
+        else:
+            left_bin = sortedbins[idx-1]
+            right_bin = sortedbins[idx]
+
+            if size - left_bin[3] < right_bin[2] - size:
+                # belongs tp left_bin
+                curr_bin = left_bin
+            else:
+                curr_bin = right_bin
+
+        peak.bin = curr_bin[0]
+        peak.type = peaktype.bin
 
 
-def bin_peaks( channel, params, marker ):
+
+def bin_peaks_xxx( channel, params, marker ):
     """
     bin each of peaks with type peak-called, and annotate as either peak-bin,
     peak-stutter or peak-artifact
     """
 
     binlist = marker.bins
+    # [ (label, mean, 25%percentile, 75%percentile), ...]
 
     binpos = list( x[0] for x in binlist )
     threshold = float(marker.repeats) / 2 * 1.5
@@ -472,8 +512,6 @@ def bin_peaks( channel, params, marker ):
         # check peak type
         if peak.type in [ peaktype.overlap, peaktype.noise, peaktype.artifact ]:
             continue
-
-        peak.type = peaktype.called
 
         if not marker.min_size < peak.size < marker.max_size:
             peak.type = peaktype.unassigned
@@ -695,7 +733,8 @@ def least_square( ladder_alleles, z ):
         #            right_ladder.rtime, right_ladder.size))
 
         return (size, (left_ladder.deviation + right_ladder.deviation) / 2,
-                        min( left_ladder.qscore, right_ladder.qscore ) )
+                        min( left_ladder.qscore, right_ladder.qscore ),
+                        allelemethod.leastsquare)
 
     return _f
 
@@ -723,7 +762,8 @@ def cubic_spline( ladder_alleles ):
         right_ladder = ladder_allele_sorted[right_idx]
 
         return (size, (left_ladder.deviation + right_ladder.deviation) / 2,
-                        min( left_ladder.qscore, right_ladder.qscore) )
+                        min( left_ladder.qscore, right_ladder.qscore),
+                        allelemethod.cubicspline)
 
     return _f
 
@@ -753,7 +793,8 @@ def local_southern( ladder_alleles ):
         size2 = np.poly1d( z2 )(rtime)
         min_score2 = min( x.qscore for x in ladder_allele_sorted[idx-1:idx+2] )
 
-        return ( (size1 + size2)/2, (size1 - size2) ** 2, (min_score1 + min_score2)/2 )
+        return ( (size1 + size2)/2, (size1 - size2) ** 2, (min_score1 + min_score2)/2,
+                allelemethod.localsouthern)
 
     return _f
 
