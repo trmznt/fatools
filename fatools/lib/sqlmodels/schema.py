@@ -183,6 +183,13 @@ class Batch(Base, BatchMixIn):
         raise NotImplementedError()
 
 
+    @property
+    def sample_ids(self):
+        """ faster implementation of getting sample ids """
+        session = object_session(self)
+        return list(session.query( Sample.id ).filter( Sample.batch_id == self.id ))
+
+
 
 class BatchNote(Base, BatchNoteMixIn):
 
@@ -571,6 +578,12 @@ class Allele(Base, AlleleMixIn):
                 backref=backref('alleles', cascade='all, delete-orphan',
                 passive_deletes=True))
 
+    marker_id = Column(types.Integer, ForeignKey('markers.id', ondelete='CASCADE'),
+                nullable=False)
+    marker = relationship(Marker, uselist=False,
+                backref=backref('alleles', cascade='all, delete-orphan',
+                    passive_deletes=True))
+
     abin = Column(types.Integer, nullable=False, default=-1)    # adjusted bin
     asize = Column(types.Float, nullable=False, default=-1)     # adjusted size
     aheight = Column(types.Float, nullable=False, default=-1)   # adjusted height
@@ -591,7 +604,7 @@ class Allele(Base, AlleleMixIn):
     theta = Column(types.Float, nullable=False, default=-1)     # height / width
 
     type = Column(types.String(32), nullable=False, default='')
-    method = Column(types.String(32), nullable=False, default='')
+    method = Column(types.String(32), nullable=False, default='')   # calling method
 
     brtime = Column(types.Integer, nullable=False, default=-1)
     ertime = Column(types.Integer, nullable=False, default=-1)
