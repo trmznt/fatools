@@ -208,12 +208,16 @@ class Sample(Base, SampleMixIn):
     id = Column(types.Integer, primary_key=True)
     code = Column(types.String(64), nullable=False)
     type = Column(types.String(1), default='S')
+    altcode = Column(types.String(16), nullable=True)               # custom usage
+    category = Column(types.Integer, nullable=False, default=0)     # custom usage
     batch_id = Column(types.Integer, ForeignKey('batches.id', ondelete='CASCADE'),
                 nullable=False)
     batch = relationship(Batch, uselist=False, backref=backref('samples', lazy='dynamic'))
     remark = deferred(Column(types.String(1024), nullable=True))
 
-    __table_args__ = (  UniqueConstraint( 'code', 'batch_id' ), )
+    __table_args__ = (  UniqueConstraint( 'code', 'batch_id' ),
+                        UniqueConstraint( 'altcode', 'batch_id')
+                    )
 
     def new_assay(self, raw_data, filename, panel=None):
         assay = Assay( raw_data = raw_data, filename = filename )
