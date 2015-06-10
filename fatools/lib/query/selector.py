@@ -31,9 +31,9 @@ class SampleSelector(object):
         pass
 
 
-    def spec_to_sample_ids(self, spec_list):
+    def spec_to_sample_ids(self, spec_list, sample_ids=None):
 
-        sample_ids = []
+        ids = set()
         for spec in spec_list:
 
             if 'query' in spec:
@@ -44,20 +44,24 @@ class SampleSelector(object):
                 if 'batch' in spec:
                     query = spec['batch'] + '[batch] & (' + spec['query'] + ')'
 
-                sample_ids += query2list( parse_querycmd( query ) )
+                ids += query2set( parse_querycmd( query ) )
 
             elif 'codes' in spec:
 
                 batch = Batch.search(spec['batch'])
                 q = dbsession.query( Sample.id ).join( Batch ).filter( Batch.id == batch.id).filter( Sample.code.in_( spec['codes'] ) ) 
 
-                sample_ids += list( q )
+                ids.update( set(q) )
 
             elif 'ids' in spec:
-                sample_ids += spec['ids']
+                ids.update( set(spec['ids']) )
 
             else:
                 raise RuntimeError('sample spec format is incorrect')
+
+        if sample_ids is not None:
+            assert type(sample_ids) is set, "Please provide sample_ids as set"
+            ids = ids.intersection( sample_ids )
 
         return sample_ids
 
@@ -73,25 +77,23 @@ class SampleSelector(object):
             colours = cycle( colour_list )
 
             if type(self.samples) == list:
-                sample_set.append( SampleSet(   location='', year=0,
-                        label = '-',
-                        colour = 'blue',
-                        sample_ids = self.spec_to_sample_ids( self.samples ) ) )
+                sample_set.append(
+                    SampleSet(label = '-', colour = 'blue',
+                        sample_ids = self.spec_to_sample_ids(self.samples, sample_ids)
+                    )
+                )
 
             elif type(self.samples) == dict:
 
                 for label in self.samples:
-            
-                    sample_set.append( SampleSet( location='', year=0,
-                                    label = label, colour = next(colours),
-                                    sample_ids = self.spec_to_sample_ids(self.samples[label])))
+                    sample_set.append(
+                        SampleSet(label = label, colour = next(colours),
+                            sample_ids = self.spec_to_sample_ids(self.samples[label],
+                                                                    sample_ids)
+                        )
+                    )
                         
-
             self._sample_sets = sample_set
-
-        if sample_ids:
-            # filter based on sample_ids
-            pass
 
         return self._sample_sets
 
@@ -163,104 +165,4 @@ class Parameter(object):
 
 
 
-class Differentiation(object):
-    """ MODE:
-        spatial ~  -1 no differentiation
-                    0 country
-                    1 admin level 1
-                    2 admin level 2
-                    3 admin level 3
-    """
-
-    def __init__(self):
-        self.spatial = 0
-        self.temporal = 0
-        self.differentiation = 0
-
-    @staticmethod
-    def from_dict(d):
-        differentiation = Differentiation()
-        differentiation.spatial = d['spatial']
-        differentiation.temporal = d['temporal']
-        differentiation.detection = d['detection']
-        return differentiation
-
-
-    def to_dict(self):
-        pass
-
-    @staticmethod
-    def load(yaml_text):
-        pass
-
-    def dump(self):
-        pass
-
-
-    def create_groups(self, sample_sets):
-        """ return a new sample set based on original sample sets and differentiation """
-
-        sets = []
-        sample_dfs = None
-        colours = cycle( colour_list )
-
-        for sample_set in sample_sets:
-
-            sample_df = SampleDF.get_by_sample_ids( sample_set.get_sample_ids(),
-                            self.spatial )
-
-            samples = {}   # group sets
-
-            for idx, sample_id, location, year, month, passive_detection in sample_df.itertuples():
-        
-                if self.temporal == 1:
-                    tag = (location, year)
-                elif self.temporal == 3:
-                    quarter = 'Q1'
-                    if month >= 9:
-                        quarter = 'Q4'
-                    elif month >= 6:
-                        quarter = 'Q3'
-                    elif month >= 3:
-                        quarter = 'Q2'
-                    tag = (location, '%d %s' % (year, quarter)) 
-                else:
-                    tag = (location, None)
-
-                if self.detection:
-                    (location, year) = tag
-                    tag = (location, year, passive_detection)
-
-                try:
-                    samples[tag].append( int(sample_id) )
-                except KeyError:
-                    samples[tag] = [ int(sample_id) ]
-
-
-            for tag in sorted(samples.keys()):
-                if self.detection:
-                    (location, year, passive_detection) = tag
-                else:
-                    (location, year) = tag
-                    passive_detection = None
-
-                label = sample_set.get_label() if not (location or year) else ''
-
-                if passive_detection is not None:
-                    extra_label = 'PD' if passive_detection else 'AD'
-                else:
-                    extra_label = None
-
-                sets.append( SampleSet( location, year, next(colours), samples[tag],
-                    label = label, extra_label = extra_label ))
-
-
-
-            if sample_dfs is None:
-                sample_dfs = sample_df
-            else:
-                sample_dfs = sample_dfs.append( sample_df, ignore_index=True )
-
-        sets.sort( key = lambda x: x.get_label() )
-        return (sets, sample_dfs)
 
