@@ -244,6 +244,7 @@ def scan_peaks( channel, params, peakdb ):
                                         theta = theta )
         allele.type = peaktype.scanned
         allele.method = binningmethod.unavailable
+        allele.marker = channel.marker
         alleles.append( allele )
 
     return alleles
