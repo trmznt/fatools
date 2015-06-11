@@ -1,37 +1,10 @@
 
-import yaml
 from itertools import cycle
+from fatools.lib.analytics.sampleset import SampleSet, SampleSetContainer
 
 colour_list = [ 'r', 'g', 'b' ]
 
-def load_yaml(yaml_text):
 
-    d = yaml.load( yaml_text )
-    instances = {}
-    for k in d:
-        if k == 'selector':
-            instances['selector'] = Selector.from_dict( d[k] )
-        elif k == 'filter':
-            instances['filter'] = Filter.from_dict( d[k] )
-        elif k == 'differentiation':
-            instances['differentiation'] = Differentiation.from_dict( d[k] )
-        else:
-            raise RuntimeError()
-
-    return instances
-
-
-class Query(object):
-
-    def __init__(self, query_params):
-        self._params = query_params
-
-
-    def get_sample_sets(self):
-        pass
-
-    def get_analytical_sets(self):
-        pass
 
 class Selector(object):
 
@@ -82,10 +55,8 @@ class Selector(object):
 
             elif 'codes' in spec:
 
-                batch = Batch.search(spec['batch'])
-                q = dbsession.query( Sample.id ).join( Batch ).filter( Batch.id == batch.id).filter( Sample.code.in_( spec['codes'] ) ) 
-
-                ids.update( set(q) )
+                batch = dbh.get_batch(spec['batch'])
+                ids.update( set(batch.get_sample_ids_by_codes( spec['codes'] )) )
 
             elif 'ids' in spec:
                 ids.update( set(spec['ids']) )
@@ -101,7 +72,7 @@ class Selector(object):
             assert type(sample_ids) is set, "Please provide sample_ids as set"
             ids = ids.intersection( sample_ids )
 
-        return sample_ids
+        return ids
 
 
     def get_sample_sets(self, dbh, sample_ids=None):
@@ -110,10 +81,10 @@ class Selector(object):
             
             assert dbh, "dbh must be specified"
         
-            sample_set = []
+            sample_sets = SampleSetContainer()
 
             if type(self.samples) == list:
-                sample_set.append(
+                sample_sets.append(
                     SampleSet(label = '-', colour = 'blue',
                         sample_ids = self.spec_to_sample_ids(self.samples, dbh, sample_ids)
                     )
@@ -124,14 +95,14 @@ class Selector(object):
                 colours = cycle( colour_list )
 
                 for label in self.samples:
-                    sample_set.append(
+                    sample_sets.append(
                         SampleSet(label = label, colour = next(colours),
                             sample_ids = self.spec_to_sample_ids(self.samples[label],
                                                         dbh, sample_ids)
                         )
                     )
                         
-            self._sample_sets = sample_set
+            self._sample_sets = sample_sets
 
         return self._sample_sets
 

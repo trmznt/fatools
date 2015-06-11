@@ -8,6 +8,9 @@ class SampleSet(object):
         self.sample_ids = sample_ids
         self.colour = colour
 
+    def __repr__(self):
+        return '<SampleSet: %s with %d sample(s)' % (self.label, len(self.sample_ids))
+
 
 
 class SampleSetContainer(list):
@@ -15,8 +18,8 @@ class SampleSetContainer(list):
     def append(self, sampleset):
         # check whether there's overlap sample ids
         for curr_set in self:
-            if curr_set.intersect_with( sampleset ):
-                return False
+            if curr_set.sample_ids.intersection( sampleset.sample_ids ):
+                raise RuntimeError( 'sample_id in container is not unique' )
         super().append( sampleset )
 
 

@@ -2,7 +2,7 @@
 
 import sys, argparse
 
-from fatools.lib.query.selector import load_yaml
+from fatools.lib.analytics.query import Query, load_yaml
 from fatools.lib.utils import cout, cerr, cexit, get_dbhandler
 from pprint import pprint
 
