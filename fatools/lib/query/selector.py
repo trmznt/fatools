@@ -1,5 +1,39 @@
 
-class SampleSelector(object):
+import yaml
+from itertools import cycle
+
+colour_list = [ 'r', 'g', 'b' ]
+
+def load_yaml(yaml_text):
+
+    d = yaml.load( yaml_text )
+    instances = {}
+    for k in d:
+        if k == 'selector':
+            instances['selector'] = Selector.from_dict( d[k] )
+        elif k == 'filter':
+            instances['filter'] = Filter.from_dict( d[k] )
+        elif k == 'differentiation':
+            instances['differentiation'] = Differentiation.from_dict( d[k] )
+        else:
+            raise RuntimeError()
+
+    return instances
+
+
+class Query(object):
+
+    def __init__(self, query_params):
+        self._params = query_params
+
+
+    def get_sample_sets(self):
+        pass
+
+    def get_analytical_sets(self):
+        pass
+
+class Selector(object):
 
     def __init__(self, samples = []):
         self.samples = samples
@@ -7,7 +41,7 @@ class SampleSelector(object):
 
     @staticmethod
     def from_dict(d):
-        selector = SampleSelector()
+        selector = Selector()
         selector.samples = d
         return selector
 
@@ -31,7 +65,7 @@ class SampleSelector(object):
         pass
 
 
-    def spec_to_sample_ids(self, spec_list, sample_ids=None):
+    def spec_to_sample_ids(self, spec_list, dbh, sample_ids=None):
 
         ids = set()
         for spec in spec_list:
@@ -44,7 +78,7 @@ class SampleSelector(object):
                 if 'batch' in spec:
                     query = spec['batch'] + '[batch] & (' + spec['query'] + ')'
 
-                ids += query2set( parse_querycmd( query ) )
+                ids.update( query2set( parse_querycmd( query ) ) )
 
             elif 'codes' in spec:
 
@@ -56,6 +90,10 @@ class SampleSelector(object):
             elif 'ids' in spec:
                 ids.update( set(spec['ids']) )
 
+            elif 'batch' in spec:
+                batch = dbh.get_batch(spec['batch'])
+                ids.update( batch.sample_ids )
+
             else:
                 raise RuntimeError('sample spec format is incorrect')
 
@@ -66,30 +104,30 @@ class SampleSelector(object):
         return sample_ids
 
 
-    def get_sample_sets(self, db=None, sample_ids=None):
+    def get_sample_sets(self, dbh, sample_ids=None):
 
         if not self._sample_sets:
             
-            if not db:
-                db = dbsession
+            assert dbh, "dbh must be specified"
         
             sample_set = []
-            colours = cycle( colour_list )
 
             if type(self.samples) == list:
                 sample_set.append(
                     SampleSet(label = '-', colour = 'blue',
-                        sample_ids = self.spec_to_sample_ids(self.samples, sample_ids)
+                        sample_ids = self.spec_to_sample_ids(self.samples, dbh, sample_ids)
                     )
                 )
 
             elif type(self.samples) == dict:
 
+                colours = cycle( colour_list )
+
                 for label in self.samples:
                     sample_set.append(
                         SampleSet(label = label, colour = next(colours),
                             sample_ids = self.spec_to_sample_ids(self.samples[label],
-                                                                    sample_ids)
+                                                        dbh, sample_ids)
                         )
                     )
                         
@@ -99,7 +137,7 @@ class SampleSelector(object):
 
 
 
-class Parameter(object):
+class Filter(object):
 
     def __init__(self):
         self.markers = []
@@ -115,7 +153,7 @@ class Parameter(object):
 
     @staticmethod
     def from_dict(d):
-        params = Parameter()
+        params = Filter()
         params.markers = d.get('markers', None)
         params.marker_ids = d.get('marker_ids', None)
         params.abs_threshold = int( d['abs_threshold'] )
