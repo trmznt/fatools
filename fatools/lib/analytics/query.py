@@ -25,19 +25,29 @@ class Query(object):
         self._dbh = dbh
         self._sample_sets = None
         self._analytical_sets = None
+        self._filtered_sample_sets = None
+        self._filtered_analytical_sets = None
 
 
     def get_sample_sets(self, sample_ids = None):
         if self._sample_sets is None or sample_ids:
             selector = self._params['selector']
-            self._sample_sets = selector.get_sample_sets(dbh, sample_ids)
+            self._sample_sets = selector.get_sample_sets(self._dbh, sample_ids)
         return self._sample_sets
 
 
     def get_analytical_sets(self, sample_ids = None):
         if self._analytical_sets is None or sample_ids:
             sample_sets = self.get_sample_sets(self._dbh, sample_ids)
-            self._analytical_sets = get_filtered_analytical_sets( sample_sets,
+            self._analytical_sets = get_analytical_sets( sample_sets,
                                         self._params['filter'] )
         return self._analytical_sets
+
+
+    def get_filtered_sample_sets(self, sample_ids = None):
+        return self.get_sample_sets( sample_ids )
+
+
+    def get_filtered_analytical_sets(self, sample_ids = None):
+        return self.get_analytical_sets( sample_ids )
 

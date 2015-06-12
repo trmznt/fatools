@@ -11,6 +11,11 @@ class SampleSet(object):
     def __repr__(self):
         return '<SampleSet: %s with %d sample(s)' % (self.label, len(self.sample_ids))
 
+    @property
+    def N(self):
+        return len( self.sample_ids )
+
+
 
 
 class SampleSetContainer(list):
@@ -21,5 +26,12 @@ class SampleSetContainer(list):
             if curr_set.sample_ids.intersection( sampleset.sample_ids ):
                 raise RuntimeError( 'sample_id in container is not unique' )
         super().append( sampleset )
+
+    @property
+    def total_samples(self):
+        N = 0
+        for s in self:
+            N += s.N
+        return N
 
 

@@ -54,10 +54,9 @@ def do_analyze(args, dbhandler_func = get_dbhandler):
 
 def do_samplesummary(args, dbh):
 
-    analytical_sets = get_analytical_sets( args, dbh )
-
-    return analytical_sets
-
+    query = get_query( args, dbh )
+    sample_sets = query.get_filtered_sample_sets()
+    cout( make_sample_report(sample_sets) )
 
 
 def get_sample_sets(args, dbh):
@@ -71,4 +70,26 @@ def get_analytical_sets( args, dbh ):
     query = load_yaml( open(args.yamlquery).read() )
     sample_sets = query['selector'].get_sample_sets(dbh)
     pprint(sample_sets)
+
+
+def get_query( args, dbh ):
+
+    query_params = load_yaml( open(args.yamlquery).read() )
+    return Query( query_params, dbh )
+
+
+def make_sample_report( sample_sets ):
+    lines = []
+    _ = lines.append
+    _( 'SAMPLE SUMMARY' )
+    _( '================================' )
+    _( 'Group: %d' % len(sample_sets) )
+    _( 'Total samples: %d' % sample_sets.total_samples )
+    _( '--------------------------------------------' )
+    for s in sample_sets:
+        _( '  %-20s  %4d' % (s.label, s.N) )
+    _( '--------------------------------------------' )
+
+    return '\n'.join(lines)
+
     
