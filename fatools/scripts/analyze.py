@@ -25,6 +25,9 @@ def init_argparser(parser=None):
             help = 'report sample summary')
 
 
+    p.add_argument('--allelesummary', default=False, action='store_true',
+            help = 'report allele summary')
+
     ## Options
 
     p.add_argument('--yamlquery', default=False,
@@ -32,6 +35,11 @@ def init_argparser(parser=None):
 
     p.add_argument('--outformat', default=False,
             help = 'format output type (html, tab)')
+
+    ## Override params
+
+    p.add_argument('--sample_qual_threshold', default=-1, type=float,
+            help = 'sample quality threshold')
 
 
     return p
@@ -49,6 +57,8 @@ def do_analyze(args, dbhandler_func = get_dbhandler):
 
     if args.samplesummary:
         do_samplesummary(args, dbh)
+    elif args.allelesummary:
+        do_allelesummary(args, dbh)
 
 
 
@@ -57,6 +67,15 @@ def do_samplesummary(args, dbh):
     query = get_query( args, dbh )
     sample_sets = query.get_filtered_sample_sets()
     cout( make_sample_report(sample_sets) )
+
+
+
+def do_allelesummary(args, dbh):
+
+    query = get_query( args, dbh )
+    analytical_sets = query.get_filtered_analytical_sets()
+    cout( make_allele_report(analytical_sets) )
+
 
 
 def get_sample_sets(args, dbh):
@@ -75,6 +94,8 @@ def get_analytical_sets( args, dbh ):
 def get_query( args, dbh ):
 
     query_params = load_yaml( open(args.yamlquery).read() )
+    if args.sample_qual_threshold >= 0:
+        query_params['filter'].sample_qual_threshold = args.sample_qual_threshold
     return Query( query_params, dbh )
 
 
@@ -91,5 +112,20 @@ def make_sample_report( sample_sets ):
     _( '--------------------------------------------' )
 
     return '\n'.join(lines)
+
+
+
+def make_allele_report( analytical_sets ):
+
+    sample_sets = analytical_sets.get_sample_sets()
+
+    sample_report = make_sample_report( sample_sets )
+
+    lines = []; _ = lines.append
+    _('ALLELE SUMMARY')
+    _('==================================')
+    
+    return sample_report + '\n\n' + '\n'.join(lines)
+
 
     
