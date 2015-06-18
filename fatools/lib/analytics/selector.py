@@ -1,6 +1,7 @@
 
 from itertools import cycle
 from fatools.lib.analytics.sampleset import SampleSet, SampleSetContainer
+from fatools.lib.const import peaktype
 
 colour_list = [ 'r', 'g', 'b' ]
 
@@ -115,11 +116,12 @@ class Filter(object):
         self.markers = []
         self.marker_ids = None
         self.species = None
-        self.abs_threshold = 0
-        self.rel_threshold = 0
-        self.rel_cutoff = 0
-        self.sample_qual_threshold = 0
-        self.marker_qual_threshold = 0
+        self.abs_threshold = 0      # includes alelles above rfu
+        self.rel_threshold = 0.0      # includes alleles above % of highest rfu
+        self.rel_cutoff = 0.0         # excludes alleles above % of highest rfu [ rel_threshold < height < rel_cutoff ]
+        self.sample_qual_threshold = 0.0    # includes samples with marker more than %  
+        self.marker_qual_threshold = 0.0    # includes markers with sample more than %
+        self.peaktype = peaktype.bin
         self.sample_options = None
 
 
@@ -137,11 +139,11 @@ class Filter(object):
         return params
 
 
-    def get_marker_ids(self):
+    def get_marker_ids(self, dbh=None):
         """ return marker ids;  """
         # self.markers is name
-        if self.marker_ids is None and self.markers:
-            markers = [ Marker.search(name) for name in self.markers ]
+        if (self.marker_ids is None and self.markers) or dbh:
+            markers = [ dbh.get_marker(name) for name in self.markers ]
             self.marker_ids = [ marker.id for marker in markers ]
         return self.marker_ids
 

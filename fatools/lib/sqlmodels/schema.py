@@ -187,7 +187,7 @@ class Batch(Base, BatchMixIn):
     def sample_ids(self):
         """ faster implementation of getting sample ids """
         session = object_session(self)
-        return list(session.query( Sample.id ).filter( Sample.batch_id == self.id ))
+        return [ x[0] for x in session.query( Sample.id ).filter( Sample.batch_id == self.id ) ]
 
 
 
