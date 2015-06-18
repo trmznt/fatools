@@ -9,24 +9,22 @@ class AlleleDataFrame(object):
         self.sample_ids = sample_ids
         self.marker_ids = marker_ids
         self.params = params
-        self._df = None
-        self._dominant_allele_df = None
+        self._df = dbh.get_allele_dataframe(self.sample_ids, self.marker_ids,
+                        self.params)
+        self._dominant_df = None
 
 
-    def get_dataframe(self):
-        if self._df is None:
-            self._df = self.dbh.get_allele_dataframe(self.sample_ids,
-                        self.marker_ids, self.params)
+    @property
+    def df(self):
         return self._df
 
 
-    def get_dominant_alleles(self):
+    @property
+    def dominant_df(self):
         """ return Pandas dataframe of (marker_id, sample_id, bin, size, height) """
-        if self._dominant_allele_df is None:
+        if self._dominant_df is None:
             df = self.get_dataframe()
             idx = df.groupby(['marker_id','sample_id'])['height'].transform(max) == df['height']
-            self._dominant_allele_df = df[idx]
-        return self._dominant_allele_df
-
-
+            self._dominant_df = df[idx]
+        return self._dominant_df
 
