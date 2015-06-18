@@ -4,6 +4,7 @@
 
 from fatools.lib.sqlmodels import schema
 from fatools.lib.utils import cout, cerr
+from pandas import DataFrame
 import os, sys
 
 class SQLHandler(object):
@@ -68,6 +69,8 @@ class SQLHandler(object):
         # allele_relative_cutoff
         # peak_type
 
+        assert sample_ids and marker_ids and params
+
         q = self.session.query( schema.AlleleSet.sample_id, schema.Channel.assay_id,
                 schema.Allele.marker_id, schema.Allele.bin,
                 schema.Allele.size, schema.Allele.height
@@ -75,10 +78,10 @@ class SQLHandler(object):
 
         q.filter( schema.AlleleSet.sample_id.in_( sample_ids ) )
 
-        if type(peak_type) in [ list, tuple ]:
-            q = q.filter( schema.Allele.type.in_( peak_type  ) )
+        if type(params.peaktype) in [ list, tuple ]:
+            q = q.filter( schema.Allele.type.in_( params.peaktype  ) )
         else:
-            q = q.filter( schema.Allele.type == peak_type )
+            q = q.filter( schema.Allele.type == params.peaktype )
 
         # we order based on marker_id, sample_id and then descending height
         q = q.order_by( schema.Allele.marker_id, schema.AlleleSet.sample_id,
@@ -91,10 +94,10 @@ class SQLHandler(object):
             #q = q.outerjoin( Marker, Allele.marker_id == Marker.id )
             #q = q.filter( Marker.id.in_( marker_ids ) )
 
-        if allele_absolute_threshold > 0:
-            q = q.filter( schema.Allele.height > allele_absolute_threshold )
+        if params.abs_threshold > 0:
+            q = q.filter( schema.Allele.height > params.abs_threshold )
 
-        if allele_relative_threshold == 0 and allele_relative_cutoff == 0:
+        if params.rel_threshold == 0 and params.rel_cutoff == 0:
             df = DataFrame( [ (marker_id, sample_id, value, size, height, assay_id )
                     for ( sample_id, marker_id, value, size, height, assay_id ) in q ] )
 
@@ -112,9 +115,10 @@ class SQLHandler(object):
                         if skip_flag:
                             continue
                         ratio = height / max_height
-                        if ratio < allele_relative_threshold:
+                        if ratio < params.rel_threshold:
                             continue
-                        if allele_relative_cutoff > 0 and ratio > allele_relative_cutoff:
+                        if (    params.rel_cutoff > 0 and
+                                ratio > params.rel_cutoff ):
                             # turn off this marker by skipping this sample_id & marker_id
                             skip_flag = True
                             # don't forget to remove the latest allele
