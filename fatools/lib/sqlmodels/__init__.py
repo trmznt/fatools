@@ -76,7 +76,7 @@ class SQLHandler(object):
                 schema.Allele.size, schema.Allele.height
             ).join(schema.Allele).join(schema.Channel)
 
-        q.filter( schema.AlleleSet.sample_id.in_( sample_ids ) )
+        q = q.filter( schema.AlleleSet.sample_id.in_( sample_ids ) )
 
         if type(params.peaktype) in [ list, tuple ]:
             q = q.filter( schema.Allele.type.in_( params.peaktype  ) )
@@ -99,7 +99,7 @@ class SQLHandler(object):
 
         if params.rel_threshold == 0 and params.rel_cutoff == 0:
             df = DataFrame( [ (marker_id, sample_id, value, size, height, assay_id )
-                    for ( sample_id, marker_id, value, size, height, assay_id ) in q ] )
+                    for ( sample_id, assay_id, marker_id, value, size, height ) in q ] )
 
         else:
 
@@ -109,7 +109,7 @@ class SQLHandler(object):
             last_marker_id = 0
             last_sample_id = 0
             skip_flag = False
-            for sample_id, marker_id, value, size, height, assay_id in q:
+            for ( sample_id, assay_id, marker_id, value, size, height ) in q:
                 if sample_id == last_sample_id:
                     if last_marker_id == marker_id:
                         if skip_flag:

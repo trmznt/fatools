@@ -59,7 +59,7 @@ class AnalyticalSet(object):
             where value = number of alleles in the marker for this particular sample
         """
         if self._marker_df is None:
-            self._marker_df = pivot_table( self.get_allele_df,
+            self._marker_df = pivot_table( self._allele_df.df,
                     rows = 'sample_id', cols = 'marker_id', values='value', aggfunc = len )
         return self._marker_df
 
@@ -104,9 +104,6 @@ class AnalyticalSet(object):
         if sample_qual_threshold < 0:
             sample_qual_threshold = self._params.sample_qual_threshold
         threshold = n * sample_qual_threshold
-        print('Threshold:', threshold)
-        print(sample_quality)
-
         passed_sample_ids = set([ int(x[0]) for x in sample_quality if x[1] >= threshold ])
         #failed_samples = len(sample_quality) - len(passed_sample_ids)
 
