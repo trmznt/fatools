@@ -109,8 +109,8 @@ class Selector(object):
 
 
 
-
 class Filter(object):
+
 
     def __init__(self):
         self.markers = []

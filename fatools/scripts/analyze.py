@@ -41,6 +41,9 @@ def init_argparser(parser=None):
     p.add_argument('--sample_qual_threshold', default=-1, type=float,
             help = 'sample quality threshold')
 
+    p.add_argument('-m', '--markers', default='',
+            help = 'markers')
+
 
     return p
 
@@ -77,6 +80,21 @@ def do_allelesummary(args, dbh):
     cout( make_allele_report(analytical_sets) )
 
 
+def do_corralleles(args, dbh):
+
+    from fatools.lib.analysis.correlation import correlate_alleles
+
+    query = get_query( args, dbh )
+    analytical_sets = query.get_filtered_analytical_sets()
+    for marker_code in analytical_sets.marker_ids:
+
+        report = correlate_alleles(analytical_sets[0], analytical_sets[1], marker=marker_code)
+        cout( make_correlate_report( report )
+
+
+
+
+
 
 def get_sample_sets(args, dbh):
     
@@ -96,6 +114,8 @@ def get_query( args, dbh ):
     query_params = load_yaml( open(args.yamlquery).read() )
     if args.sample_qual_threshold >= 0:
         query_params['filter'].sample_qual_threshold = args.sample_qual_threshold
+    if args.markers:
+        query_params['filter'].markers = args.markers
     return Query( query_params, dbh )
 
 

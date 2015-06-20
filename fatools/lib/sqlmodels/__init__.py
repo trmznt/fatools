@@ -52,6 +52,14 @@ class SQLHandler(object):
         return schema.Marker.search(marker_code, self.session)
 
 
+    def get_code_pairs(self, sample_ids):
+        """ return [(sample_id, code), ...] pairs """
+        
+        q = self.session.query( schema.Sample.id, schema.Sample.code )
+        q = q.filter( schema.Sample.id.in_( sample_ids ))
+        return list(q)
+
+
     def Panel(self):
         p = schema.Panel()
         p._dbh_session_ = self.session
