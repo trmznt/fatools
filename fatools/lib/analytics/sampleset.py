@@ -28,7 +28,6 @@ class SampleSet(object):
 
 
 
-
 class SampleSetContainer(list):
 
     def append(self, sampleset):

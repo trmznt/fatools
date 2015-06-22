@@ -83,13 +83,22 @@ class AnalyticalSet(object):
 
 
     def get_filtered_marker_ids(self):
-        pass
+        """ get marker_ids that passed marker quality assessment """
+        if self._filtered_marker_ids is None:
+            self._filtered_marker_ids, self._marker_genotyeped_dist = self.assess_marker_quality()
+        return self._filtered_marker_ids
 
 
     def get_sample_genotyped_distribution(self):
         if self._sample_genotyped_dist is None:
             self.get_filtered_sample_ids()
         return self._sample_genotyped_dist
+
+
+    def get_marker_genotyped_distribution(self):
+        if self._marker_genotyped_dist is None:
+            self.get_filtered_marker_ids()
+        return self._marker_genotyped_dist
 
 
     def assess_sample_quality(self, sample_qual_threshold = -1):
@@ -122,13 +131,14 @@ class AnalyticalSet(object):
             for m in self.marker_df[marker_id]:
                 if m > 0:
                     genotyped += 1
-            marker_quality.append( (marker_id, genotyped) )
+            marker_genotyped.append( (marker_id, genotyped) )
 
         if marker_qual_threshold < 0:
             marker_qual_threshold = self._params.marker_qual_threshold
         threshold = len(self.sample_ids) * marker_qual_threshold
-        passed_marker_ids = set([ x[0] for x in marker_quality if x[1] >= threshold ])
-        return (passed_marker_id, marker_quality)
+        passed_marker_ids = set([ x[0] for x in marker_genotyped if x[1] >= threshold ])
+        return (passed_marker_id, marker_genotyped)
+
 
 
 class AnalyticalSetContainer(list):
@@ -138,6 +148,7 @@ class AnalyticalSetContainer(list):
         self._sample_sets = sample_sets
         for s in self._sample_sets:
             self.append( AnalyticalSet( s, params, marker_ids, dbh ) )
+
 
     def get_sample_sets(self):
         return self._sample_sets
@@ -150,13 +161,19 @@ class AnalyticalSetContainer(list):
             sample_ids.update( s.get_filtered_sample_ids() )
         return sample_ids
 
+
     def get_filtered_marker_ids(self):
         """ return a filtered marker_ids """
-        pass
+        marker_ids = set()
+        for m in self:
+            marker_ids.update( m.get_filtered_marker_ids() )
+        return marker_ids
+
 
     def assess_marker_quality(self):
         """ assess marker quality """
         # collect all necessary data from each analyticalset
+        pass
 
 
 
