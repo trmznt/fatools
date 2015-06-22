@@ -23,7 +23,7 @@ class AlleleDataFrame(object):
     def dominant_df(self):
         """ return Pandas dataframe of (marker_id, sample_id, bin, size, height) """
         if self._dominant_df is None:
-            df = self.get_dataframe()
+            df = self.df
             idx = df.groupby(['marker_id','sample_id'])['height'].transform(max) == df['height']
             self._dominant_df = df[idx]
         return self._dominant_df
