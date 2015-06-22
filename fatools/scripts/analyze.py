@@ -24,9 +24,11 @@ def init_argparser(parser=None):
     p.add_argument('--samplesummary', default=False, action='store_true',
             help = 'report sample summary')
 
-
     p.add_argument('--allelesummary', default=False, action='store_true',
             help = 'report allele summary')
+
+    p.add_argument('--export', default=False, action='store_true',
+            help = 'export allele data to file')
 
     ## Options
 
@@ -34,12 +36,18 @@ def init_argparser(parser=None):
             help = 'YAML query file')
 
     p.add_argument('--outformat', default=False,
-            help = 'format output type (html, tab)')
+            help = 'format output type (html, tab, arlequin)')
+
+    p.add_argument('--outfile', default=False,
+            help = 'output filename, or - for stdout/console')
 
     ## Override params
 
     p.add_argument('--sample_qual_threshold', default=-1, type=float,
             help = 'sample quality threshold')
+
+    p.add_argument('--rel_threshold', default=-1, type=float,
+            help = 'relative allele rfu threshold')
 
     p.add_argument('-m', '--markers', default='',
             help = 'markers')
@@ -62,6 +70,8 @@ def do_analyze(args, dbhandler_func = get_dbhandler):
         do_samplesummary(args, dbh)
     elif args.allelesummary:
         do_allelesummary(args, dbh)
+    elif args.export:
+        do_export(args, dbh)
 
 
 
@@ -75,9 +85,23 @@ def do_samplesummary(args, dbh):
 
 def do_allelesummary(args, dbh):
 
+    from fatools.lib.analytics.summary import summarize_alleles
+
     query = get_query( args, dbh )
     analytical_sets = query.get_filtered_analytical_sets()
-    cout( make_allele_report(analytical_sets) )
+    report = summarize_alleles( analytical_sets )
+    cout( make_sample_report( analytical_sets.get_sample_sets() ) )
+    cout( make_allele_report(report) )
+
+
+def do_export(args, dbh):
+
+    from fatools.lib.analytics.export import export
+
+    query = get_query( args, dbh )
+    analytical_sets = query.get_filtered_analytical_sets()
+    output = export( analytical_sets, dbh, outfile = args.outfile, format = args.outformat )
+    cout('Done.')
 
 
 def do_corralleles(args, dbh):
@@ -89,7 +113,7 @@ def do_corralleles(args, dbh):
     for marker_code in analytical_sets.marker_ids:
 
         report = correlate_alleles(analytical_sets[0], analytical_sets[1], marker=marker_code)
-        cout( make_correlate_report( report )
+        cout( make_correlate_report( report ) )
 
 
 
@@ -116,6 +140,8 @@ def get_query( args, dbh ):
         query_params['filter'].sample_qual_threshold = args.sample_qual_threshold
     if args.markers:
         query_params['filter'].markers = args.markers
+    if args.rel_threshold >= 0:
+        query_params['filter'].rel_threshold = args.rel_threshold
     return Query( query_params, dbh )
 
 
@@ -134,18 +160,30 @@ def make_sample_report( sample_sets ):
     return '\n'.join(lines)
 
 
+def make_allele_report( summaries ):
 
-def make_allele_report( analytical_sets ):
+    #sample_sets = analytical_sets.get_sample_sets()
 
-    sample_sets = analytical_sets.get_sample_sets()
-
-    sample_report = make_sample_report( sample_sets )
+    #sample_report = make_sample_report( sample_sets )
 
     lines = []; _ = lines.append
     _('ALLELE SUMMARY')
     _('==================================')
+
+    for label in summaries:
+        summary = summaries[label]
+        _('Sample Set: %s' % label)
+
+        for marker_id in summary:
+            _('    Marker ID: %d' % marker_id)
+            _('    Unique alleles: %d' % summary[marker_id]['unique_allele'])
+            _('    Total alleles: %d' % summary[marker_id]['total_allele'])
+
+            for data in summary[marker_id]['alleles']:
+                _('        %3d  %5.3f  %3d  %5.2f - %5.2f  %5.2f  %4.2f' %
+                        (data[0], data[1], data[2], data[4], data[5], data[8], data[6]))
     
-    return sample_report + '\n\n' + '\n'.join(lines)
+    return '\n'.join(lines)
 
 
     
