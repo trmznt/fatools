@@ -60,6 +60,13 @@ class SQLHandler(object):
         return list(q)
 
 
+    def get_sample_by_id(self, sample_id):
+        return schema.Sample.get(sample_id, self.session)
+
+
+    def get_marker_by_id(self, marker_id):
+        return schema.Marker.get(marker_id, self.session)
+
     def Panel(self):
         p = schema.Panel()
         p._dbh_session_ = self.session
