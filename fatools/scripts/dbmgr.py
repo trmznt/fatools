@@ -2,9 +2,12 @@
 import sys, argparse, yaml, csv, transaction
 from fatools.lib.utils import cout, cerr, cexit, get_dbhandler, tokenize
 
-def init_argparser():
+def init_argparser( parser=None ):
 
-    p = argparse.ArgumentParser('dbmgr')
+    if parser is None:
+        p = argparse.ArgumentParser('dbmgr')
+    else:
+        p = parser
 
     ## mandatory options
 
