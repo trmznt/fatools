@@ -24,7 +24,7 @@ class base_sqlhandler(object):
         p._dbh_session_ = self.session
 
 
-    ## getter for root classes
+    ## getter for single root classes
 
     def get_panel(self, panel_code):
         assert panel_code
@@ -40,6 +40,21 @@ class base_sqlhandler(object):
 
     def get_by_id(self, class_, id):
         return class_.get(id, self.session)
+
+
+    ## getter for multi root classes
+
+    def get_markers(self):
+        return self.Marker.query(self.session)
+
+    def get_panels(self):
+        pass
+
+    def get_batches(self):
+        pass
+
+    def get_by_ids(self):
+        pass
 
 
     ## getter for data

@@ -12,7 +12,8 @@ requires = [
     'numpy',
     'scipy',
     'matplotlib',
-    'pyyaml'
+    'pyyaml',
+    'pandas',
     ]
 
 setup(name='fatools',
