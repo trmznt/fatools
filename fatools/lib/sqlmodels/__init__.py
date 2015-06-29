@@ -2,17 +2,17 @@
 
 ## handler
 
-from fatools.lib.sqlmodels import schema
-from fatools.lib.utils import cout, cerr
-from pandas import DataFrame
+#from fatools.lib.sqlmodels import schema
+#from fatools.lib.utils import cout, cerr
+#from pandas import DataFrame
 import os, sys
 
-class SQLHandler(object):
+class SQLHandler_XXX(object):
 
 
-    Marker = schema.Marker
+    #Marker = schema.Marker
 
-    Batch = schema.Batch
+    #Batch = schema.Batch
 
     def __init__(self, dbfile, initial=False):
         print("Opening db: %s" % dbfile)

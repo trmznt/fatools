@@ -21,7 +21,7 @@ def get_dbhandler(args, initial=False):
 
     if args.sqldb:
         
-        from fatools.lib.sqlmodels import SQLHandler
+        from fatools.lib.sqlmodels.handler import SQLHandler
 
         return SQLHandler(args.sqldb, initial)
 
