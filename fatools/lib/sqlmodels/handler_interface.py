@@ -41,7 +41,11 @@ class base_sqlhandler(object):
         assert marker_code
         return self.Marker.search(marker_code, self.session)
 
+    def get_marker_by_id(self, id):
+        return self.get_by_id(self.Marker, id)
+
     def get_by_id(self, class_, id):
+        assert class_ and id
         return class_.get(id, self.session)
 
 
