@@ -12,16 +12,19 @@ class base_sqlhandler(object):
     ## constructor for root classes
 
     def new_panel(self):
-        p = self.Panel()
-        p._dbh_session_ = self.session
+        i = self.Panel()
+        i._dbh_session_ = self.session()
+        return i
 
     def new_marker(self):
-        p = self.Marker()
-        p._dbh_session_ = self.session
+        i = self.Marker()
+        i._dbh_session_ = self.session()
+        return i
 
     def new_batch(self):
-        p = self.Batch()
-        p._dbh_session_ = self.session
+        i = self.Batch()
+        i._dbh_session_ = self.session()
+        return i
 
 
     ## getter for single root classes

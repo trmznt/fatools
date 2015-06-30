@@ -142,7 +142,7 @@ def do_importpanel(args, dbh):
         if panel['code'] != code:
             cerr('ERR: code for panel %s is not consistent!' % code)
             sys.exit(1)
-        p = dbh.Panel()
+        p = dbh.new_panel()
         p.update( panel )
         if args.update:
             db_p = p.sync(dbh.session)
@@ -162,7 +162,7 @@ def do_importmarker(args, dbh):
         if marker['code'] != code:
             cerr('ERR: code for marker %s is not consistent!' % code)
             sys.exit(1)
-        m = dbh.Marker()
+        m = dbh.new_marker()
         m.update(marker)
         if args.update:
             db_m = m.sync(dbh.session)
