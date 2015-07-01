@@ -39,9 +39,11 @@ class Query(object):
 
     def get_analytical_sets(self, sample_ids = None):
         if self._analytical_sets is None or sample_ids:
+            cerr('[query]: getting initial analytical sets')
             sample_sets = self.get_sample_sets( sample_ids )
             self._analytical_sets = get_analytical_sets( self._dbh, sample_sets,
                                         self._params['filter'] )
+            cerr('[query]: initial total samples: %d' % self._analytical_sets.total_samples)
         return self._analytical_sets
 
 
@@ -54,7 +56,26 @@ class Query(object):
 
 
     def get_filtered_analytical_sets(self, sample_ids = None):
-        if self._filtered_analytical_sets or sample_ids:
-            pass
-        return self.get_analytical_sets( sample_ids )
+        if self._filtered_analytical_sets is None or sample_ids:
+
+            # get initial sample set, and filter the sample set by sample ids
+            filtered_sample_sets = self.get_filtered_sample_sets(sample_ids)
+
+            # create new analytical sets based on the filtered sample sets
+            cerr('[query]: getting analytical sets with filtered sample sets')
+            filtered_analytical_sets = get_analytical_sets( self._dbh, filtered_sample_sets,
+                                        self._params['filter'] )
+            cerr('[query]: filtered total samples: %d'
+                        % filtered_analytical_sets.total_samples)
+
+            # get filtered marker ids
+            filtered_marker_ids = filtered_analytical_sets.get_filtered_marker_ids()
+            cerr('[query]: filtered marker ids: %s' % str(filtered_marker_ids))
+
+            # filter markers by retaining marker ids and removing others
+            filtered_analytical_sets.retain_marker_ids( filtered_marker_ids )
+
+            self._filtered_analytical_sets = filtered_analytical_sets
+
+        return self._filtered_analytical_sets
 

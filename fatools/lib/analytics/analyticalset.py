@@ -163,9 +163,9 @@ class AnalyticalSetContainer(list):
 
 
     def get_filtered_marker_ids(self):
-        """ return a filtered marker_ids """
-        marker_ids = set()
-        for m in self:
+        """ return a filtered marker_ids from total of all analytical sets """
+        marker_counts = defaultdict( int )
+        for s in self:
             marker_ids.update( m.get_filtered_marker_ids() )
         return marker_ids
 
@@ -175,6 +175,10 @@ class AnalyticalSetContainer(list):
         # collect all necessary data from each analyticalset
         pass
 
+
+    @property
+    def total_samples(self):
+        return self._sample_sets.total_samples
 
 
 def get_analytical_sets(dbh, sample_sets, params, marker_ids=None):
