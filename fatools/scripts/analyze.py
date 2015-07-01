@@ -100,6 +100,10 @@ def do_export(args, dbh):
 
     query = get_query( args, dbh )
     analytical_sets = query.get_filtered_analytical_sets()
+    if analytical_sets.total_samples <= 0:
+        cexit('ERR - query does not yield any sample data')
+    else:
+        cerr('INFO - total sampel number: %d' % analytical_sets.total_samples)
     output = export( analytical_sets, dbh, outfile = args.outfile, format = args.outformat )
     cout('Done.')
 
@@ -114,9 +118,6 @@ def do_corralleles(args, dbh):
 
         report = correlate_alleles(analytical_sets[0], analytical_sets[1], marker=marker_code)
         cout( make_correlate_report( report ) )
-
-
-
 
 
 
