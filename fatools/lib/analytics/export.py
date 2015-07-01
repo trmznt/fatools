@@ -10,7 +10,8 @@ def export_major_tab(analytical_sets, dbh, outstream):
     output = []
 
     for analytical_set in analytical_sets:
-        data, aux_data, assay_data = tabulate_data( analytical_set.allele_df.dominant_df, dbh )
+        data, aux_data, assay_data = tabulate_data( analytical_set.allele_df.dominant_df,
+                                            dbh )
         output.append( (analytical_set.label, data, aux_data, assay_data) )
 
     write_csv(output, outstream)
@@ -30,6 +31,23 @@ def export_tab(analytical_sets, dbh, outstream):
 
     return output
 
+
+def export_major_r(analytical_sets, dbh, outstream):
+    """ export to file suitable for loading into R
+        the file will be tab-delimited and has header
+    """
+
+    output = []
+    for analytical_set in analytical_sets:
+        data, aux_data, assay_data = tabulate_data( analytical_set.allele_df.dominant_df,
+                                            dbh )
+        output.append( (analytical_set.label, data, aux_data, assay_data) )
+
+    write_r(output, outstream)
+
+    return output
+
+
 def write_csv(output, outstream, delimiter='\t'):
 
     writer = csv.writer(outstream, delimiter=delimiter)
@@ -40,8 +58,25 @@ def write_csv(output, outstream, delimiter='\t'):
 
 export_format = {
     'major_tab': export_major_tab,
-    'tab': export_tab
+    'tab': export_tab,
+    'major_r': export_major_r,
 }
+
+
+def write_r(output, outstream, delimiter='\t'):
+
+    # sanitity checking
+    header = output[0][1]._header_
+    for (label, rows, aux_rows, assay_rows) in output[1:]:
+        if header != rows._header_:
+            raise RuntimeError('Headers between tabulated data do not match')
+
+    writer = csv.writer(outstream, delimiter=delimiter)
+    writer.writerow( ('group',) + header )
+    for (label, rows, aux_rows, assay_rows) in output:
+        for row in rows:
+            writer.writerow( (label, ) + row )
+
 
 def export(analytical_sets, dbh, outfile, format='major_tab'):
 
@@ -61,13 +96,16 @@ def tabulate_data( allele_df, dbh ):
     buf2 = []
     buf3 = []
 
-    table = pivot_table( allele_df, index='sample_id', columns='marker_id', values='value',
+    table = pivot_table( allele_df,
+                            index='sample_id', columns='marker_id', values='value',
                             aggfunc = lambda x: tuple(x) )
 
-    heights = pivot_table( allele_df, index='sample_id', columns='marker_id', values='height',
+    heights = pivot_table( allele_df,
+                            index='sample_id', columns='marker_id', values='height',
                             aggfunc = lambda x: tuple(x) )
 
-    assay_ids = pivot_table( allele_df, index='sample_id', columns='marker_id', values='assay_id',
+    assay_ids = pivot_table( allele_df,
+                            index='sample_id', columns='marker_id', values='assay_id',
                             aggfunc = lambda x: tuple(x) )
 
     buf.append( tuple( ['Sample', 'ID'] + 
@@ -80,8 +118,10 @@ def tabulate_data( allele_df, dbh ):
 
     empty = tuple()
 
-    rows = [ ((dbh.get_sample_by_id(r[0]).code,), (r[0],)) + r[1:] for r in table.itertuples() ]
+    rows = [ ((dbh.get_sample_by_id(r[0]).code,), (r[0],)) + r[1:]
+                for r in table.itertuples() ]
     rows.sort()
+    rows._header_ = ( 'code', 'id') + table.columns()
 
     height_rows = [ ((dbh.get_sample_by_id(r[0]).code,), (r[0],)) + r[1:]
                                 for r in heights.itertuples() ]
