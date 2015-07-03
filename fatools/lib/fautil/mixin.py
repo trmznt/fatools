@@ -114,7 +114,7 @@ class MarkerMixIn(object):
     def initbins(self, start_range, end_range):
         self.bins = []
         for size in range(start_range, end_range, self.repeats):
-            self.bins.append( (size, float(size), float(size-1), float(size+1)) )
+            self.bins.append( [size, float(size), float(size-1), float(size+1)] )
 
 
 class BatchMixIn(object):
