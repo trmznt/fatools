@@ -1,5 +1,6 @@
 
 import yaml
+from fatools.lib.utils import cerr, cout
 from fatools.lib.analytics.selector import Selector, Filter
 from fatools.lib.analytics.analyticalset import get_analytical_sets
 from pprint import pprint
@@ -73,7 +74,9 @@ class Query(object):
             cerr('[query]: filtered marker ids: %s' % str(filtered_marker_ids))
 
             # filter markers by retaining marker ids and removing others
-            filtered_analytical_sets.retain_marker_ids( filtered_marker_ids )
+            filtered_analytical_sets = get_analytical_sets( self._dbh, filtered_sample_sets,
+                                        self._params['filter'],
+                                        marker_ids = filtered_marker_ids )
 
             self._filtered_analytical_sets = filtered_analytical_sets
 

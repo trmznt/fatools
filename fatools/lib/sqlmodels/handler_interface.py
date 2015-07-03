@@ -44,6 +44,9 @@ class base_sqlhandler(object):
     def get_marker_by_id(self, id):
         return self.get_by_id(self.Marker, id)
 
+    def get_sample_by_id(self, id):
+        return self.get_by_id(self.Sample, id)
+
     def get_by_id(self, class_, id):
         assert class_ and id
         return class_.get(id, self.session)

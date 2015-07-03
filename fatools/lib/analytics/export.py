@@ -66,15 +66,15 @@ export_format = {
 def write_r(output, outstream, delimiter='\t'):
 
     # sanitity checking
-    header = output[0][1]._header_
+    header = output[0][1][0]
     for (label, rows, aux_rows, assay_rows) in output[1:]:
-        if header != rows._header_:
+        if header != rows[0]:
             raise RuntimeError('Headers between tabulated data do not match')
 
     writer = csv.writer(outstream, delimiter=delimiter)
-    writer.writerow( ('group',) + header )
+    writer.writerow( ('Group',) + header )
     for (label, rows, aux_rows, assay_rows) in output:
-        for row in rows:
+        for row in rows[1:]:
             writer.writerow( (label, ) + row )
 
 
@@ -121,7 +121,6 @@ def tabulate_data( allele_df, dbh ):
     rows = [ ((dbh.get_sample_by_id(r[0]).code,), (r[0],)) + r[1:]
                 for r in table.itertuples() ]
     rows.sort()
-    rows._header_ = ( 'code', 'id') + table.columns()
 
     height_rows = [ ((dbh.get_sample_by_id(r[0]).code,), (r[0],)) + r[1:]
                                 for r in heights.itertuples() ]

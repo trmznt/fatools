@@ -1,5 +1,7 @@
 
+from collections import defaultdict
 from fatools.lib.analytics.dataframes import AlleleDataFrame
+from pandas import pivot_table
 from pprint import pprint
 
 class AnalyticalSet(object):
@@ -26,8 +28,15 @@ class AnalyticalSet(object):
             )
 
         # placeholder
+
+        self._marker_df = None
+
         self._filtered_sample_ids = None
+        self._filtered_marker_ids = None
         self._sample_marker = None
+
+        self._sample_genotyped_dist = None
+        self._marker_genotyped_dist = None
 
 
     @property
@@ -60,7 +69,7 @@ class AnalyticalSet(object):
         """
         if self._marker_df is None:
             self._marker_df = pivot_table( self._allele_df.df,
-                    rows = 'sample_id', cols = 'marker_id', values='value', aggfunc = len )
+                    index = 'sample_id', columns = 'marker_id', values='value', aggfunc = len )
         return self._marker_df
 
     @property
@@ -85,7 +94,7 @@ class AnalyticalSet(object):
     def get_filtered_marker_ids(self):
         """ get marker_ids that passed marker quality assessment """
         if self._filtered_marker_ids is None:
-            self._filtered_marker_ids, self._marker_genotyeped_dist = self.assess_marker_quality()
+            self._filtered_marker_ids, self._marker_genotyped_dist = self.assess_marker_quality()
         return self._filtered_marker_ids
 
 
@@ -124,7 +133,7 @@ class AnalyticalSet(object):
             all samples!!
             param: marker_qual_threshold
         """
-
+        marker_genotyped = []
         for marker_id in self.marker_ids:
             # check of any x > 0 for marker_df[marker_id] = [ 2 1 0 0 0 ]
             genotyped = 0
@@ -137,8 +146,15 @@ class AnalyticalSet(object):
             marker_qual_threshold = self._params.marker_qual_threshold
         threshold = len(self.sample_ids) * marker_qual_threshold
         passed_marker_ids = set([ x[0] for x in marker_genotyped if x[1] >= threshold ])
-        return (passed_marker_id, marker_genotyped)
+        return (passed_marker_ids, marker_genotyped)
 
+
+    def get_filtered_analytical_set(self, sample_ids=None, marker_ids=None):
+
+        if not (sample_ids or marker_ids):
+            return None
+
+        raise NotImplementedError()
 
 
 class AnalyticalSetContainer(list):
@@ -146,6 +162,7 @@ class AnalyticalSetContainer(list):
     def __init__(self, sample_sets, params, marker_ids, dbh):
         super().__init__()
         self._sample_sets = sample_sets
+        self._params = params
         for s in self._sample_sets:
             self.append( AnalyticalSet( s, params, marker_ids, dbh ) )
 
@@ -164,16 +181,26 @@ class AnalyticalSetContainer(list):
 
     def get_filtered_marker_ids(self):
         """ return a filtered marker_ids from total of all analytical sets """
-        marker_counts = defaultdict( int )
-        for s in self:
-            marker_ids.update( m.get_filtered_marker_ids() )
+        marker_counts = self.assess_marker_quality()
+        threshold = self.total_samples * self._params.marker_qual_threshold
+        marker_ids = [ x[0] for x in marker_counts.items() if x[1] > threshold ]
         return marker_ids
 
 
     def assess_marker_quality(self):
         """ assess marker quality """
         # collect all necessary data from each analyticalset
-        pass
+        marker_counts = defaultdict( int )
+        for s in self:
+            for (marker_id, count) in s.get_marker_genotyped_distribution():
+                marker_counts[marker_id] += count
+
+        return marker_counts
+        
+
+    def get_filtered_analytical_sets(self):
+        """ return a filtered analytical set container """
+        raise NotImplementedError
 
 
     @property
