@@ -18,9 +18,9 @@ def summarize_alleles( analytical_sets ):
 
 
 def summarize_allele_df( allele_df ):
-    """ return a tuple of (dict, dict):
-        1dict: alleles: [ (allele, freq, count, mean_height, min_size, max_size, delta), ...]
-        2dict: marker: ( [ size, ...], [ height, ....] )
+    """ return a dict of:
+        alleles: [ (allele, freq, count, mean_height, min_size, max_size, delta, items), ...]
+            where items is [ 
     """
 
     allele_list = defaultdict(list)
@@ -52,7 +52,7 @@ def summarize_allele_df( allele_df ):
             in alleles
         ]
 
-        delta_status = check_delta( allele_params)
+        delta_status = check_delta(allele_params)
 
         results[marker_id] = dict(
             code = marker_id,
@@ -91,4 +91,16 @@ def check_delta( alleles ):
         delta_status.append( True )
 
     return delta_status
+
+
+
+def summarize_bins( analytical_sets ):
+    """ return bin summary for each marker """
+
+    allele_summaries = summarize_alleles( analytical_sets )
+
+    marker_summaries = {}
+
+    for allele_summary in allele_summaries:
+        print( allele_summary )
 

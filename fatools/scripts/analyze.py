@@ -27,6 +27,9 @@ def init_argparser(parser=None):
     p.add_argument('--allelesummary', default=False, action='store_true',
             help = 'report allele summary')
 
+    p.add_argument('--allelesummary', default=False, action='store_true',
+            help = 'report bin summary')
+
     p.add_argument('--export', default=False, action='store_true',
             help = 'export allele data to file')
 
@@ -92,6 +95,16 @@ def do_allelesummary(args, dbh):
     report = summarize_alleles( analytical_sets )
     cout( make_sample_report( analytical_sets.get_sample_sets() ) )
     cout( make_allele_report(report) )
+
+
+def do_binsummary(args, dbh):
+
+    from fatools.lib.analytics.summary import summarize_bins
+
+    query = get_query( args, dbh )
+    analytical_sets = query.get_filtered_analytical_sets()
+    report = summarize_alleles( analytical_sets )
+
 
 
 def do_export(args, dbh):
