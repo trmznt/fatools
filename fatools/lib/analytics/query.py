@@ -53,6 +53,8 @@ class Query(object):
             if not sample_ids:
                 sample_ids = self.get_analytical_sets().get_filtered_sample_ids()
             self._filtered_sample_sets = self.get_sample_sets().filtered( sample_ids )
+            cerr('[query]: filtered total samples: %d' %
+                    self._filtered_sample_sets.total_samples)
         return self._filtered_sample_sets
 
 
