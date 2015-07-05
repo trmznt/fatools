@@ -28,6 +28,9 @@ def init_argparser( parser=None ):
     p.add_argument('--importmarker', default=False,
             help = 'importing marker from YAML file')
 
+    p.add_argument('--updatebins', default=False,
+            help = 'updating bins')
+
     p.add_argument('--upload', default=False,
             help = 'uploading FSA data')
 
@@ -120,6 +123,8 @@ def do_dbmgr(args, dbh = None, warning=True):
         do_initbin(args, dbh)
     elif args.viewbin is not False:
         do_viewbin(args, dbh)
+    elif args.updatebins is not False:
+        do_updatebins(args, dbh)
     else:
         if warning:
             cerr('Unknown command, nothing to do!')
@@ -288,6 +293,18 @@ def do_viewbin(args, dbh):
             cout('   %3d  %5.2f  %5.2f  %5.2f  %4.2f' %
                     (binset[0], binset[1], binset[2], binset[3], binset[3] - binset[2]))
 
+
+def do_updatebins(args, dbh):
+    
+    with open(args.updatebins) as f:
+        updated_bins = yaml.load( f )
+
+    for (marker_label, marker_data) in updated_bins.items():
+        if marker_data['label'] != marker_label:
+            raise RuntimeError()
+        marker = dbh.get_marker( marker_label )
+        marker.bins = marker_data['bins']
+        cerr('I: Updating bins for marker: %s' % marker.label)
 
 
 def do_clearassay(args, dbh):
