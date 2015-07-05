@@ -80,7 +80,9 @@ class base_sqlhandler(object):
         # allele_relative_cutoff
         # peak_type
 
-        assert sample_ids and marker_ids and params
+        assert sample_ids
+        assert marker_ids
+        assert params
 
         q = self.session.query( self.AlleleSet.sample_id, self.Channel.assay_id,
                 self.Allele.marker_id, self.Allele.bin,
