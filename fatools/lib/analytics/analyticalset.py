@@ -60,6 +60,10 @@ class AnalyticalSet(object):
         return self._allele_df
 
     @property
+    def colour(self):
+        return self._sample_set.colour
+
+    @property
     def marker_df(self):
         """ return a dataframe of:
                 sample_id   marker_id1  marker_id2  marker_id3
@@ -206,6 +210,10 @@ class AnalyticalSetContainer(list):
     @property
     def total_samples(self):
         return self._sample_sets.total_samples
+
+    @property
+    def sample_ids(self):
+        return self._sample_sets.sample_ids
 
 
 def get_analytical_sets(dbh, sample_sets, params, marker_ids=None):
