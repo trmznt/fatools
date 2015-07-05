@@ -1,9 +1,13 @@
+#
+# this script contains commands which do not need to update the database content
+# commands that need to update/change the database content should be in facmd toolset
+#
 
-
-import sys, argparse
+import sys, argparse, yaml
 
 from fatools.lib.analytics.query import Query, load_yaml
 from fatools.lib.utils import cout, cerr, cexit, get_dbhandler
+from fatools.lib import params
 from pprint import pprint
 
 def init_argparser(parser=None):
@@ -27,8 +31,11 @@ def init_argparser(parser=None):
     p.add_argument('--allelesummary', default=False, action='store_true',
             help = 'report allele summary')
 
-    p.add_argument('--allelesummary', default=False, action='store_true',
+    p.add_argument('--binsummary', default=False, action='store_true',
             help = 'report bin summary')
+
+    p.add_argument('--adjustbins', default=False, action='store_true',
+            help = 'iteratively adjust the binning')
 
     p.add_argument('--export', default=False, action='store_true',
             help = 'export allele data to file')
@@ -43,6 +50,12 @@ def init_argparser(parser=None):
 
     p.add_argument('--outfile', default=False,
             help = 'output filename, or - for stdout/console')
+
+    p.add_argument('--outplot', default=False,
+            help = 'output plot filename')
+
+    p.add_argument('--iteration', default=2, type=int,
+            help = 'iteration number')
 
     ## Override params
 
@@ -73,6 +86,8 @@ def do_analyze(args, dbhandler_func = get_dbhandler):
         do_samplesummary(args, dbh)
     elif args.allelesummary:
         do_allelesummary(args, dbh)
+    elif args.binsummary:
+        do_binsummary(args, dbh)
     elif args.export:
         do_export(args, dbh)
 
@@ -88,7 +103,7 @@ def do_samplesummary(args, dbh):
 
 def do_allelesummary(args, dbh):
 
-    from fatools.lib.analytics.summary import summarize_alleles
+    from fatools.lib.analytics.summary import summarize_alleles, plot_alleles
 
     query = get_query( args, dbh )
     analytical_sets = query.get_filtered_analytical_sets()
@@ -96,14 +111,57 @@ def do_allelesummary(args, dbh):
     cout( make_sample_report( analytical_sets.get_sample_sets() ) )
     cout( make_allele_report(report) )
 
+    if args.outplot:
+        plot_alleles( report, args.outplot )
+
 
 def do_binsummary(args, dbh):
 
     from fatools.lib.analytics.summary import summarize_bins
 
-    query = get_query( args, dbh )
-    analytical_sets = query.get_filtered_analytical_sets()
-    report = summarize_alleles( analytical_sets )
+    scanning_parameter = params.Params()
+
+    markers = None
+    for i in range( args.iteration ):
+        query = get_query( args, dbh )
+        analytical_sets = query.get_filtered_analytical_sets()
+        report = summarize_bins( analytical_sets )
+        cerr('I: Bin summary iteration %d' % i)
+        pprint(report)
+
+        markers = []
+        for (marker_id, updated_bins) in report.items():
+            marker = dbh.get_marker_by_id(marker_id)
+            marker.adjustbins( updated_bins )
+            markers.append( marker )
+        dbh.session().flush()
+
+        # rebinning
+        cerr('I: Rebinning samples')
+        assay_list = []
+        N = len(analytical_sets.sample_ids)
+        count = 1
+        for sample_id in analytical_sets.sample_ids:
+            sample = dbh.get_sample_by_id(sample_id)
+            cerr('\rI: [%d/%d] - Binning sample...' % (count, N), nl=False)
+            for assay in sample.assays:
+                assay.bin( scanning_parameter.nonladder, markers )
+            count += 1
+        cerr('')
+        dbh.session().flush()
+
+    if args.outfile:
+        
+        output_dict = {}
+        for marker in markers:
+            output_dict[marker.label] = {
+                    'label': marker.label,
+                    'bins': marker.bins
+                }
+
+        with open(args.outfile, 'wt') as f:
+            yaml.dump(output_dict, f)
+        cerr('I: writing bins to %s' % args.outfile)
 
 
 
@@ -185,7 +243,7 @@ def make_allele_report( summaries ):
     _('==================================')
 
     for label in summaries:
-        summary = summaries[label]
+        summary = summaries[label]['summary']
         _('Sample Set: %s' % label)
 
         for marker_id in summary:
