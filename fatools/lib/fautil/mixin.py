@@ -6,6 +6,7 @@ from fatools.lib.fautil import algo
 from sortedcontainers import SortedListWithKey
 
 import io, numpy as np
+from copy import copy
 import pprint, sys
 
 class PanelMixIn(object):
@@ -115,6 +116,19 @@ class MarkerMixIn(object):
         self.bins = []
         for size in range(start_range, end_range, self.repeats):
             self.bins.append( [size, float(size), float(size-1), float(size+1)] )
+            # the real bins are defined by [ bin_value, mean, 25percentile, 75percentile ]
+
+
+    def adjustbins(self, updated_bins):
+        bins = copy(self.bins)
+        for idx in range(len(bins)):
+            tag = bins[idx][1]
+            if tag in updated_bins:
+                bins[idx] = updated_bins[tag]
+                cerr('updating bin: %d' % tag)
+
+        # force db to update
+        self.bins = bins
 
 
 class BatchMixIn(object):
