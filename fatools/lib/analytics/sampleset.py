@@ -54,6 +54,13 @@ class SampleSetContainer(list):
             N += s.N
         return N
 
+    @property
+    def sample_ids(self):
+        ids = set()
+        for s in self:
+            ids.update( s.sample_ids )
+        return ids
+
 
 
 
