@@ -151,6 +151,24 @@ class BatchMixIn(object):
         return list([ x.id for s in self.samples])
 
 
+    def update(self, obj):
+        raise NotImplementedError('PROG/ERR - child class must provide this method')
+
+    def _update(self, obj):
+
+        if type(obj) == dict:
+            # updating from dictionary (eg. YAML )
+            if 'code' in obj:
+                self.code = obj['code']
+            if 'description' in obj:
+                self.description = obj['description']
+            if 'remark' in obj:
+                self.remark = obj['remark']
+
+        else:
+            raise NotImplementedError('PROG/ERR - not implemented yet')
+
+
 
 class SampleMixIn(object):
     """ implement general Sample methods """
