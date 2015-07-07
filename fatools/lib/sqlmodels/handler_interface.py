@@ -44,6 +44,9 @@ class base_sqlhandler(object):
     def get_marker_by_id(self, id):
         return self.get_by_id(self.Marker, id)
 
+    def get_batch_by_id(self, id):
+        return self.get_by_id(self.Batch, id)
+
     def get_sample_by_id(self, id):
         return self.get_by_id(self.Sample, id)
 
