@@ -223,6 +223,23 @@ class SampleMixIn(object):
         raise NotImplementedError('PROG/ERR - child class must override this method!')
 
 
+    def _update(self, obj):
+
+        if type(obj) == dict:
+            if 'type' in obj:
+                self.type = obj['type']
+            if 'altcode' in obj:
+                self.altcode = obj['altcode']
+            if 'category' in obj:
+                self.category = obj['category']
+            if 'remark' in obj:
+                self.remark = obj['remark']
+
+        else:
+
+            raise NotImplementedError('PROG/ERR - not implemented yet')
+
+
 
 class ChannelMixIn(object):
     """ contains Channel methods """
