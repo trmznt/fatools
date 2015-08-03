@@ -4,6 +4,12 @@ from pandas import DataFrame
 class base_sqlhandler(object):
     """ base class for SQLAlchemy-friendly handler """
 
+    Panel = None
+    Marker = None
+    Batch = None
+    Sample = None
+    Assay = None
+
     def __init__(self):
         self.engine = None
         self.session = None
