@@ -20,10 +20,13 @@ class channelstatus(object):
     unused = 'channel-unused'
     noisy = 'channel-noisy'
     empty = 'channel-empty'
+    reseted = 'channel-reseted'
     scanned = 'channel-scanned'
+    preannotated = 'channel-preannotated'
     aligned = 'channel-aligned'         # ladder peaks has been aligned to standard size
     called = 'channel-called'
     binned = 'channel-binned'
+    annotated = 'channel-annotated'
     ladder = 'channel-ladder'
 
 
