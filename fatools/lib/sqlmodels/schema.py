@@ -219,12 +219,13 @@ class Sample(Base, SampleMixIn):
                         UniqueConstraint( 'altcode', 'batch_id')
                     )
 
-    def new_assay(self, raw_data, filename, panel=None):
+    def new_assay(self, raw_data, filename, status, panel=None):
         assay = Assay( raw_data = raw_data, filename = filename )
         if panel is None:
             panel = Panel.search('undefined', object_session(self))
         assay.panel = panel
         assay.sample = self
+        assay.status = status
         return assay
 
 
@@ -261,8 +262,11 @@ class Panel(Base, PanelMixIn):
                 sys.exit(1)
 
 
-    def sync(self):
-        raise NotImplementedError()
+    def sync(self, session):
+        """ sync'ing is getting the object in the database and update with our content """
+        db_panel = Panel.search(self.code, session)
+        db_panel.update( self )
+        return db_panel
 
 
     def get_marker(self, marker_code):

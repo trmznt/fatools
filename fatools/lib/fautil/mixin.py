@@ -1,7 +1,8 @@
 
 from fatools.lib.fautil import traceio, traceutils
 from fatools.lib.utils import cout, cerr
-from fatools.lib.const import peaktype, channelstatus, assaystatus, dyes, ladders, allelemethod
+from fatools.lib.const import (peaktype, channelstatus, assaystatus, dyes, ladders,
+                                    allelemethod, assaymethod)
 from fatools.lib.fautil import algo
 from sortedcontainers import SortedListWithKey
 
@@ -173,13 +174,16 @@ class BatchMixIn(object):
 class SampleMixIn(object):
     """ implement general Sample methods """
 
-    def add_assay(self, trace, filename, panel_code, options = None, species = None):
+    def add_assay(self, trace, filename, panel_code, options = None, species = None,
+                    dbhandler = None):
+
+        assert dbhandler, 'Please provide dbhandler function'
 
         # check panel
 
         batch = self.batch
 
-        panels = [ batch.get_panel(c.strip()) for c in panel_code.split(',') ]
+        panels = [ dbhandler.get_panel(c.strip()) for c in panel_code.split(',') ]
 
         # parsing options
 
@@ -210,7 +214,10 @@ class SampleMixIn(object):
 
         # creating assay
         for panel in panels:
-            assay = self.new_assay(raw_data = trace, filename = filename, panel = panel)
+            assay = self.new_assay(raw_data = trace, filename = filename,
+                        status = assaystatus.uploaded, panel = panel)
+            assay.status = assaystatus.uploaded
+            assay.method = assaymethod.nomethod
             assay.runtime = assay.get_trace().get_run_start_time()
             assay.create_channels()
             assay.assign_channels( panel, excluded_markers )
@@ -559,7 +566,7 @@ class AssayMixIn(object):
 
         cerr('Dyes: ', nl=False)
         for channel in self.channels:
-            if channel.dye == ladder_dye:
+            if channel.dye.upper() == ladder_dye.upper():
                 channel.marker = panel.get_marker('ladder')
                 has_ladder = True
                 channel.status = channelstatus.assigned
@@ -568,7 +575,7 @@ class AssayMixIn(object):
                 continue
             
             try:
-                marker = panel.get_marker_by_dye( channel.dye )
+                marker = panel.get_marker_by_dye( channel.dye.upper() )
             except KeyError:
                 channel.status = channelstatus.unused
                 cerr('%s => Unused; ' % channel.dye, nl=False)
@@ -587,7 +594,7 @@ class AssayMixIn(object):
         cerr('')
         if not has_ladder:
             raise RuntimeError('ERR - sample %s assay %s does not have ladder!' %
-                            (sample.code, assay.filename))
+                            (self.sample.code, self.filename))
 
         self.status = assaystatus.assigned
 

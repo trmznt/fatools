@@ -249,7 +249,7 @@ def do_upload(args, dbh):
                 trace = f.read()
 
             a = s.add_assay( trace, filename=assay_filename, panel_code = assay_panel,
-                        options = options, species = args.species )
+                        options = options, species = args.species, dbhandler = dbh)
             cerr('INFO - sample: %s assay: %s panel: %s has been uploaded' % 
                         (s.code, a.filename, assay_panel))
 

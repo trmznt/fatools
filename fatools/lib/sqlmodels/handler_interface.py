@@ -62,15 +62,16 @@ class base_sqlhandler(object):
 
 
     ## getter for multi root classes
+    ## this will return a query object that can be further filtered by the caller
 
     def get_markers(self):
         return self.Marker.query(self.session)
 
     def get_panels(self):
-        pass
+        return self.Panel.query(self.session)
 
     def get_batches(self):
-        pass
+        return self.Batch.query(self.session)
 
     def get_by_ids(self):
         pass
