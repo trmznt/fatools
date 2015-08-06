@@ -40,6 +40,9 @@ class assaystatus(object):
     binned = 'assay-binned'
     annotated = 'assay-annotated'
 
+class assaymethod(object):
+    nomethod = 'assay-nomethod'
+    cwt = 'assay-cwt'
 
 class allelemethod(object):
     uncalled = 'allele-uncalled'
