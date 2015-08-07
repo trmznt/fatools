@@ -303,7 +303,7 @@ class Marker(Base, MarkerMixIn):
     __tablename__ = 'markers'
     id = Column(types.Integer, primary_key=True)
     code = Column(types.String(64), nullable=False, unique=True)
-    species = Column(types.String(32), nullable=False, default='X')
+    species = Column(types.String(32), nullable=False)
     repeats = Column(types.Integer, nullable=False, default=-1)
 
     min_size = Column(types.Integer, nullable=False, default=0)
@@ -398,8 +398,8 @@ class Assay(Base, AssayMixIn):
     ladder = relationship('Channel', uselist=False,
                 primaryjoin = "Assay.ladder_id == Channel.id")
 
-    status = Column(types.String(32), nullable=False, default='')
-    method = deferred(Column(types.String(16), nullable=False, default=''))
+    status = Column(types.String(32), nullable=False)
+    method = deferred(Column(types.String(16), nullable=False))
     report = deferred(Column(types.String(512), nullable=False, default=''))
     remark = deferred(Column(types.String(1024), nullable=False, default=''))
 
@@ -543,13 +543,13 @@ class AlleleSet(Base, AlleleSetMixIn):
                     backref=backref('allelesets', lazy='dynamic'))
     """ link to marker """
 
-    scanning_method = deferred(Column(types.String(32), nullable=False, default=''))
+    scanning_method = deferred(Column(types.String(32), nullable=False))
     """ method used for scanning and generating this alleleset """
 
-    calling_method = deferred(Column(types.String(32), nullable=False, default=''))
+    calling_method = deferred(Column(types.String(32), nullable=False))
     """ method used for calling this alleleset """
 
-    binning_method = deferred(Column(types.String(32), nullable=False, default=''))
+    binning_method = deferred(Column(types.String(32), nullable=False))
     """ method used for binning this alleleset """
 
 
@@ -611,8 +611,8 @@ class Allele(Base, AlleleMixIn):
     beta = Column(types.Float, nullable=False, default=-1)      # area / height
     theta = Column(types.Float, nullable=False, default=-1)     # height / width
 
-    type = Column(types.String(32), nullable=False, default='')
-    method = Column(types.String(32), nullable=False, default='')   # calling method
+    type = Column(types.String(32), nullable=False)
+    method = Column(types.String(32), nullable=False)   # binning method
 
     brtime = Column(types.Integer, nullable=False, default=-1)
     ertime = Column(types.Integer, nullable=False, default=-1)
