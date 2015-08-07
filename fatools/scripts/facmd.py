@@ -117,12 +117,9 @@ def main(args):
         do_facmd(args)
 
 
+def do_facmd(args, dbh=None):
 
-def do_facmd(args, dbhandler_func=None):
-
-    if dbhandler_func:
-        dbh = dbhandler_func(args)
-    else:
+    if dbh is None:
         dbh = get_dbhandler(args)
 
     executed = 0
