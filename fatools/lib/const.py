@@ -1,73 +1,73 @@
 
 
 class peaktype(object):
-    scanned = 'peak-scanned'
-    broad = 'peak-broad'
-    noise = 'peak-noise'
-    overlap = 'peak-overlap'
-    unassigned = 'peak-unassigned'
-    ladder = 'peak-ladder'
-    called = 'peak-called'
-    stutter = 'peak-stutter'
-    artifact = 'peak-artifact'
-    bin = 'peak-bin'
-    ignored = 'peak-ignored'
+    scanned = 'scanned'
+    broad = 'broad'
+    noise = 'noise'
+    overlap = 'overlap'
+    unassigned = 'unassigned'
+    ladder = 'ladder'
+    called = 'called'
+    stutter = 'stutter'
+    artifact = 'artifact'
+    bin = 'bin'
+    ignored = 'ignored'
 
 
 class channelstatus(object):
-    unassigned = 'channel-unassigned'
-    assigned = 'channel-assigned'
-    unused = 'channel-unused'
-    noisy = 'channel-noisy'
-    empty = 'channel-empty'
-    reseted = 'channel-reseted'
-    scanned = 'channel-scanned'
-    preannotated = 'channel-preannotated'
-    aligned = 'channel-aligned'         # ladder peaks has been aligned to standard size
-    called = 'channel-called'
-    binned = 'channel-binned'
-    annotated = 'channel-annotated'
-    ladder = 'channel-ladder'
+    unassigned = 'unassigned'
+    assigned = 'assigned'
+    unused = 'unused'
+    noisy = 'noisy'
+    empty = 'empty'
+    reseted = 'reseted'
+    scanned = 'scanned'
+    preannotated = 'preannotated'
+    aligned = 'aligned'         # ladder peaks has been aligned to standard size
+    called = 'called'
+    binned = 'binned'
+    annotated = 'annotated'
+    ladder = 'ladder'
 
 
 class assaystatus(object):
-    uploaded = 'assay-uploaded'
-    assigned = 'assay-assigned'
-    scanned = 'assay-scanned'
-    preannotated = 'assay-preannotated'
-    aligned = 'assay-aligned'
-    called = 'assay-called'
-    binned = 'assay-binned'
-    annotated = 'assay-annotated'
+    uploaded = 'uploaded'
+    assigned = 'assigned'
+    scanned = 'scanned'
+    preannotated = 'preannotated'
+    aligned = 'aligned'
+    called = 'called'
+    binned = 'binned'
+    annotated = 'annotated'
 
 
 class alignmethod(object):
-    unapplicable = 'align-unapplicable'
-    fast_hq = 'align-fast|highqual'
-    fast_mq = 'align-fast|medqual'
-    fast_hqr = 'align-fast|highqual-relax'
-    fast_mqr = 'align-fast|medqual-relax'
-    greedy_filtered = 'align-greedy|filtered'
-    greedy_shifted = 'align-greedy|shifted'
-    greedy_scored = 'align-greedy|scored'
+    notapplicable = 'notapplicable'
+    fast_hq = 'fast|highqual'
+    fast_mq = 'fast|medqual'
+    fast_hqr = 'fast|highqual-relax'
+    fast_mqr = 'fast|medqual-relax'
+    greedy_filtered = 'greedy|filtered'
+    greedy_shifted = 'greedy|shifted'
+    greedy_scored = 'greedy|scored'
 
 
 class scanningmethod(object):
-    unapplicable = 'scan-unapplicable'
-    cwt = 'scan-cwt'
+    notapplicable = 'notapplicable'
+    cwt = 'cwt'
 
 
 class allelemethod(object):
-    uncalled = 'allele-uncalled'
-    leastsquare = 'allele-leastsquare'
-    cubicspline = 'allele-cubicspline'
-    localsouthern = 'allele-localsouthern'
+    uncalled = 'uncalled'
+    leastsquare = 'leastsquare'
+    cubicspline = 'cubicspline'
+    localsouthern = 'localsouthern'
 
 
 class binningmethod(object):
-    unavailable = 'binning-unavailable'
-    auto = 'binning-auto'
-    semiauto = 'binning-semiauto'
+    unavailable = 'unavailable'
+    auto = 'auto'
+    semiauto = 'semiauto'
 
 
 dyes = [ '6-FAM', 'NED', 'VIC', 'PET', 'LIZ' ]

@@ -2,7 +2,7 @@
 from fatools.lib.fautil import traceio, traceutils
 from fatools.lib.utils import cout, cerr
 from fatools.lib.const import (peaktype, channelstatus, assaystatus, dyes, ladders,
-                                    allelemethod, assaymethod, binningmethod)
+                                    allelemethod, alignmethod, binningmethod, scanningmethod)
 from fatools.lib.fautil import algo
 from sortedcontainers import SortedListWithKey
 
@@ -217,7 +217,7 @@ class SampleMixIn(object):
             assay = self.new_assay(raw_data = trace, filename = filename,
                         status = assaystatus.uploaded, panel = panel)
             assay.status = assaystatus.uploaded
-            assay.method = assaymethod.nomethod
+            assay.method = alignmethod.notapplicable
             assay.runtime = assay.get_trace().get_run_start_time()
             assay.create_channels()
             assay.assign_channels( panel, excluded_markers )
@@ -273,9 +273,9 @@ class ChannelMixIn(object):
         #print('SCANNING: %s' % self.dye)
 
         alleleset = self.new_alleleset()
-        alleleset.scanning_method = scanningmethod.unapplicable
+        alleleset.scanning_method = scanningmethod.notapplicable
         alleleset.calling_method = allelemethod.uncalled
-        alleleset.binning_method = binningmethod.unapplicable
+        alleleset.binning_method = binningmethod.unavailable
 
         # first, check whether we are ladder or not
         if self.marker.code == 'ladder':
@@ -287,14 +287,14 @@ class ChannelMixIn(object):
 
             alleles = algo.scan_peaks(self, params.ladder, peakdb)
             cerr('ladder: %d; ' % len(alleles), nl=False)
-            alleleset.scanning_method = 'scan-' + params.ladder.method
+            alleleset.scanning_method = params.ladder.method
 
 
         else:
 
             alleles = algo.scan_peaks(self, params.nonladder, peakdb)
             cerr('%s: %d; ' % (self.marker.label, len(alleles)), nl=False)
-            alleleset.scanning_method = 'scan-' + params.nonladder.method
+            alleleset.scanning_method = params.nonladder.method
 
 
     def preannotate(self, params):
