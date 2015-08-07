@@ -42,7 +42,7 @@ class assaystatus(object):
 
 
 class alignmethod(object):
-    nomethod = 'align-nomethod'
+    unapplicable = 'align-unapplicable'
     fast_hq = 'align-fast|highqual'
     fast_mq = 'align-fast|medqual'
     fast_hqr = 'align-fast|highqual-relax'
@@ -53,7 +53,7 @@ class alignmethod(object):
 
 
 class scanningmethod(object):
-    unavailable = 'scan-unavailable'
+    unapplicable = 'scan-unapplicable'
     cwt = 'scan-cwt'
 
 
