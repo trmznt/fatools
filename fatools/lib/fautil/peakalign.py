@@ -1,5 +1,6 @@
 
 from fatools.lib.utils import cout, cerr
+from fatools.lib.const import alignmethod
 from fatools.lib.fautil import dpalign as dp
 
 import numpy as np
@@ -26,7 +27,7 @@ def fast_align( data, ladders, peaks , qcfunc ):
         cerr('%d | %4.2f | %6.2f | %3.2f' % 
                 (len(hq_result[3]), hq_result[0], hq_result[1], hq_score))
         if hq_score > 0.95:
-            return (hq_score, hq_msg, hq_result, 'fast|highqual')
+            return (hq_score, hq_msg, hq_result, alignmethod.fast_hq)
 
     mq_peaks = [ p for p in peaks if p.qscore >= 0.75 ]
 
@@ -37,7 +38,7 @@ def fast_align( data, ladders, peaks , qcfunc ):
         cerr('%d | %4.2f | %6.2f | %3.2f' % 
                 (len(mq_result[3]), mq_result[0], mq_result[1], mq_score))
         if mq_score > 0.95:
-            return (mq_score, mq_msg, mq_result, 'fast|medqual')
+            return (mq_score, mq_msg, mq_result, alignmethod.fast_mq)
 
     hq_relax_score = mq_relax_score = -1
     if hq_score:
@@ -47,8 +48,8 @@ def fast_align( data, ladders, peaks , qcfunc ):
     if hq_relax_score < 0 and mq_relax_score < 0:
         return (0, None, None, None)
     if hq_relax_score >= mq_relax_score:
-        return (hq_relax_score, hq_relax_msg, hq_result, 'fast|hiqhqual-relax')
-    return (mq_relax_score, mq_relax_msg, mq_result, 'fast|medqual-relax')
+        return (hq_relax_score, hq_relax_msg, hq_result, alignmethod.fast_hqr)
+    return (mq_relax_score, mq_relax_msg, mq_result, alignmethod.fast_mqr)
 
 
 def greedy_align( data, ladders, peaks, qcfunc ):
@@ -96,7 +97,7 @@ def greedy_align( data, ladders, peaks, qcfunc ):
         result = iterative_align( peaks, ladders, peak_pairs, peaks )
         (score, msg) = qcfunc(result[:4], 'relax')
         if score > 0.99:
-            return (score, msg, result[:4], 'greedy|filtered')
+            return (score, msg, result[:4], alignmethod.greedy_filtered)
 
         dp_score, dp_rss, dp_z, dp_peaks = result[:4]
 
@@ -109,7 +110,7 @@ def greedy_align( data, ladders, peaks, qcfunc ):
             result_shift = iterative_align( peaks, ladders, peak_pairs, peaks )
             score_shift, msg_shift = qcfunc( result_shift[:4], 'relax' )
             if score_shift > 0.99:
-                return (score_shift, msg_shift, result_shift[:4], 'greedy|shifted')
+                return (score_shift, msg_shift, result_shift[:4], alignmethod.greedy_shifted)
             if result_shift[0] <= dp_score and result_shift[1] >= dp_rss and score_shift <= score:
                 break
             if result_shift[0] <= dp_score and counter > 50:
@@ -119,7 +120,8 @@ def greedy_align( data, ladders, peaks, qcfunc ):
             msg = msg_shift
             counter += 1
 
-        reports.append( (score, msg, (dp_score, dp_rss, dp_z, dp_peaks), 'greedy|scored') )
+        reports.append( (score, msg, (dp_score, dp_rss, dp_z, dp_peaks),
+                                            alignmethod.greedy_scored) )
 
     reports.sort( reverse = True, key = lambda x: x[0] )
     return reports[0]
