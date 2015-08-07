@@ -40,9 +40,22 @@ class assaystatus(object):
     binned = 'assay-binned'
     annotated = 'assay-annotated'
 
-class assaymethod(object):
-    nomethod = 'assay-nomethod'
-    cwt = 'assay-cwt'
+
+class alignmethod(object):
+    nomethod = 'align-nomethod'
+    fast_hq = 'align-fast|highqual'
+    fast_mq = 'align-fast|medqual'
+    fast_hqr = 'align-fast|highqual-relax'
+    fast_mqr = 'align-fast|medqual-relax'
+    greedy_filtered = 'align-greedy|filtered'
+    greedy_shifted = 'align-greedy|shifted'
+    greedy_scored = 'align-greedy|scored'
+
+
+class scanningmethod(object):
+    unavailable = 'scan-unavailable'
+    cwt = 'scan-cwt'
+
 
 class allelemethod(object):
     uncalled = 'allele-uncalled'
