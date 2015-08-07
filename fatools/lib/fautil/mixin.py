@@ -2,7 +2,7 @@
 from fatools.lib.fautil import traceio, traceutils
 from fatools.lib.utils import cout, cerr
 from fatools.lib.const import (peaktype, channelstatus, assaystatus, dyes, ladders,
-                                    allelemethod, assaymethod)
+                                    allelemethod, assaymethod, binningmethod)
 from fatools.lib.fautil import algo
 from sortedcontainers import SortedListWithKey
 
@@ -271,10 +271,15 @@ class ChannelMixIn(object):
         """ scan using params """
 
         #print('SCANNING: %s' % self.dye)
+
+        alleleset = self.new_alleleset()
+        alleleset.scanning_method = scanningmethod.unapplicable
+        alleleset.calling_method = allelemethod.uncalled
+        alleleset.binning_method = binningmethod.unapplicable
+
         # first, check whether we are ladder or not
         if self.marker.code == 'ladder':
-            
-            alleleset = self.new_alleleset()    # create a new alleleset
+
             ladder_code = self.assay.size_standard
             sizes = ladders[ladder_code]['sizes']
             params.ladder.max_peak_number = len(sizes) * 2
@@ -282,15 +287,14 @@ class ChannelMixIn(object):
 
             alleles = algo.scan_peaks(self, params.ladder, peakdb)
             cerr('ladder: %d; ' % len(alleles), nl=False)
-            alleleset.scanning_method = params.ladder.method
+            alleleset.scanning_method = 'scan-' + params.ladder.method
 
 
         else:
 
-            alleleset = self.new_alleleset()    # create a new alleleset
             alleles = algo.scan_peaks(self, params.nonladder, peakdb)
             cerr('%s: %d; ' % (self.marker.label, len(alleles)), nl=False)
-            alleleset.scanning_method = params.nonladder.method
+            alleleset.scanning_method = 'scan-' + params.nonladder.method
 
 
     def preannotate(self, params):
@@ -402,7 +406,7 @@ class ChannelMixIn(object):
         return alleleset.new_allele( rtime = rtime, height = height, area = area,
                     brtime = brtime, ertime = ertime, wrtime = wrtime, srtime = srtime,
                     beta = beta, theta = theta,
-                    type = peaktype.scanned, method = allelemethod.uncalled )
+                    type = peaktype.scanned, method = binningmethod.unavailable )
 
 
     def showladderpca(self):
