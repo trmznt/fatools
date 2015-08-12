@@ -141,10 +141,13 @@ class Batch(Base, BatchMixIn):
     __tablename__ = 'batches'
     id = Column(types.Integer, primary_key=True)
     code = Column(types.String(16), nullable=False, unique=True)
-    assay_provider = Column(types.String(32), nullable=False, default='')
+    assay_provider = Column(types.String(32), nullable=False)
+    species = Column(types.String(16), nullable=False)
     description = Column(types.String(1024), nullable=False, default='')
     remark = deferred(Column(types.String(1024), nullable=True))
     data = deferred(Column(YAMLCol(4096), nullable=False, default=''))
+
+
 
 
     def add_sample(self, sample_code):
@@ -212,6 +215,10 @@ class Sample(Base, SampleMixIn):
     category = Column(types.Integer, nullable=False, default=0)     # custom usage
     batch_id = Column(types.Integer, ForeignKey('batches.id', ondelete='CASCADE'),
                 nullable=False)
+    int1 = Column(types.Integer, nullable=False, default=-1)        # custom usage
+    int2 = Column(types.Integer, nullable=False, default=-1)        # custom usage
+    string1 = Column(types.String(16), nullable=False, default='')  # custom usage
+    string2 = Column(types.String(16), nullable=False, default='')  # custom usage
     batch = relationship(Batch, uselist=False, backref=backref('samples', lazy='dynamic'))
     remark = deferred(Column(types.String(1024), nullable=True))
 
