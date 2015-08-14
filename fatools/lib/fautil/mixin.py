@@ -175,7 +175,7 @@ class SampleMixIn(object):
     """ implement general Sample methods """
 
     def add_assay(self, trace, filename, panel_code, options = None, species = None,
-                    dbhandler = None):
+                    dbhandler = None, dry_run=False):
 
         assert dbhandler, 'Please provide dbhandler function'
 
@@ -211,6 +211,13 @@ class SampleMixIn(object):
             if unknown_markers:
                 raise RuntimeError('ERR - assay %s does not have exluded marker(s): %s'
                             % (filename, ','.join( unknown_markers )))
+
+        if dry_run:
+            # we need to check whether trace is valid
+            trace_instance = traceio.read_abif_stream( io.BytesIO( trace ) )
+            # need to check whether dyes in the panel exist in the trace
+            ## XXX: fixme
+            return None
 
         # creating assay
         for panel in panels:
