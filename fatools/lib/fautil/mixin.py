@@ -282,7 +282,7 @@ class ChannelMixIn(object):
         alleleset = self.new_alleleset()
         alleleset.scanning_method = scanningmethod.notapplicable
         alleleset.calling_method = allelemethod.uncalled
-        alleleset.binning_method = binningmethod.unavailable
+        alleleset.binning_method = binningmethod.notavailable
 
         # first, check whether we are ladder or not
         if self.marker.code == 'ladder':
@@ -413,7 +413,7 @@ class ChannelMixIn(object):
         return alleleset.new_allele( rtime = rtime, height = height, area = area,
                     brtime = brtime, ertime = ertime, wrtime = wrtime, srtime = srtime,
                     beta = beta, theta = theta,
-                    type = peaktype.scanned, method = binningmethod.unavailable )
+                    type = peaktype.scanned, method = binningmethod.notavailable )
 
 
     def showladderpca(self):

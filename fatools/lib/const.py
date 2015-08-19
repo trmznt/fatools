@@ -65,7 +65,7 @@ class allelemethod(object):
 
 
 class binningmethod(object):
-    unavailable = 'unavailable'
+    notavailable = 'notavailable'
     auto = 'auto'
     semiauto = 'semiauto'
 
