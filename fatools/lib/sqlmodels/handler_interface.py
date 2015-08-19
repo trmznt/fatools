@@ -56,6 +56,9 @@ class base_sqlhandler(object):
     def get_sample_by_id(self, id):
         return self.get_by_id(self.Sample, id)
 
+    def get_assay_by_id(self, id):
+        return self.get_by_id(self.Assay, id)
+
     def get_by_id(self, class_, id):
         assert class_ and id
         return class_.get(id, self.session)
