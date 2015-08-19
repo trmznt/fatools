@@ -452,7 +452,7 @@ def call_peaks( channel, params, func, min_rtime, max_rtime ):
         allele.deviation = deviation
         allele.qcall = qcall
         allele.type = peaktype.called
-        allele.method = method
+        allele.method = binningmethod.notavailable
 
 def bin_peaks(channel, params, marker):
 
