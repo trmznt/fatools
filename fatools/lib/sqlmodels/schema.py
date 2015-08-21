@@ -413,7 +413,7 @@ class Assay(Base, AssayMixIn):
     raw_data = deferred(Column(types.Binary(), nullable=False))
     """ raw data for this assay (FSA file content) """
 
-    __table_args__ = (  UniqueConstraint( 'filename', 'panel_id' ), )
+    __table_args__ = (  UniqueConstraint( 'filename', 'panel_id', 'sample_id' ), )
 
 
     def new_channel(self, raw_data, data, dye, wavelen, status, median, mean,
