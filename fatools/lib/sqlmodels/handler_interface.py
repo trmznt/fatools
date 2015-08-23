@@ -1,5 +1,6 @@
 
 from pandas import DataFrame
+from sqlalchemy.orm.exc import NoResultFound
 
 class base_sqlhandler(object):
     """ base class for SQLAlchemy-friendly handler """
@@ -36,8 +37,10 @@ class base_sqlhandler(object):
     ## getter for single root classes
 
     def get_panel(self, panel_code):
-        assert panel_code
-        return self.Panel.search(panel_code, self.session)
+        try:
+            return self.Panel.search(panel_code, self.session)
+        except NoResultFound:
+            raise RuntimeError('Panel code %s does not exist!' % panel_code)
 
     def get_batch(self, batch_code):
         assert batch_code

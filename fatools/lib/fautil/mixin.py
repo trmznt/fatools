@@ -215,7 +215,10 @@ class SampleMixIn(object):
         if dry_run:
             # we need to check whether trace is valid
             trace_instance = traceio.read_abif_stream( io.BytesIO( trace ) )
-            # need to check whether dyes in the panel exist in the trace
+            # things to be checked:
+            # - dyes in the panel exist in DB
+            # - duplicates of filename, panel_id, sample_id in the current DB
+            # - duplicates of filename, panel_id, sample_id in the assay list -> check in caller
             ## XXX: fixme
             return None
 
