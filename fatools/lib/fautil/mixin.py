@@ -32,7 +32,9 @@ class PanelMixIn(object):
     
     def get_marker_codes(self):
         """ return a list of marker codes """
-        return list( self.data['markers'].keys() )
+        if self.data:
+            return list( self.data['markers'].keys() )
+        return []
 
 
     def get_markers(self):
@@ -46,7 +48,9 @@ class PanelMixIn(object):
 
     
     def get_ladder_code(self):
-        return self.data['ladder']
+        if self.data:
+            return self.data['ladder']
+        return ''
 
 
     def get_marker_by_dye(self, dye):
