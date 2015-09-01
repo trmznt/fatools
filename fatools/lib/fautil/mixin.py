@@ -136,6 +136,10 @@ class MarkerMixIn(object):
         self.bins = bins
 
 
+class BinMixIn(object):
+    pass
+
+
 class BatchMixIn(object):
     """ contains Batch methods """
 
