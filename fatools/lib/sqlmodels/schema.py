@@ -18,7 +18,7 @@ from sqlalchemy.sql.functions import current_timestamp
 from zope.sqlalchemy import ZopeTransactionExtension
 
 from fatools.lib.fautil.mixin import ( PanelMixIn, AssayMixIn, ChannelMixIn, MarkerMixIn,
-                AlleleSetMixIn, AlleleMixIn, SampleMixIn, BatchMixIn,
+                BinMixIn, AlleleSetMixIn, AlleleMixIn, SampleMixIn, BatchMixIn,
                 NoteMixIn, BatchNoteMixIn, SampleNoteMixIn, AssayNoteMixIn,
                 ChannelNoteMixIn, AlleleSetNoteMixIn, PanelNoteMixIn, MarkerNoteMixIn )
 
@@ -146,6 +146,7 @@ class Batch(Base, BatchMixIn):
     description = Column(types.String(1024), nullable=False, default='')
     remark = deferred(Column(types.String(1024), nullable=True))
     data = deferred(Column(YAMLCol(4096), nullable=False, default=''))
+    bin_batch_id = Column(types.Integer, ForeignKey('bins'), nullable=True)
 
 
 
@@ -370,6 +371,27 @@ class MarkerNote(Base, MarkerNoteMixIn):
     note_id = Column(types.Integer, ForeignKey('notes.id', ondelete='CASCADE'),
                 nullable=False)
 
+class Bin(Base, BinMixIn):
+
+    __tablename__ = 'bins'
+    batch_id = Column(types.Integer, ForeignKey('batches.id'), nullable=False)
+    marker_id = Column(types.Integer, ForeignKey('markers.id'), nullable=False)
+    z = deferred(Column(NPArray))
+
+    related_to_id = Column(types.Integer, ForeignKey('bins.id'), nullable=True)
+
+    bins = deferred(Column(YAMLCol(2048), nullable=False, default=''))
+    """ sorted known bins for this markers """
+
+    meta = deferred(Column(YAMLCol(4096), nullable=False, default=''))
+    """ metadata for this bin """
+
+    remark = deferred(Column(types.String(512)))
+
+
+    def search(self, batch_id, marker_id, session):
+        q = Bin.query(session).filter(Bin.batch_id == batch_id, Bin.marker_id == marker_id)
+        return q.one()
 
 
 class Assay(Base, AssayMixIn):

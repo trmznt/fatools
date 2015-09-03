@@ -456,7 +456,8 @@ def call_peaks( channel, params, func, min_rtime, max_rtime ):
 
 def bin_peaks(channel, params, marker):
 
-    sortedbins = marker.sortedbins
+    #sortedbins = marker.sortedbins
+    sortedbins = marker.get_sortedbins(channel.batch)
     threshold = float(marker.repeats)/2 * 1.5
 
     for peak in channel.alleles:

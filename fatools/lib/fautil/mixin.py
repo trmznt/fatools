@@ -8,6 +8,7 @@ from sortedcontainers import SortedListWithKey
 
 import io, numpy as np
 from copy import copy
+from functools import lru_cache
 import pprint, sys
 
 class PanelMixIn(object):
@@ -116,13 +117,21 @@ class MarkerMixIn(object):
     def sortedbins(self):
         return SortedListWithKey(self.bins, key = lambda b: b[1])
 
+    @lru_cache(maxsize=32)    
+    def get_sortedbins(self, batch):
+        # get Bin from this batch
+        bin = self.get_bin(batch)
+        return bin.sortedbins
+
+
+
+class BinMixIn(object):
 
     def initbins(self, start_range, end_range):
         self.bins = []
         for size in range(start_range, end_range, self.repeats):
             self.bins.append( [size, float(size), float(size-1), float(size+1)] )
             # the real bins are defined by [ bin_value, mean, 25percentile, 75percentile ]
-
 
     def adjustbins(self, updated_bins):
         bins = copy(self.bins)
@@ -135,9 +144,9 @@ class MarkerMixIn(object):
         # force db to update
         self.bins = bins
 
-
-class BinMixIn(object):
-    pass
+    @property
+    def sortedbins(self):
+        return SortedListWithKey(self.bins, key = lambda b: b[1])
 
 
 class BatchMixIn(object):
