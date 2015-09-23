@@ -43,6 +43,9 @@ def init_argparser( parser=None ):
     p.add_argument('--initbatch', default=False,
             help = 'create new batch')
 
+    p.add_argument('--showbatches', default=False, action='store_true',
+            help = 'show available batch(es)')
+
     p.add_argument('--initbin', default=False, action='store_true',
             help = 'create initial bin')
 
@@ -109,6 +112,8 @@ def do_dbmgr(args, dbh = None, warning=True):
         do_upload(args, dbh)
     elif args.initbatch is not False:
         do_initbatch(args, dbh)
+    elif args.showbatches is not False:
+        do_showbatches(args, dbh)
     elif args.initsample is not False:
         do_initsample(args, dbh)
     elif args.importpanel is not False:
@@ -183,6 +188,15 @@ def do_initbatch(args, dbh):
     b.code = args.initbatch
     dbh.session.add(b)
     cout('INFO: batch %s added.' % b.code)
+
+
+
+def do_showbatches(args, dbh):
+
+    cout('Available batch(es):')
+    batches = dbh.get_batches()
+    for batch in batches:
+        cout('  %s' % batch.code)
 
 
 
