@@ -579,7 +579,7 @@ class AssayMixIn(object):
             if n not in dyes:
                 raise RuntimeError('ERR - dye %s is unknown!' % n)
             c = self.new_channel( raw_data = raw, data = sg, dye = n, wavelen = wl,
-                status = channelstatus.unassigned,
+                status = channelstatus.reseted,
                 median=int(np.median(raw)), mean=float(raw.mean()),
                 max_height=int(raw.max()), min_height=int(raw.min()),
                 std_dev = float(raw.std()) )
@@ -600,7 +600,7 @@ class AssayMixIn(object):
             if channel.dye.upper() == ladder_dye.upper():
                 channel.marker = panel.get_marker('ladder')
                 has_ladder = True
-                channel.status = channelstatus.assigned
+                #channel.status = channelstatus.assigned
                 self.size_standard = ladder_code
                 self.ladder = channel
                 continue
@@ -608,17 +608,17 @@ class AssayMixIn(object):
             try:
                 marker = panel.get_marker_by_dye( channel.dye.upper() )
             except KeyError:
-                channel.status = channelstatus.unused
+                #channel.status = channelstatus.unused
                 cerr('%s => Unused; ' % channel.dye, nl=False)
                 continue
 
             if marker.label in excluded_markers:
-                channel.status = channelstatus.unassigned
+                #channel.status = channelstatus.unassigned
                 cerr('%s => Unassigned; ' % channel.dye, nl=False)
                 continue
 
             channel.marker = marker
-            channel.status = channelstatus.assigned
+            #channel.status = channelstatus.assigned
             marker_count += 1
             cerr('%s => %s; ' % (channel.dye, marker.code), nl=False)
 
@@ -627,7 +627,8 @@ class AssayMixIn(object):
             raise RuntimeError('ERR - sample %s assay %s does not have ladder!' %
                             (self.sample.code, self.filename))
 
-        self.status = assaystatus.assigned
+        if self.status == assaystatus.unassigned:
+            self.status = assaystatus.assigned
 
     def showladderpca(self):
         for c in self.channels:
