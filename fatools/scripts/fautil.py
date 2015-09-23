@@ -14,11 +14,17 @@ def init_argparser():
     p.add_argument('--view', default=False, action='store_true',
         help = 'view information')
 
+    p.add_argument('--analyze', default=False, action='store_true',
+        help = 'analyze single FSA file')
+
     p.add_argument('--file', default=False,
         help = 'input file')
 
     p.add_argument('--sqldb', default=False,
         help = 'Sqlite database file')
+
+    p.add_argument('--sizestandard', default='LIZ600',
+        help = 'Size standard')
 
     return p
 
@@ -43,6 +49,8 @@ def do_fautil(args):
         do_info(args, dbh)
     if args.view is not False:
         do_view(args, dbh)
+    if args.analyze is not False:
+        do_analyze(args)
 
 
 
@@ -95,3 +103,48 @@ def do_view(args, dbh):
     for abspath, trace in traces:
         
         viewer( trace )
+
+
+def do_analyze(args):
+    """ open a tracefile, performs fragment analysis (scan & call only)
+    """
+
+    from fatools.lib.fautil.traceio import read_abif_stream
+    from fatools.lib.fautil.traceutils import separate_channels
+    from fatools.lib.fsmodels.models import Assay, Marker, Panel
+    from fatools.lib import params
+
+    scanning_parameter = params.Params()
+
+    # create dummy markers
+    ladder = Marker('ladder', 10, 600, 0, None)
+
+    # create dummy panel
+    dummy_panel = Panel( '-', {
+        'ladder': args.sizestandard,
+        'markers': {},
+    })
+
+    with open(args.file, 'rb') as in_stream:
+        cerr('Reading FSA file: %s' % args.file)
+        t = read_abif_stream(in_stream)
+
+    # create a new Assay and add trace
+    assay = Assay()
+    assay.size_standard = args.sizestandard
+    assay._trace = t
+
+    # create all channels
+    assay.create_channels()
+
+    # assign all channels
+    assay.assign_channels( panel = dummy_panel )
+
+
+    # scan for peaks
+    assay.scan(scanning_parameter)
+
+
+    # scan all channels
+
+

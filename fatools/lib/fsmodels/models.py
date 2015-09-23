@@ -1,10 +1,9 @@
 # basic classes that mimic msdb classes
 # this is filesystem-based database
 
-import .fautils2 as fautils
 
-from .mixin import *
-
+from fatools.lib.fautil.mixin import (AssayMixIn, ChannelMixIn,
+            MarkerMixIn, PanelMixIn, AlleleSetMixIn)
 
 
 class sessionmgr(object):
@@ -32,7 +31,7 @@ class base(object):
         pass
 
     def query(self):
-        
+        pass        
 
 
 class Sample(base):
@@ -44,10 +43,11 @@ class Sample(base):
 class Assay(base, AssayMixIn):
 
     def __init__(self):
-        self.channels = None
+        self.channels = []
         self.rss = -1
         self.dp = -1
         self.score = -1
+        self.size_standard = None
 
         self.sample = None
         self.panel = None
@@ -82,14 +82,36 @@ class Assay(base, AssayMixIn):
         pass
 
 
-class Channel(base, ChannelMixIn):
+    def new_channel(self, raw_data, data, dye, wavelen, status,
+            median, mean, max_height, min_height, std_dev):
+        channel = Channel()
+        channel.raw_data = raw_data
+        channel.data = data
+        channel.dye = dye
+        channel.wavelen = wavelen
+        channel.status = status
+        channel.median = median
+        channel.mean = mean
+        channel.max_height = max_height
+        channel.min_height = min_height
+        channel.std_dev = std_dev
+        channel._assay = self
+
+        # need to assign initial marker
+        channel.marker = undefined_marker
+
+        self.channels.append( channel )
+        return channel
+
+
+
+class Channel(base, ChannelMixIn, AlleleSetMixIn):
 
     def __init__(self):
         self.raw_data = None    # raw data from ABI
         self.data = None        # smoothed data using savitzky-golay and baseline correction
         self.marker = None
         self.dye = None
-        self.alleles = None
 
         self._assay = None
 
@@ -105,6 +127,24 @@ class Channel(base, ChannelMixIn):
             pass
 
         return self.raw_data
+
+
+    def new_alleleset(self):
+        # note: we don't really have AlleleSet, just return ourselves
+        return self
+
+    def get_latest_alleleset(self):
+        return self
+
+
+    def new_allele(self, rtime, height, area, brtime, ertime, wrtime, srtime, beta, theta,
+                    type, method):
+        allele = Allele( rtime = rtime, height = height, area = area,
+                    brtime = brtime, ertime = ertime, wrtime = wrtime, srtime = srtime,
+                    beta = beta, theta = theta, type = type, method = method )
+        allele.alleleset = self
+
+        return allele
 
 
 
@@ -138,13 +178,14 @@ class Allele(base):
         return '<Allele rtime: %d height: %d>' % (self.rtime, self.height)
 
 
-class Marker(base):
+class Marker(base, MarkerMixIn):
 
     """ Marker information
     """
 
     def __init__(self, code, min_size, max_size, repeats, bins):
         self.code = code
+        self.species = 'x'
         self.min_size = min_size
         self.max_size = max_size
         self.repeats = repeats
@@ -152,7 +193,22 @@ class Marker(base):
         # bins is [ [pos, tag], [pos, tag], ... ]
 
 
+undefined_marker = Marker('undefined', 10, 600, 0, [])
 
+class Panel(base, PanelMixIn):
+
+    """ Panel information
+    """
+
+    def __init__(self, code, data ):
+        self.code = code
+        self.data = data
+        self._dyes = {}
+
+    def get_marker(self, code):
+        print('creating marker: %s' % code)
+        m = Marker(code, 10, 600, 0, None)
+        return m
 
 # the filesystem-based database for sample and allele
 #
@@ -206,7 +262,7 @@ def load_assay( dirname ):
 
     # get the last name
 
-    assay_name = 
+    assay_name = None
     assay_file = assay_name + '.fsa'
     assay_path = "%s/%s" % (assay_name, assay_file)
     
@@ -226,4 +282,3 @@ class fsdb(object):
     def __init__(self, rootdir):
         self.rootdir = rootdir
 
-    def 
