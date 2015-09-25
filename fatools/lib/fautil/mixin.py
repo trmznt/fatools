@@ -215,7 +215,7 @@ class SampleMixIn(object):
                             marker_code = species + '/' + marker_code.strip()
                         else:
                             marker_code = marker_code.strip()
-                        excluded_markers.append(marker_code)
+                        excluded_markers.append(marker_code.upper())
 
 
         # Processing options
