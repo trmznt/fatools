@@ -223,7 +223,11 @@ class SampleMixIn(object):
             # check excluded markers
             panel_markers = []
             for panel in panels:
-                panel_markers.extend( panel.get_marker_codes() )
+                panel_markers.extend(
+                    ('%s/%s' % (species, m) if '/' not in m else m).upper()
+                    for m in panel.get_marker_codes()
+                )
+            print(str(excluded_markers), str(panel_markers))
             unknown_markers = set(excluded_markers) - set(panel_markers)
             if unknown_markers:
                 raise RuntimeError('ERR - assay %s does not have exluded marker(s): %s'
@@ -627,7 +631,7 @@ class AssayMixIn(object):
             raise RuntimeError('ERR - sample %s assay %s does not have ladder!' %
                             (self.sample.code, self.filename))
 
-        if self.status == assaystatus.unassigned:
+        if self.status in [assaystatus.unassigned, assaystatus.uploaded]:
             self.status = assaystatus.assigned
 
     def showladderpca(self):

@@ -32,6 +32,7 @@ class channelstatus(object):
 
 class assaystatus(object):
     uploaded = 'uploaded'
+    unassigned = 'unassigned'
     assigned = 'assigned'
     scanned = 'scanned'
     preannotated = 'preannotated'
