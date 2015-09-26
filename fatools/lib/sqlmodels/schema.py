@@ -146,7 +146,7 @@ class Batch(Base, BatchMixIn):
     description = Column(types.String(1024), nullable=False, default='')
     remark = deferred(Column(types.String(1024), nullable=True))
     data = deferred(Column(YAMLCol(4096), nullable=False, default=''))
-    bin_batch_id = Column(types.Integer, ForeignKey('bins'), nullable=True)
+    bin_batch_id = Column(types.Integer, ForeignKey('batches.id'), nullable=True)
 
 
 
@@ -374,6 +374,7 @@ class MarkerNote(Base, MarkerNoteMixIn):
 class Bin(Base, BinMixIn):
 
     __tablename__ = 'bins'
+    id = Column(types.Integer, primary_key=True)
     batch_id = Column(types.Integer, ForeignKey('batches.id'), nullable=False)
     marker_id = Column(types.Integer, ForeignKey('markers.id'), nullable=False)
     z = deferred(Column(NPArray))
