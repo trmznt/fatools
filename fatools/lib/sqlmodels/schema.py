@@ -194,6 +194,16 @@ class Batch(Base, BatchMixIn):
         return [ x[0] for x in session.query( Sample.id ).filter( Sample.batch_id == self.id ) ]
 
 
+    def get_bin(self, marker):
+        session = object_session(self)
+        try:
+            bin = Bin.search(marker_id = marker.id, batch_id = self.id, session = session)
+        except NoResultFound:
+            batch = Batch.search('default', session)
+            bin = Bin.search(marker_id = marker.id, batch_id = batch.id, session = session)
+        return bin
+
+
 
 class BatchNote(Base, BatchNoteMixIn):
 
@@ -361,6 +371,15 @@ class Marker(Base, MarkerMixIn):
         return q.one()
 
 
+    def new_bin(self, batch):
+
+        bin = Bin()
+        bin.marker_id = self.id
+        bin.batch_id = batch.id
+        object_session(self).add(bin)
+        return bin
+
+
 
 class MarkerNote(Base, MarkerNoteMixIn):
 
@@ -376,6 +395,7 @@ class Bin(Base, BinMixIn):
     __tablename__ = 'bins'
     id = Column(types.Integer, primary_key=True)
     batch_id = Column(types.Integer, ForeignKey('batches.id'), nullable=False)
+    batch = relationship(Batch, uselist=False)
     marker_id = Column(types.Integer, ForeignKey('markers.id'), nullable=False)
     z = deferred(Column(NPArray))
 
@@ -389,8 +409,11 @@ class Bin(Base, BinMixIn):
 
     remark = deferred(Column(types.String(512)))
 
+    __table_args__ = (  UniqueConstraint( 'batch_id', 'marker_id' ), )
 
-    def search(self, batch_id, marker_id, session):
+
+    @staticmethod
+    def search(batch_id, marker_id, session):
         q = Bin.query(session).filter(Bin.batch_id == batch_id, Bin.marker_id == marker_id)
         return q.one()
 

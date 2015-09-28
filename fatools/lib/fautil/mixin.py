@@ -120,16 +120,24 @@ class MarkerMixIn(object):
     @lru_cache(maxsize=32)    
     def get_sortedbins(self, batch):
         # get Bin from this batch
-        bin = self.get_bin(batch)
+        bin = batch.get_bin(self)
         return bin.sortedbins
+
+    def initbins(self, start_range, end_range, batch):
+        bin = self.new_bin( batch = batch )
+        bin.initbins( start_range, end_range, self.repeats )
+
+
+    def new_bin(self, batch):
+        raise NotImplementedError('PROG/ERR - need to implement this on child class')
 
 
 
 class BinMixIn(object):
 
-    def initbins(self, start_range, end_range):
+    def initbins(self, start_range, end_range, repeats):
         self.bins = []
-        for size in range(start_range, end_range, self.repeats):
+        for size in range(start_range, end_range, repeats):
             self.bins.append( [size, float(size), float(size-1), float(size+1)] )
             # the real bins are defined by [ bin_value, mean, 25percentile, 75percentile ]
 
@@ -147,6 +155,7 @@ class BinMixIn(object):
     @property
     def sortedbins(self):
         return SortedListWithKey(self.bins, key = lambda b: b[1])
+
 
 
 class BatchMixIn(object):
@@ -651,6 +660,10 @@ class AlleleSetMixIn(object):
 
     def new_allele(self, rtime, height, area, brtime, ertime, wrtime, srtime, beta):
         raise NotImplementedError('PROG/ERR - child class must override this method!')
+
+    @property
+    def batch(self):
+        return self.sample.batch
 
 
 

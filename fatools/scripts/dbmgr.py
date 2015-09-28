@@ -67,6 +67,9 @@ def init_argparser( parser=None ):
     p.add_argument('-m', '--marker', default='',
             help = 'marker list (comma separated)')
 
+    p.add_argument('--assayprovider', default='',
+            help = 'assay provider vendor/group')
+
     p.add_argument('--fsadir', default='.',
             help = 'directory containing FSA files')
 
@@ -186,6 +189,8 @@ def do_initbatch(args, dbh):
 
     b = dbh.Batch()
     b.code = args.initbatch
+    b.species = args.species
+    b.assay_provider = args.assayprovider
     dbh.session.add(b)
     cout('INFO: batch %s added.' % b.code)
 
@@ -283,13 +288,19 @@ def do_initbin(args, dbh):
     if '-' not in args.range:
         cexit('ERR - please provide range for bin')
 
+    if not args.batch:
+        args.batch = 'default'
+    batch = dbh.get_batch( args.batch )
+
     markers = [ dbh.get_marker(code) for code in args.marker.split(',') ]
     ranges = args.range.split('-')
     start_range = int(ranges[0])
     end_range = int(ranges[1])
 
+    print(markers)
     for m in markers:
-        m.initbins(start_range, end_range)
+        m.initbins(start_range, end_range, batch)
+        cerr('INFO  - bin for marker %s with batch %s has been created.' % (m.label, batch.code))
 
 
 def do_viewbin(args, dbh):

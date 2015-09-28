@@ -25,4 +25,12 @@ def setup(session):
     cout("INFO - panel 'undefined' created.")
     session.add(panel)
 
+    # create default batch (for bin holder)
+    batch = schema.Batch( code = 'default' )
+    batch.assay_provider = ''
+    batch.species = 'X'
+    cout("INFO - batch 'default' created.")
+    session.add(batch)
+
+
 
