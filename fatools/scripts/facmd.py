@@ -3,7 +3,7 @@
 import sys, argparse, yaml, csv, transaction
 from fatools.lib.utils import cout, cerr, get_dbhandler
 from fatools.lib import params
-from fatools.lib.const import assaystatus
+from fatools.lib.const import assaystatus, peaktype
 from fatools.lib.fautil import algo
 
 
@@ -50,6 +50,9 @@ def init_argparser(parser=None):
     p.add_argument('--findpeaks', default=False, action='store_true',
             help = 'only find peaks')
 
+    p.add_argument('--setallele', default=False, action='store_true',
+            help = 'set allele type')
+
 
     p.add_argument('--batch', default=False,
             help = 'batch code')
@@ -77,6 +80,16 @@ def init_argparser(parser=None):
 
     p.add_argument('--method', default='',
             help = 'spesific method or algorithm to use')
+
+    p.add_argument('--value', default='',
+            help = 'bin value of alleles')
+
+    p.add_argument('--totype', default='',
+            help = 'new type of alleles')
+
+    p.add_argument('--fromtype', default='',
+            help = 'original type of alleles')
+
 
     p.add_argument('--excluded_peaks')
 
@@ -143,6 +156,9 @@ def do_facmd(args, dbh=None):
         executed += 1
     if args.bin is not False:
         do_bin(args, dbh)
+        executed += 1
+    if args.setallele is not False:
+        do_setallele(args, dbh)
         executed += 1
     if args.showladderpca is not False:
         do_showladderpca( args, dbh )
@@ -321,6 +337,30 @@ def do_findpeaks( args, dbh ):
     do_parallel_find_peaks( channel_list, peakdb )
 
     peakdb.close()
+
+
+
+def do_setallele( args, dbh ):
+
+    marker_codes = args.marker.split(',')
+    marker_ids = [ dbh.get_marker(code).id for code in marker_codes ]
+    bin_values = [ int(x) for x in args.value.split(',') ]
+
+    totype = getattr(peaktype, args.totype)
+
+    assay_list = get_assay_list( args, dbh )
+    counter = 1
+    for (assay, sample_code) in assay_list:
+        for c in assay.channels:
+            if marker_ids and c.marker_id in marker_ids:
+                for allele in c.alleles:
+                    if not allele.bin in bin_values:
+                        continue
+                    if args.fromtype and allele.type != args.fromtype:
+                        continue
+                    allele.type = totype
+                    cerr('I: - setting allele %d marker %s for sample %s' %
+                            (allele.bin, c.marker.label, sample_code))
 
 
 
