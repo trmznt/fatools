@@ -52,6 +52,14 @@ def init_argparser( parser=None ):
     p.add_argument('--viewbin', default=False, action='store_true',
             help = 'view bin')
 
+    p.add_argument('--removebatch', default=False, action='store_true',
+            help = 'remove batch from database')
+
+    p.add_argument('--removesample', default=False, action='store_true',
+            help = 'remove sample from database')
+
+    p.add_argument('--removeassay', default=False, action='store_true',
+            help = 'remove assay from database')
 
     ## options
 
@@ -133,6 +141,8 @@ def do_dbmgr(args, dbh = None, warning=True):
         do_viewbin(args, dbh)
     elif args.updatebins is not False:
         do_updatebins(args, dbh)
+    elif args.removebatch is not False:
+        do_removebatch(args, dbh)
     else:
         if warning:
             cerr('Unknown command, nothing to do!')
@@ -332,11 +342,15 @@ def do_updatebins(args, dbh):
         cerr('I: Updating bins for marker: %s' % marker.label)
 
 
+def do_removebatch(args, dbh):
+
+    batch = dbh.get_batch(args.batch)
+    batch_code = batch.code
+    dbh.session().delete(batch)
+    cerr('INFO - batch %s has been removed' % batch_code)
+
+
 def do_clearassay(args, dbh):
 
     cout('Clearing assay...')
-
-
-
-
 

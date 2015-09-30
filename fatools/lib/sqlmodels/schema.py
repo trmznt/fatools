@@ -230,7 +230,8 @@ class Sample(Base, SampleMixIn):
     int2 = Column(types.Integer, nullable=False, default=-1)        # custom usage
     string1 = Column(types.String(16), nullable=False, default='')  # custom usage
     string2 = Column(types.String(16), nullable=False, default='')  # custom usage
-    batch = relationship(Batch, uselist=False, backref=backref('samples', lazy='dynamic'))
+    batch = relationship(Batch, uselist=False,
+            backref=backref('samples', lazy='dynamic', cascade='save-update,delete'))
     remark = deferred(Column(types.String(1024), nullable=True))
 
     __table_args__ = (  UniqueConstraint( 'code', 'batch_id' ),
