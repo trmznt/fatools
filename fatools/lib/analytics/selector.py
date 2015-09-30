@@ -66,6 +66,10 @@ class Selector(object):
                 batch = dbh.get_batch(spec['batch'])
                 ids.update( batch.sample_ids )
 
+            elif 'batch_id' in spec:
+                batch = dbh.get_batch_by_id(spec['batch_id'])
+                ids.update( batch.sample_ids )
+
             else:
                 raise RuntimeError('sample spec format is incorrect')
 
@@ -142,7 +146,9 @@ class Filter(object):
     def get_marker_ids(self, dbh=None):
         """ return marker ids;  """
         # self.markers is name
-        if (self.marker_ids is None and self.markers) or dbh:
+        if (self.marker_ids is None and self.markers) and dbh:
+            # only execute below if dbh is provided, marker_ids is empty and
+            # markers is not empty 
             markers = [ dbh.get_marker(name) for name in self.markers ]
             self.marker_ids = [ marker.id for marker in markers ]
         return self.marker_ids
