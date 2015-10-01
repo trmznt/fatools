@@ -17,6 +17,7 @@ from sqlalchemy.sql.functions import current_timestamp
 
 from zope.sqlalchemy import ZopeTransactionExtension
 
+from fatools.lib.utils import cout, cerr
 from fatools.lib.fautil.mixin import ( PanelMixIn, AssayMixIn, ChannelMixIn, MarkerMixIn,
                 BinMixIn, AlleleSetMixIn, AlleleMixIn, SampleMixIn, BatchMixIn,
                 NoteMixIn, BatchNoteMixIn, SampleNoteMixIn, AssayNoteMixIn,
@@ -148,7 +149,7 @@ class Batch(Base, BatchMixIn):
     data = deferred(Column(YAMLCol(4096), nullable=False, default=''))
     bin_batch_id = Column(types.Integer, ForeignKey('batches.id'), nullable=True)
 
-
+    bin_batch = relationship('Batch', uselist=False)
 
 
     def add_sample(self, sample_code):
@@ -192,16 +193,6 @@ class Batch(Base, BatchMixIn):
         """ faster implementation of getting sample ids """
         session = object_session(self)
         return [ x[0] for x in session.query( Sample.id ).filter( Sample.batch_id == self.id ) ]
-
-
-    def get_bin(self, marker):
-        session = object_session(self)
-        try:
-            bin = Bin.search(marker_id = marker.id, batch_id = self.id, session = session)
-        except NoResultFound:
-            batch = Batch.search('default', session)
-            bin = Bin.search(marker_id = marker.id, batch_id = batch.id, session = session)
-        return bin
 
 
 

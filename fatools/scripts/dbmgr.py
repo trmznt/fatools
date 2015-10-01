@@ -61,6 +61,8 @@ def init_argparser( parser=None ):
     p.add_argument('--removeassay', default=False, action='store_true',
             help = 'remove assay from database')
 
+    p.add_argument('--setbinbatch', default=False,
+            help = 'set bins-related batch')
     ## options
 
     p.add_argument('--update', default=False,
@@ -143,6 +145,8 @@ def do_dbmgr(args, dbh = None, warning=True):
         do_updatebins(args, dbh)
     elif args.removebatch is not False:
         do_removebatch(args, dbh)
+    elif args.setbinbatch is not False:
+        do_setbinbatch(args, dbh)
     else:
         if warning:
             cerr('Unknown command, nothing to do!')
@@ -353,4 +357,13 @@ def do_removebatch(args, dbh):
 def do_clearassay(args, dbh):
 
     cout('Clearing assay...')
+
+
+def do_setbinbatch(args, dbh):
+
+    batch = dbh.get_batch(args.batch)
+    bin_batch = dbh.get_batch(args.setbinbatch)
+    batch.bin_batch = bin_batch
+    cerr('INFO - bins for batch %s has been set to batch %s'
+            % (batch.code, bin_batch.code))
 
