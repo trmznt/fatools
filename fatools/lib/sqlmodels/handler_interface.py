@@ -107,10 +107,7 @@ class base_sqlhandler(object):
 
         q = q.filter( self.AlleleSet.sample_id.in_( sample_ids ) )
 
-        if type(params.peaktype) in [ list, tuple ]:
-            q = q.filter( self.Allele.type.in_( params.peaktype  ) )
-        else:
-            q = q.filter( self.Allele.type == params.peaktype )
+        q = self.customize_filter(q, params)
 
         # we order based on marker_id, sample_id and then descending height
         q = q.order_by( self.Allele.marker_id, self.AlleleSet.sample_id,
@@ -171,6 +168,12 @@ class base_sqlhandler(object):
         return df
 
 
+    def customize_filter(self, q, params):
 
+        if type(params.peaktype) in [ list, tuple ]:
+            q = q.filter( self.Allele.type.in_( params.peaktype  ) )
+        else:
+            q = q.filter( self.Allele.type == params.peaktype )
 
+        return q
 
