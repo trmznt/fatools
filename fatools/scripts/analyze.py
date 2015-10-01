@@ -65,6 +65,9 @@ def init_argparser(parser=None):
     p.add_argument('--rel_threshold', default=-1, type=float,
             help = 'relative allele rfu threshold')
 
+    p.add_argument('--abs_threshold', default=-1, type=float,
+            help = 'absolute allele rfu threshold')
+
     p.add_argument('-m', '--markers', default='',
             help = 'markers')
 
@@ -214,6 +217,8 @@ def get_query( args, dbh ):
         query_params['filter'].markers = args.markers
     if args.rel_threshold >= 0:
         query_params['filter'].rel_threshold = args.rel_threshold
+    if args.abs_threshold >= 0:
+        query_params['filter'].abs_threshold = args.abs_threshold
     return Query( query_params, dbh )
 
 
