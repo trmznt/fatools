@@ -117,10 +117,10 @@ class MarkerMixIn(object):
     def sortedbins(self):
         return SortedListWithKey(self.bins, key = lambda b: b[1])
 
-    @lru_cache(maxsize=32)    
+    @lru_cache(maxsize=32)
     def get_sortedbins(self, batch):
         # get Bin from this batch
-        bin = batch.get_bin(self)
+        bin = self.get_bin(batch)
         return bin.sortedbins
 
     def initbins(self, start_range, end_range, batch):
