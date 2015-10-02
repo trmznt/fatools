@@ -205,6 +205,9 @@ def do_initbatch(args, dbh):
     b.code = args.initbatch
     b.species = args.species
     b.assay_provider = args.assayprovider
+    # set default bin_batch to batch default
+    def_batch = dbh.get_batch('default')
+    b.bin_batch = def_batch
     dbh.session.add(b)
     cout('INFO: batch %s added.' % b.code)
 
