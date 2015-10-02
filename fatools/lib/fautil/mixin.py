@@ -86,8 +86,8 @@ class MarkerMixIn(object):
                 self.max_size = obj['max_size']
             if 'repeats' in obj:
                 self.repeats = obj['repeats']
-            if 'bins' in obj:
-                self.bins = obj['bins']
+            #if 'bins' in obj:
+            #    self.bins = obj['bins']
             if 'z_params' in obj:
                 self.z_params = obj['z_params']
 
@@ -102,8 +102,8 @@ class MarkerMixIn(object):
                 self.max_size = obj.max_size
             if obj.repeats is not None:
                 self.repeats = obj.repeats
-            if obj.bins is not None:
-                self.bins = obj.bins
+            #if obj.bins is not None:
+            #    self.bins = obj.bins
             if obj.related_to is not None:
                 self.related_to = obj.related_to
             if obj.z_params is not None:
@@ -113,9 +113,9 @@ class MarkerMixIn(object):
     def label(self):
         return self.species + '/' + self.code
 
-    @property
-    def sortedbins(self):
-        return SortedListWithKey(self.bins, key = lambda b: b[1])
+    #@property
+    #def sortedbins(self):
+    #    return SortedListWithKey(self.bins, key = lambda b: b[1])
 
     @lru_cache(maxsize=32)
     def get_sortedbins(self, batch):
@@ -427,8 +427,9 @@ class ChannelMixIn(object):
 
     def tag(self):
         
-        return '%s|%s|%s|%s|%s' % (self.assay.sample.batch.code, self.assay.sample.code,
-                                self.assay.filename, self.assay.runtime, self.dye)
+        return '%s|%s|%s|%s|%s' % (self.assay.sample.batch.code,
+                        self.assay.sample.code, self.assay.filename,
+                        self.assay.runtime, self.dye.upper())
 
 
     def get_latest_alleleset(self):
