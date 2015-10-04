@@ -319,9 +319,6 @@ class Marker(Base, MarkerMixIn):
     min_size = Column(types.Integer, nullable=False, default=0)
     max_size = Column(types.Integer, nullable=False, default=0)
     """ range of allele size for this marker """
-
-    bins = deferred(Column(YAMLCol(2048), nullable=False, default=''))
-    """ sorted known bins for this markers """
     
     related_to_id = Column(types.Integer, ForeignKey('markers.id'),
                           nullable=True)
@@ -334,6 +331,7 @@ class Marker(Base, MarkerMixIn):
     remark = deferred(Column(types.String(1024), nullable=True))
 
     __table_args__ = ( UniqueConstraint( 'code', 'species' ), )
+
 
     def update(self, obj):
         
