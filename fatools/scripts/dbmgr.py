@@ -193,10 +193,19 @@ def do_importmarker(args, dbh):
         m.update(marker)
         if args.update:
             db_m = m.sync(dbh.session)
-            cout("INFO: marker: %s sync'd." % db_m.code)
+            cerr("INFO: marker: %s sync'd." % db_m.code)
         else:
             dbh.session.add(m)
-            cout('INFO: marker %s added.' % m.code)
+            cerr('INFO: marker %s added.' % m.code)
+            db_m = m
+
+        if 'bins_range' in marker:
+            batch = dbh.get_batch('default')
+            db_m.initbins( marker['bins_range'][0], marker['bins_range'][1], batch)
+            cerr('INFO: bins for marker %s has been created in batch %s'
+                % (db_m.code, batch.code))
+
+
 
 
 def do_initbatch(args, dbh):
