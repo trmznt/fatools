@@ -661,6 +661,7 @@ class Allele(Base, AlleleMixIn):
 
     abin = Column(types.Integer, nullable=False, default=-1)    # adjusted bin
     asize = Column(types.Float, nullable=False, default=-1)     # adjusted size
+    adelta = Column(types.Float, nullable=False, default=-1)    # adjusted delta, abs(abin - asize)
     aheight = Column(types.Float, nullable=False, default=-1)   # adjusted height
 
     bin = Column(types.Integer, nullable=False, default=-1)
@@ -685,6 +686,11 @@ class Allele(Base, AlleleMixIn):
     ertime = Column(types.Integer, nullable=False, default=-1)
     wrtime = Column(types.Integer, nullable=False, default=-1)
     srtime = Column(types.Float, nullable=False, default=-1)    # log2( right_area/left_area )
+    w25rtime = Column(types.Float, nullable=False, default=-1)
+    w50rtime = Column(types.Integer, nullable=False, default=-1)
+    w75rtime = Column(types.Integer, nullable=False, default=-1)
+    lshared = Column(types.Boolean, nullable=False, default=False)
+    rshared = Column(types.Boolean, nullable=False, default=False)
     """ begin, end, width, symmetrical retention time of this peak and peak quality"""
 
     qscore = Column(types.Float, nullable=False, default=-1)    # calculated in preannotate()
