@@ -9,7 +9,8 @@ from sortedcontainers import SortedListWithKey
 import io, numpy as np
 from copy import copy
 from functools import lru_cache
-import pprint, sys
+import pprint, sys, time
+
 
 class PanelMixIn(object):
     """ contains Panel methods """
@@ -358,8 +359,10 @@ class ChannelMixIn(object):
             p.size = -1
             p.bin = -1
 
+        start_time = time.process_time()
         (qcscore, remarks, results, method) = algo.size_peaks(self, params, ladder_sizes,
                                                 ladder_qc_func)
+        stop_time = time.process_time()
         (dpscore, rss, z, aligned_peaks) = results
         #qcscore, remarks = algo.score_ladder(rss, len(aligned_peak), len(ladder_sizes))
 
@@ -378,6 +381,7 @@ class ChannelMixIn(object):
         assay.rss = rss
         assay.z = z
         assay.ladder_peaks = len(aligned_peaks)
+        assay.process_time += int((stop_time - start_time) * 1000)  # in miliseconds
         assay.method = method
         if remarks:
             if assay.report:
@@ -518,8 +522,11 @@ class AssayMixIn(object):
     def preannotate(self, params):
         """ annotate peaks for broad, rtime-based stutter & overlapping peaks """
         channels =  list(self.channels)
+        start_time = time.process_time()
         algo.preannotate_channels(channels, params.nonladder)
+        stop_time = time.process_time()
         self.status = assaystatus.preannotated
+        self.process_time = int((stop_time - start_time) * 1000) # in miliseconds
 
 
     def alignladder(self, excluded_peaks, force_mode=False):
@@ -614,7 +621,7 @@ class AssayMixIn(object):
             if channel.dye.upper() == ladder_dye.upper():
                 channel.marker = panel.get_marker('ladder')
                 has_ladder = True
-                #channel.status = channelstatus.assigned
+                channel.status = channelstatus.ladder
                 self.size_standard = ladder_code
                 self.ladder = channel
                 continue
@@ -622,17 +629,17 @@ class AssayMixIn(object):
             try:
                 marker = panel.get_marker_by_dye( channel.dye.upper() )
             except KeyError:
-                #channel.status = channelstatus.unused
+                channel.status = channelstatus.unused
                 cerr('%s => Unused; ' % channel.dye, nl=False)
                 continue
 
             if marker.label in excluded_markers:
-                #channel.status = channelstatus.unassigned
+                channel.status = channelstatus.unassigned
                 cerr('%s => Unassigned; ' % channel.dye, nl=False)
                 continue
 
             channel.marker = marker
-            #channel.status = channelstatus.assigned
+            channel.status = channelstatus.assigned
             marker_count += 1
             cerr('%s => %s; ' % (channel.dye, marker.code), nl=False)
 
