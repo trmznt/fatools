@@ -412,6 +412,9 @@ class ChannelMixIn(object):
         if self.marker.code == 'ladder':
             return
 
+        if self.marker.code == 'undefined':
+            return
+
         if self.marker.code == 'combined':
             # this is specific for combined marker
             # create allelesets as many as markers
