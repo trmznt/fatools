@@ -15,19 +15,19 @@ class peaktype(object):
 
 
 class channelstatus(object):
-    unassigned = 'unassigned'
-    assigned = 'assigned'
-    unused = 'unused'
+    unassigned = 'unassigned'   # dye is used in panel, but not in this channel
+    assigned = 'assigned'       # channel is assigned to a marker
+    unused = 'unused'           # dye is unused in panel
     noisy = 'noisy'
     empty = 'empty'
-    reseted = 'reseted'
+    reseted = 'reseted'         # channel is reseted (created empty)
     scanned = 'scanned'
     preannotated = 'preannotated'
     aligned = 'aligned'         # ladder peaks has been aligned to standard size
     called = 'called'
     binned = 'binned'
     annotated = 'annotated'
-    ladder = 'ladder'
+    ladder = 'ladder'           # channel is used for ladder
 
 
 class assaystatus(object):
