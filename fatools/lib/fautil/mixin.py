@@ -197,6 +197,11 @@ class BatchMixIn(object):
             raise NotImplementedError('PROG/ERR - not implemented yet')
 
 
+    def remove_assays(self):
+        for sample in self.samples:
+            sample.remove_assays()
+
+
 
 class SampleMixIn(object):
     """ implement general Sample methods """
@@ -286,6 +291,10 @@ class SampleMixIn(object):
         else:
 
             raise NotImplementedError('PROG/ERR - not implemented yet')
+
+
+    def remove_assays(self):
+        raise NotImplementedError
 
 
 
@@ -619,6 +628,7 @@ class AssayMixIn(object):
         has_ladder = False
         marker_count = 0
 
+        cerr('Assay: %s' % self.filename)
         cerr('Dyes: ', nl=False)
         for channel in self.channels:
             if channel.dye.upper() == ladder_dye.upper():
@@ -636,7 +646,7 @@ class AssayMixIn(object):
                 cerr('%s => Unused; ' % channel.dye, nl=False)
                 continue
 
-            if marker.label in excluded_markers:
+            if marker.label.upper() in excluded_markers:
                 channel.status = channelstatus.unassigned
                 cerr('%s => Unassigned; ' % channel.dye, nl=False)
                 continue

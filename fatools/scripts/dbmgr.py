@@ -63,6 +63,7 @@ def init_argparser( parser=None ):
 
     p.add_argument('--setbinbatch', default=False,
             help = 'set bins-related batch')
+
     ## options
 
     p.add_argument('--update', default=False,
@@ -76,6 +77,12 @@ def init_argparser( parser=None ):
 
     p.add_argument('-m', '--marker', default='',
             help = 'marker list (comma separated)')
+
+    p.add_argument('-s', '--sample', default='',
+            help = 'sample code list (comma separated, no space)')
+
+    p.add_argument('-a', '--assay', default='',
+            help = 'assay filename list (comma separated, no space)')
 
     p.add_argument('--assayprovider', default='',
             help = 'assay provider vendor/group')
@@ -145,6 +152,8 @@ def do_dbmgr(args, dbh = None, warning=True):
         do_updatebins(args, dbh)
     elif args.removebatch is not False:
         do_removebatch(args, dbh)
+    elif args.removeassay is not False:
+        do_removeassay(args, dbh)
     elif args.setbinbatch is not False:
         do_setbinbatch(args, dbh)
     else:
@@ -366,6 +375,23 @@ def do_removebatch(args, dbh):
     cerr('INFO - batch %s has been removed' % batch_code)
 
 
+def do_removeassay(args, dbh):
+
+    assay_list = get_assay_list( args, dbh )
+
+    batch = dbh.get_batch(args.batch)
+    if batch and not (args.sample or args.assay):
+        # remove all assay in this batch
+        batch.remove_assays()
+        cerr('INFO - removing all assays from batch %s' % batch.code)
+    else:
+        sess = dbh.session()
+        for (assay, sample_code) in assay_list:
+            assay_filename = assay.filename
+            sess.delete(assay)
+            cerr('INFO - removing assay %s | %s' % (sample_code, assay_filename))
+
+
 def do_clearassay(args, dbh):
 
     cout('Clearing assay...')
@@ -378,4 +404,35 @@ def do_setbinbatch(args, dbh):
     batch.bin_batch = bin_batch
     cerr('INFO - bins for batch %s has been set to batch %s'
             % (batch.code, bin_batch.code))
+
+# helpers
+
+def get_assay_list( args, dbh ):
+    
+    if not args.batch:
+        cerr('ERR - need --batch argument!')
+        sys.exit(1)
+
+    batch = dbh.get_batch( args.batch )
+    if not batch:
+        cerr('ERR - batch %s not found!' % args.batch)
+        sys.exit(1)
+
+    samples = []
+    if args.sample:
+        samples = args.sample.split(',')
+
+    assays = []
+    if args.assay:
+        assays = args.assay.split(',')
+
+    assay_list = []
+    for sample in batch.samples:
+        if samples and sample.code not in samples: continue
+        for assay in sample.assays:
+            if assays and assay.filename not in assays: continue
+            assay_list.append( (assay, sample.code) )
+
+    cerr('INFO - number of assays to be processed: %d' % len(assay_list))
+    return assay_list
 
