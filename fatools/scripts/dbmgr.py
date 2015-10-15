@@ -315,6 +315,36 @@ def do_upload(args, dbh):
             cerr(' => %s' % str(exc))
 
 
+def do_reassign(args, dbh):
+
+    cerr("Reassign assays")
+
+    assay_list = get_assay_list( args, dbh)
+
+    b = dbh.get_batch(args.batch)
+
+    if args.excludedmarker:
+        excludedmarkers = args.excludedmarker.upper().split(',')
+    else:
+        excludedmarkers = None
+
+    if args.reassign.strip() == '-':
+        # use the one already in the db for each assay (ie. only reaffirm)
+        for (assay, sample_code) in assay_list:
+            if excludedmarkers is None:
+                try:
+                    exclusion_data = assay.exclude
+                    excludedmarkers = exclusion_data.upper().split(',')
+                except KeyError:
+                    excluded_markers = None
+            assay.assign_channels(excludedmarkers)
+
+    else:
+        pass
+
+
+
+
 def do_initbin(args, dbh):
 
     if not args.marker:

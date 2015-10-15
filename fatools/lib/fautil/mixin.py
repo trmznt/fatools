@@ -266,7 +266,7 @@ class SampleMixIn(object):
             assay.method = alignmethod.notapplicable
             assay.runtime = assay.get_trace().get_run_start_time()
             assay.create_channels()
-            assay.assign_channels( panel, excluded_markers )
+            assay.assign_channels( excluded_markers )
 
         return assay
 
@@ -618,12 +618,15 @@ class AssayMixIn(object):
                 std_dev = float(raw.std()) )
 
 
-    def assign_channels(self, panel, excluded_markers=None):
+    def assign_channels(self, excluded_markers=None):
         """ assign channel & ladder based on panel """
 
         # check panel
+        panel = self.panel
         ladder_code = panel.get_ladder_code()
         ladder_dye = ladders[ladder_code]['dye']
+
+        # check excluded_markers
         
         has_ladder = False
         marker_count = 0
@@ -646,7 +649,7 @@ class AssayMixIn(object):
                 cerr('%s => Unused; ' % channel.dye, nl=False)
                 continue
 
-            if marker.label.upper() in excluded_markers:
+            if excluded_markers != None and marker.label.upper() in excluded_markers:
                 channel.status = channelstatus.unassigned
                 cerr('%s => Unassigned; ' % channel.dye, nl=False)
                 continue
