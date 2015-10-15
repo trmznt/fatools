@@ -112,7 +112,7 @@ def do_allelesummary(args, dbh):
     analytical_sets = query.get_filtered_analytical_sets()
     report = summarize_alleles( analytical_sets )
     cout( make_sample_report( analytical_sets.get_sample_sets() ) )
-    cout( make_allele_report(report) )
+    cout( make_allele_report(report, dbh) )
 
     if args.outplot:
         plot_alleles( report, args.outplot )
@@ -237,7 +237,7 @@ def make_sample_report( sample_sets ):
     return '\n'.join(lines)
 
 
-def make_allele_report( summaries ):
+def make_allele_report( summaries, dbh ):
 
     #sample_sets = analytical_sets.get_sample_sets()
 
@@ -253,6 +253,7 @@ def make_allele_report( summaries ):
 
         for marker_id in summary:
             _('    Marker ID: %d' % marker_id)
+            _('    Marker code: %s' % dbh.get_marker_by_id(marker_id).label)
             _('    Unique alleles: %d' % summary[marker_id]['unique_allele'])
             _('    Total alleles: %d' % summary[marker_id]['total_allele'])
 
