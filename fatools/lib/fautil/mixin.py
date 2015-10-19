@@ -125,7 +125,10 @@ class MarkerMixIn(object):
         return bin.sortedbins
 
     def initbins(self, start_range, end_range, batch):
-        bin = self.new_bin( batch = batch )
+        # check whether we already have bin data, otherwise create new one
+        bin = self.get_bin(batch, recursive=False)
+        if bin is None:
+            bin = self.new_bin( batch = batch )
         bin.initbins( start_range, end_range, self.repeats )
 
 
