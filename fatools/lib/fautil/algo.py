@@ -14,8 +14,7 @@ import fatools.lib.fautil.peakalign as pa
 
 from sortedcontainers import SortedListWithKey
 
-
-import pprint, sys
+import pprint, sys, pickle
 from matplotlib import pylab as plt
 from bisect import bisect_left
 
@@ -186,7 +185,7 @@ def scan_peaks( channel, params, peakdb ):
     """
 
     if peakdb:
-        raw_peaks = peakdb[channel.tag()]
+        raw_peaks = pickle.loads(peakdb.Get(channel.tag().encode()))
     else:
         raw_peaks = None
 

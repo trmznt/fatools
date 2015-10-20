@@ -670,6 +670,7 @@ class AssayMixIn(object):
         if self.status in [assaystatus.unassigned, assaystatus.uploaded]:
             self.status = assaystatus.assigned
 
+
     def showladderpca(self):
         for c in self.channels:
             if c.marker.code == 'ladder':

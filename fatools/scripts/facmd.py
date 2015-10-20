@@ -203,8 +203,8 @@ def do_scan( args, dbh ):
     assay_list = get_assay_list( args, dbh )
 
     if args.peakcachedb:
-        import shelve
-        peakdb = shelve.open(args.peakcachedb, flag='r')
+        import leveldb
+        peakdb = leveldb.LevelDB(args.peakcachedb, create_if_missing=False)
     else:
         peakdb = None
 
@@ -302,7 +302,7 @@ def do_bin(args, dbh):
 
 def do_findpeaks( args, dbh ):
 
-    import shelve
+    import leveldb
     from fatools.lib import params
 
     cerr('Finding and caching peaks...')
@@ -310,7 +310,8 @@ def do_findpeaks( args, dbh ):
     if not args.peakcachedb:
         cexit('ERR - please provide cache db filename')
 
-    peakdb = shelve.open(args.peakcachedb, flag='c')
+    # opening LevelDB database
+    peakdb = leveldb.LevelDB(args.peakcachedb)
 
     scanning_parameter = params.Params()
     assay_list = get_assay_list( args, dbh )
@@ -318,7 +319,6 @@ def do_findpeaks( args, dbh ):
     if args.method:
         scanning_parameter.ladder.method = args.method
         scanning_parameter.nonladder.method = args.method
-
 
     channel_list = []
     counter = 1
@@ -336,7 +336,7 @@ def do_findpeaks( args, dbh ):
 
     do_parallel_find_peaks( channel_list, peakdb )
 
-    peakdb.close()
+    #peakdb.close()
 
 
 
@@ -513,14 +513,14 @@ def printout_assay( assay, outfile=sys.stdout, fmt='text' ):
 
 def do_parallel_find_peaks( channel_list, peakdb ):
 
-    import concurrent.futures
+    import concurrent.futures, pickle
 
     cerr('I: Processing channel(s)')
     total = len(channel_list)
     counter = 0
     with concurrent.futures.ProcessPoolExecutor() as executor:
         for (tag, peaks) in executor.map( find_peaks_p, channel_list ):
-            peakdb[tag] = peaks
+            peakdb.Put(tag.encode(), pickle.dumps(peaks))
             counter += 1
             cerr('I: [%d/%d] channel %s => %d peak(s)' % (counter, total, tag, len(peaks)))
 
