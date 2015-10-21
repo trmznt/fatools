@@ -468,6 +468,8 @@ class Assay(Base, AssayMixIn):
     report = deferred(Column(types.String(512), nullable=False, default=''))
     remark = deferred(Column(types.String(1024), nullable=False, default=''))
 
+    exclude = deferred(Column(types.String(128), nullable=False, default=''))
+
     raw_data = deferred(Column(types.Binary(), nullable=False))
     """ raw data for this assay (FSA file content) """
 
