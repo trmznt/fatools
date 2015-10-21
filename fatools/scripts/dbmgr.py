@@ -2,6 +2,8 @@
 import sys, argparse, yaml, csv, transaction
 from fatools.lib.utils import cout, cerr, cexit, get_dbhandler, tokenize
 
+
+
 def init_argparser( parser=None ):
 
     if parser is None:
@@ -18,29 +20,30 @@ def init_argparser( parser=None ):
             help = 'directory for filesystem-based database')
 
     ## commands
+    ## all argument should store_true for consistency
 
     p.add_argument('--initdb', default=False, action='store_true',
             help = 'initialize database')
 
-    p.add_argument('--importpanel', default=False,
+    p.add_argument('--importpanel', default=False, action='store_true',
             help = 'importing panel from YAML file')
 
-    p.add_argument('--importmarker', default=False,
+    p.add_argument('--importmarker', default=False, action='store_true',
             help = 'importing marker from YAML file')
 
-    p.add_argument('--updatebins', default=False,
+    p.add_argument('--updatebins', default=False, action='store_true',
             help = 'updating bins')
 
-    p.add_argument('--upload', default=False,
+    p.add_argument('--upload', default=False, action='store_true',
             help = 'uploading FSA data')
 
-    p.add_argument('--initsample', default=False,
+    p.add_argument('--initsample', default=False, action='store_true',
             help = 'create new sample from sample file')
 
     p.add_argument('--clearassay', default=False, action='store_true',
             help = 'clear assay')
 
-    p.add_argument('--initbatch', default=False,
+    p.add_argument('--initbatch', default=False, action='store_true',
             help = 'create new batch')
 
     p.add_argument('--showbatches', default=False, action='store_true',
@@ -61,10 +64,16 @@ def init_argparser( parser=None ):
     p.add_argument('--removeassay', default=False, action='store_true',
             help = 'remove assay from database')
 
-    p.add_argument('--setbinbatch', default=False,
+    p.add_argument('--setbinbatch', default=False, action='store_true',
             help = 'set bins-related batch')
 
     ## options
+
+    p.add_argument('--infile', default=False,
+            help = 'input file')
+
+    p.add_argument('--outfile', default=False,
+            help = 'output file')
 
     p.add_argument('--update', default=False,
             help = 'updating current data in the database')
@@ -87,8 +96,8 @@ def init_argparser( parser=None ):
     p.add_argument('--assayprovider', default='',
             help = 'assay provider vendor/group')
 
-    p.add_argument('--fsadir', default='.',
-            help = 'directory containing FSA files')
+    p.add_argument('--indir', default='.',
+            help = 'input directory (eg. containing FSA files)')
 
     p.add_argument('--species', default='',
             help = 'species of markers')
@@ -103,7 +112,6 @@ def init_argparser( parser=None ):
             help = 'abort for any warning')
 
     return p
-
 
 
 def main(args):
@@ -121,6 +129,7 @@ def main(args):
                 sys.exit(1)
             
         do_dbmgr(args)
+
 
 
 def do_dbmgr(args, dbh = None, warning=True):
@@ -164,6 +173,7 @@ def do_dbmgr(args, dbh = None, warning=True):
     return True
 
 
+
 def do_initdb(args, dbh):
 
     dbh.initdb()
@@ -172,7 +182,7 @@ def do_initdb(args, dbh):
 
 def do_importpanel(args, dbh):
 
-    panels = yaml.load( open(args.importpanel) )
+    panels = yaml.load( open(args.infile) )
 
     for code, panel in panels.items():
         if panel['code'] != code:
@@ -191,7 +201,7 @@ def do_importpanel(args, dbh):
 
 def do_importmarker(args, dbh):
 
-    markers = yaml.load(open(args.importmarker))
+    markers = yaml.load(open(args.infile))
     # markers is a dict of dict, so need a new instance for updating
 
     for code, marker in markers.items():
@@ -213,7 +223,6 @@ def do_importmarker(args, dbh):
             db_m.initbins( marker['bins_range'][0], marker['bins_range'][1], batch)
             cerr('INFO: bins for marker %s has been created in batch %s'
                 % (db_m.code, batch.code))
-
 
 
 
@@ -249,8 +258,8 @@ def do_initsample(args, dbh):
     b = dbh.Batch.search(args.batch, dbh.session)
     cout('INFO - using batch code: %s' % b.code)
 
-    inrows = csv.reader( open(args.initsample),
-                delimiter = ',' if args.initsample.endswith('.csv') else '\t' )
+    inrows = csv.reader( open(args.infile),
+                delimiter = ',' if args.infile.endswith('.csv') else '\t' )
 
     next(inrows)    # discard the 1st line
 
@@ -270,8 +279,8 @@ def do_upload(args, dbh):
 
     b = dbh.get_batch(args.batch)
 
-    inrows = csv.reader( open(args.upload),
-                delimiter = ',' if args.upload.endswith('.csv') else '\t' )
+    inrows = csv.reader( open(args.infile),
+                delimiter = ',' if args.infile.endswith('.csv') else '\t' )
     next(inrows)
 
     total_assay = 0
@@ -299,7 +308,7 @@ def do_upload(args, dbh):
                 cerr('ERR - sample %s does not exist' % row[0])
                 sys.exit(1)
 
-            with open( args.fsadir + '/' + row[1], 'rb') as f:
+            with open( args.indir + '/' + row[1], 'rb') as f:
                 trace = f.read()
 
             a = s.add_assay( trace, filename=assay_filename, panel_code = assay_panel,
@@ -313,6 +322,7 @@ def do_upload(args, dbh):
                 raise
             cerr('ERR - line %d' % line_counter)
             cerr(' => %s' % str(exc))
+
 
 
 def do_reassign(args, dbh):
@@ -344,7 +354,6 @@ def do_reassign(args, dbh):
 
 
 
-
 def do_initbin(args, dbh):
 
     if not args.marker:
@@ -368,6 +377,7 @@ def do_initbin(args, dbh):
         cerr('INFO  - bin for marker %s with batch %s has been created.' % (m.label, batch.code))
 
 
+
 def do_viewbin(args, dbh):
 
     if not args.marker:
@@ -384,6 +394,7 @@ def do_viewbin(args, dbh):
                     (binset[0], binset[1], binset[2], binset[3], binset[3] - binset[2]))
 
 
+
 def do_updatebins(args, dbh):
     
     with open(args.updatebins) as f:
@@ -397,12 +408,14 @@ def do_updatebins(args, dbh):
         cerr('I: Updating bins for marker: %s' % marker.label)
 
 
+
 def do_removebatch(args, dbh):
 
     batch = dbh.get_batch(args.batch)
     batch_code = batch.code
     dbh.session().delete(batch)
     cerr('INFO - batch %s has been removed' % batch_code)
+
 
 
 def do_removeassay(args, dbh):
@@ -422,9 +435,11 @@ def do_removeassay(args, dbh):
             cerr('INFO - removing assay %s | %s' % (sample_code, assay_filename))
 
 
+
 def do_clearassay(args, dbh):
 
     cout('Clearing assay...')
+
 
 
 def do_setbinbatch(args, dbh):
@@ -434,6 +449,8 @@ def do_setbinbatch(args, dbh):
     batch.bin_batch = bin_batch
     cerr('INFO - bins for batch %s has been set to batch %s'
             % (batch.code, bin_batch.code))
+
+
 
 # helpers
 
