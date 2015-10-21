@@ -14,6 +14,7 @@ requires = [
     'matplotlib',
     'pyyaml',
     'pandas',
+    'leveldb',
     ]
 
 setup(name='fatools',
