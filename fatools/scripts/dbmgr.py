@@ -34,14 +34,14 @@ def init_argparser( parser=None ):
     p.add_argument('--updatebins', default=False, action='store_true',
             help = 'updating bins')
 
-    p.add_argument('--upload', default=False, action='store_true',
+    p.add_argument('--uploadfsa', default=False, action='store_true',
             help = 'uploading FSA data')
 
     p.add_argument('--initsample', default=False, action='store_true',
             help = 'create new sample from sample file')
 
-    p.add_argument('--clearassay', default=False, action='store_true',
-            help = 'clear assay')
+    p.add_argument('--clearfsa', default=False, action='store_true',
+            help = 'clear FSA data')
 
     p.add_argument('--initbatch', default=False, action='store_true',
             help = 'create new batch')
@@ -61,8 +61,8 @@ def init_argparser( parser=None ):
     p.add_argument('--removesample', default=False, action='store_true',
             help = 'remove sample from database')
 
-    p.add_argument('--removeassay', default=False, action='store_true',
-            help = 'remove assay from database')
+    p.add_argument('--removefsa', default=False, action='store_true',
+            help = 'remove FSA from database')
 
     p.add_argument('--setbinbatch', default=False, action='store_true',
             help = 'set bins-related batch')
@@ -137,8 +137,8 @@ def do_dbmgr(args, dbh = None, warning=True):
     if not dbh:
         dbh = get_dbhandler(args, initial = args.initdb)
 
-    if args.upload is not False:
-        do_upload(args, dbh)
+    if args.uploadfsa is not False:
+        do_uploadfsa(args, dbh)
     elif args.initbatch is not False:
         do_initbatch(args, dbh)
     elif args.showbatches is not False:
@@ -151,8 +151,8 @@ def do_dbmgr(args, dbh = None, warning=True):
         do_importmarker(args, dbh)
     elif args.initdb is not False:
         do_initdb(args, dbh)
-    elif args.clearassay is not False:
-        do_clearassay(args, dbh)
+    elif args.clearfsa is not False:
+        do_clearfsa(args, dbh)
     elif args.initbin is not False:
         do_initbin(args, dbh)
     elif args.viewbin is not False:
@@ -161,8 +161,8 @@ def do_dbmgr(args, dbh = None, warning=True):
         do_updatebins(args, dbh)
     elif args.removebatch is not False:
         do_removebatch(args, dbh)
-    elif args.removeassay is not False:
-        do_removeassay(args, dbh)
+    elif args.removefsa is not False:
+        do_removefsa(args, dbh)
     elif args.setbinbatch is not False:
         do_setbinbatch(args, dbh)
     else:
@@ -283,7 +283,7 @@ def do_upload(args, dbh):
                 delimiter = ',' if args.infile.endswith('.csv') else '\t' )
     next(inrows)
 
-    total_assay = 0
+    total_fsa = 0
     line_counter = 1
     for row in inrows:
 
@@ -295,7 +295,7 @@ def do_upload(args, dbh):
         if len(row) < 3:
             cerr('ERR - line %d only has %d item(s)' % (line_counter, len(row)))
 
-        sample_code, assay_filename, assay_panel = row[0], row[1], row[2]
+        sample_code, fsa_filename, fsa_panel = row[0], row[1], row[2]
         if len(row) >= 4:
             options = tokenize( row[3] )
         else:
@@ -311,10 +311,10 @@ def do_upload(args, dbh):
             with open( args.indir + '/' + row[1], 'rb') as f:
                 trace = f.read()
 
-            a = s.add_assay( trace, filename=assay_filename, panel_code = assay_panel,
+            a = s.add_fsa( trace, filename=fsa_filename, panel_code = fsa_panel,
                         options = options, species = args.species, dbhandler = dbh)
             cerr('INFO - sample: %s assay: %s panel: %s has been uploaded' % 
-                        (s.code, a.filename, assay_panel))
+                        (s.code, a.filename, fsa_panel))
 
         except Exception as exc:
 
@@ -327,7 +327,7 @@ def do_upload(args, dbh):
 
 def do_reassign(args, dbh):
 
-    cerr("Reassign assays")
+    cerr("Reassign FSA assays")
 
     assay_list = get_assay_list( args, dbh)
 

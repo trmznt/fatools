@@ -209,7 +209,7 @@ class BatchMixIn(object):
 class SampleMixIn(object):
     """ implement general Sample methods """
 
-    def add_assay(self, trace, filename, panel_code, options = None, species = None,
+    def add_fsa_assay(self, trace, filename, panel_code, options = None, species = None,
                     dbhandler = None, dry_run=False):
 
         assert dbhandler, 'Please provide dbhandler function'
@@ -263,7 +263,7 @@ class SampleMixIn(object):
 
         # creating assay
         for panel in panels:
-            assay = self.new_assay(raw_data = trace, filename = filename,
+            assay = self.new_fsa_assay(raw_data = trace, filename = filename,
                         status = assaystatus.uploaded, panel = panel)
             assay.status = assaystatus.uploaded
             assay.method = alignmethod.notapplicable
@@ -274,7 +274,7 @@ class SampleMixIn(object):
         return assay
 
 
-    def new_assay(self, trace, filename, panel):
+    def new_fsa_assay(self, trace, filename, panel):
         
         raise NotImplementedError('PROG/ERR - child class must override this method!')
 
@@ -296,7 +296,7 @@ class SampleMixIn(object):
             raise NotImplementedError('PROG/ERR - not implemented yet')
 
 
-    def remove_assays(self):
+    def remove_fsas(self):
         raise NotImplementedError
 
 
@@ -633,6 +633,7 @@ class AssayMixIn(object):
         
         has_ladder = False
         marker_count = 0
+        excluded = []
 
         cerr('Assay: %s' % self.filename)
         cerr('Dyes: ', nl=False)
@@ -654,6 +655,7 @@ class AssayMixIn(object):
 
             if excluded_markers != None and marker.label.upper() in excluded_markers:
                 channel.status = channelstatus.unassigned
+                excluded.append( marker.label.upper() )
                 cerr('%s => Unassigned; ' % channel.dye, nl=False)
                 continue
 
@@ -666,6 +668,9 @@ class AssayMixIn(object):
         if not has_ladder:
             raise RuntimeError('ERR - sample %s assay %s does not have ladder!' %
                             (self.sample.code, self.filename))
+
+        if excluded:
+            self.exclude = ','.join( excluded )
 
         if self.status in [assaystatus.unassigned, assaystatus.uploaded]:
             self.status = assaystatus.assigned
