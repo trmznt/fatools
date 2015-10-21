@@ -67,6 +67,18 @@ def init_argparser( parser=None ):
     p.add_argument('--setbinbatch', default=False, action='store_true',
             help = 'set bins-related batch')
 
+    p.add_argument('--exportmarker', default=False, action='store_true',
+            help = 'export marker to YAML file')
+
+    p.add_argument('--exportpanel', default=False, action='store_true',
+            help = 'export panel to YAML file')
+
+    p.add_argument('--exportfsa', default=False, action='store_true',
+            help = 'export FSA (either or both metadata and FSA files')
+
+    p.add_argument('--exportsample', default=False, action='store_true',
+            help = 'export sample data to tab-delimited file')
+
     ## options
 
     p.add_argument('--infile', default=False,
@@ -90,14 +102,17 @@ def init_argparser( parser=None ):
     p.add_argument('-s', '--sample', default='',
             help = 'sample code list (comma separated, no space)')
 
-    p.add_argument('-a', '--assay', default='',
+    p.add_argument('--fsa', default='',
             help = 'assay filename list (comma separated, no space)')
 
     p.add_argument('--assayprovider', default='',
             help = 'assay provider vendor/group')
 
-    p.add_argument('--indir', default='.',
+    p.add_argument('--indir', default=False,
             help = 'input directory (eg. containing FSA files)')
+
+    p.add_argument('--outdir', default=False,
+            help = 'output directory')
 
     p.add_argument('--species', default='',
             help = 'species of markers')
@@ -165,6 +180,8 @@ def do_dbmgr(args, dbh = None, warning=True):
         do_removefsa(args, dbh)
     elif args.setbinbatch is not False:
         do_setbinbatch(args, dbh)
+    elif args.exportfsa is not False:
+        do_exportfsa(args, dbh)
     else:
         if warning:
             cerr('Unknown command, nothing to do!')
@@ -452,6 +469,33 @@ def do_setbinbatch(args, dbh):
 
 
 
+def do_exportfsa(args, dbh):
+
+    assay_list = get_assay_list( args, dbh )
+
+    outdir = None
+    if args.outdir:
+        os.mkdirs(args.outdir)
+        outdir = args.outdir + '/'
+
+    if args.outfile:
+        outfile = open(args.outfile, 'w')
+    else:
+        outfile = sys.stdout
+    outfile.write('FILENAME\tSAMPLE\tPANEL\tOPTIONS\n')
+
+    for (assay, sample_code) in assay_list:
+        if outdir:
+            with open(outdir + assay.filename, 'wb') as f:
+                f.write(assay.raw_data)
+        exclude = 'exclude=%s' % assay.exclude if assay.exclude else ''
+        outfile.write('%s\t%s\t%s\t%s\n' % (assay.filename, sample_code,
+                            assay.panel.code, exclude))
+
+    outfile.close()
+
+
+
 # helpers
 
 def get_assay_list( args, dbh ):
@@ -470,7 +514,7 @@ def get_assay_list( args, dbh ):
         samples = args.sample.split(',')
 
     assays = []
-    if args.assay:
+    if args.fsa:
         assays = args.assay.split(',')
 
     assay_list = []
