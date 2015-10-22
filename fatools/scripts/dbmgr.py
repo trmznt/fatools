@@ -290,9 +290,9 @@ def do_initsample(args, dbh):
 
 
 
-def do_upload(args, dbh):
+def do_uploadfsa(args, dbh):
 
-    cout('Uploading FSA files from input file: %s' % args.upload)
+    cout('Uploading FSA files from input file: %s' % args.infile)
 
     b = dbh.get_batch(args.batch)
 
@@ -328,7 +328,7 @@ def do_upload(args, dbh):
             with open( args.indir + '/' + row[1], 'rb') as f:
                 trace = f.read()
 
-            a = s.add_fsa( trace, filename=fsa_filename, panel_code = fsa_panel,
+            a = s.add_fsa_assay( trace, filename=fsa_filename, panel_code = fsa_panel,
                         options = options, species = args.species, dbhandler = dbh)
             cerr('INFO - sample: %s assay: %s panel: %s has been uploaded' % 
                         (s.code, a.filename, fsa_panel))
