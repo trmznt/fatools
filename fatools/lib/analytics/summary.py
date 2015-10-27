@@ -27,7 +27,7 @@ def summarize_alleles( analytical_sets ):
 
     for analytical_set in analytical_sets:
 
-        summary = summarize_allele_df( analytical_set.allele_df.df )
+        summary = summarize_allele_df( analytical_set.allele_df )
         summaries[analytical_set.label] = { 'summary': summary,
                                             'colour': analytical_set.colour }
 
@@ -38,15 +38,14 @@ def summarize_alleles( analytical_sets ):
 def summarize_allele_df( allele_df ):
     """ return a dict of data containing:
         alleles: [ (allele, freq, count, mean_height, min_size, max_size, delta, items), ...]
-            where items is [ 
+            where items is [
     """
 
     allele_list = defaultdict(list)
     #marker_list = defaultdict(lambda x = None: ([], []))
-    print(allele_df)
-    grouped = allele_df.groupby( ['marker_id', 'value'] )
-    
-    for (marker_id, allele), df in grouped:
+    #print(allele_df)
+
+    for (marker_id, allele), df in allele_df.grouped_df:
 
         allele_list[marker_id].append(
             (allele, len(df), np.mean( df['height'] ), min(df['size']), max(df['size']),
@@ -55,7 +54,7 @@ def summarize_allele_df( allele_df ):
 
         #marker_list[marker_id][0].extend( df['size'] )
         #marker_list[marker_id][1].extend( df['height'] )
-            
+
 
     # calculate other stuff
 
@@ -140,7 +139,7 @@ def summarize_bins( analytical_sets ):
         for (allele_bin, sizes) in marker_summary.items():
             # not found
             percentiles = np.percentile( sizes, [ 25, 75 ] )
-            empirical_bins[ allele_bin ] = [ int(allele_bin), 
+            empirical_bins[ allele_bin ] = [ int(allele_bin),
                                                 round(float(np.mean(sizes)), 3),
                                                 round(float(percentiles[0]), 3),
                                                 round(float(percentiles[1]), 3) ]
@@ -149,7 +148,7 @@ def summarize_bins( analytical_sets ):
     return bin_summaries
 
 
-def plot_alleles( allele_reports, filename, rfu_height=True ):
+def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
 
     from matplotlib import pyplot as plt
     from matplotlib.ticker import MultipleLocator
@@ -161,12 +160,13 @@ def plot_alleles( allele_reports, filename, rfu_height=True ):
 
     m = len(marker_ids)
     fig = plt.figure( figsize = (21, 4 * m), dpi=600 )
-    
+
     axes = {}
 
-    for allele_report in allele_reports.values():
+    for idx, allele_report in enumerate(allele_reports.values(), 1):
         pprint(allele_report)
         colour = allele_report['colour']
+        y = idx+1
         for (marker_id, summary) in allele_report['summary'].items():
             if marker_id in axes:
                 ax = axes[marker_id]
@@ -176,7 +176,8 @@ def plot_alleles( allele_reports, filename, rfu_height=True ):
 
             for allele_params in summary['alleles']:
                 data = allele_params[9]
-                ax.vlines( data[0], [0], [1], colors = [ colour ] )
+                ax.vlines( data[0], [idx], [y], colors = [ colour ] )
+                ax.vlines( data[0], [0], [1], colors = ['k'])
 
 
     for (marker_id, ax) in axes.items():
@@ -193,7 +194,10 @@ def plot_alleles( allele_reports, filename, rfu_height=True ):
         for label in ax.get_yticklabels():
             label.set_size( 'xx-small' )
 
-        ax.set_ylabel( marker_id )
+        if dbh:
+            ax.set_ylabel( dbh.get_marker_by_id(marker_id).label )
+        else:
+            ax.set_ylabel( marker_id )
         ax.set_ylim(0)
         #ax.set_xlim(min(data[0]), max(data[0]))
         ax.set_xlim(auto = True)
