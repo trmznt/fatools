@@ -150,7 +150,7 @@ class base_sqlhandler(object):
                             # don't forget to remove the latest allele
                             del alleles[-1]
                             continue
-                            
+
                 else:
                     last_sample_id = sample_id
                     last_marker_id = marker_id
@@ -160,7 +160,7 @@ class base_sqlhandler(object):
                 alleles.append( (marker_id, sample_id, value, size, height, assay_id) )
 
             df = DataFrame( alleles )
-        
+
         if len(df) == 0:
             return df
 
@@ -169,6 +169,7 @@ class base_sqlhandler(object):
 
 
     def customize_filter(self, q, params):
+        """ return SQLAlchemy query with peak type filtering """
 
         if type(params.peaktype) in [ list, tuple ]:
             q = q.filter( self.Allele.type.in_( params.peaktype  ) )
