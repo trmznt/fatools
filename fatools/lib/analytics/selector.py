@@ -6,7 +6,6 @@ from fatools.lib.const import peaktype
 colour_list = [ 'r', 'g', 'b' ]
 
 
-
 class Selector(object):
 
     def __init__(self, samples = []):
@@ -45,7 +44,7 @@ class Selector(object):
         for spec in spec_list:
 
             if 'query' in spec:
-                    
+
                 if '$' in spec['query']:
                     raise RuntimeError('cannot process differentiating query')
 
@@ -83,9 +82,9 @@ class Selector(object):
     def get_sample_sets(self, dbh, sample_ids=None):
 
         if not self._sample_sets:
-            
+
             assert dbh, "dbh must be specified"
-        
+
             sample_sets = SampleSetContainer()
 
             if type(self.samples) == list:
@@ -106,7 +105,7 @@ class Selector(object):
                                                         dbh, sample_ids)
                         )
                     )
-                        
+
             self._sample_sets = sample_sets
 
         return self._sample_sets
@@ -123,7 +122,7 @@ class Filter(object):
         self.abs_threshold = 0      # includes alelles above rfu
         self.rel_threshold = 0.0      # includes alleles above % of highest rfu
         self.rel_cutoff = 0.0         # excludes alleles above % of highest rfu [ rel_threshold < height < rel_cutoff ]
-        self.sample_qual_threshold = 0.0    # includes samples with marker more than %  
+        self.sample_qual_threshold = 0.0    # includes samples with marker more than %
         self.marker_qual_threshold = 0.0    # includes markers with sample more than %
         self.peaktype = peaktype.bin
         self.sample_options = None
@@ -148,7 +147,7 @@ class Filter(object):
         # self.markers is name
         if (self.marker_ids is None and self.markers) and dbh:
             # only execute below if dbh is provided, marker_ids is empty and
-            # markers is not empty 
+            # markers is not empty
             markers = [ dbh.get_marker(name) for name in self.markers ]
             self.marker_ids = [ marker.id for marker in markers ]
         return self.marker_ids
@@ -179,8 +178,3 @@ class Filter(object):
                                 unique = (self.sample_options == 'U') ) )
 
         return sets
-
-
-
-
-
