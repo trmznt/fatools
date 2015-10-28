@@ -141,7 +141,7 @@ class AnalyticalSet(object):
         for marker_id in self.marker_ids:
             # check of any x > 0 for marker_df[marker_id] = [ 2 1 0 0 0 ]
             genotyped = 0
-            for m in self.marker_df[marker_id]:
+            for m in self.marker_df.get(marker_id, [0]):
                 if m > 0:
                     genotyped += 1
             marker_genotyped.append( (marker_id, genotyped) )

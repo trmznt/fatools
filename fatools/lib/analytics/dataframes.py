@@ -21,6 +21,10 @@ class AlleleDataFrame(object):
         self._df_distribution = None
         self._dominant_df_distribution = None
 
+        # genotypes and MLGT
+        self._genotype_df = None
+        self._mlgt_df = None
+
 
     @property
     def df(self):
@@ -57,7 +61,7 @@ class AlleleDataFrame(object):
     def df_distribution(self):
         if self._df_distribution is None:
             self._df_distribution = pivot_table(self.df,
-                    rows = ['marker_id', 'value'],
+                    index = ['marker_id', 'value'],
                     values = 'sample_id',
                     aggfunc = len)
         return self._df_distribution
@@ -67,10 +71,26 @@ class AlleleDataFrame(object):
     def dominant_df_distribution(self):
         if self._df_distribution is None:
             self._dominant_df_distribution = pivot_table(self.dominant_df,
-                    rows = ['marker_id', 'value'],
+                    index = ['marker_id', 'value'],
                     values = 'sample_id',
                     aggfunc = len)
         return self._dominant_df_distribution
+
+
+    @property
+    def genotype_df(self):
+        if self._genotype_df is None:
+            self._genotype_df = pivot_table(self.df,
+                    index = ['sample_id'],
+                    columns = ['marker_id'],
+                    values = 'value')
+        return self._genotype_df
+
+
+    @property
+    def mltgs(self):
+        pass
+
 
     @property
     def allele_multiplicity(self):
@@ -80,6 +100,7 @@ class AlleleDataFrame(object):
                     values = 'value',
                     aggfunc = len)
         return self._allele_multiplicity
+
 
     @property
     def sample_multiplicity(self):
