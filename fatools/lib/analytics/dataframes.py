@@ -71,3 +71,21 @@ class AlleleDataFrame(object):
                     values = 'sample_id',
                     aggfunc = len)
         return self._dominant_df_distribution
+
+    @property
+    def allele_multiplicity(self):
+        if self._allele_multiplicity is None:
+            self._allele_multiplicity = pivot_table(self.df,
+                    rows = ['sample_id', 'marker_id'],
+                    values = 'value',
+                    aggfunc = len)
+        return self._allele_multiplicity
+
+    @property
+    def sample_multiplicity(self):
+        if self._sample_multiplicity is None:
+            self._sample_multiplicity = pivot_table(self.allele_multiplicity,
+                    rows = ['sample_id'],
+                    values = 'value',
+                    aggfunc = max)
+        return self._sample_multiplicity
