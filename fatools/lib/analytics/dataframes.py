@@ -25,6 +25,10 @@ class AlleleDataFrame(object):
         self._genotype_df = None
         self._mlgt_df = None
 
+        # moi
+        self._allele_multiplicity = None
+        self._sample_multiplicity = None
+
 
     @property
     def df(self):
@@ -33,7 +37,7 @@ class AlleleDataFrame(object):
 
     @property
     def dominant_df(self):
-        """ return Pandas dataframe of (marker_id, sample_id, bin, size, height) """
+        """ return Pandas dataframe of (marker_id, sample_id, value, size, height) """
         if self._dominant_df is None:
             df = self.df
             idx = df.groupby(['marker_id','sample_id'])['height'].transform(max) == df['height']
@@ -43,7 +47,9 @@ class AlleleDataFrame(object):
 
     @property
     def grouped_df(self):
-        """ return Pandas dataframe grouped by ['marker_id', 'value'] """
+        """ return Pandas dataframe grouped by ['marker_id', 'value']
+            ie: [marker_id, value] = (marker_id, sample_id, value, size, height, assay_id)
+        """
         if self._group_df is None:
             self._group_df = self.df.groupby( ['marker_id', 'value'] )
         return self._group_df
@@ -89,25 +95,31 @@ class AlleleDataFrame(object):
 
 
     @property
-    def mltgs(self):
-        pass
+    def mlgt(self):
+        """ return MLGT (Multi Locus GenoTyping) dataframe """
+        if self._mlgt_df is None:
+            self._mltg_df = pivot_table(self.dominant_df,
+                    index = 'sample_id',
+                    columns = 'marker_id',
+                    values = 'value')
+        return self._mltg_df
 
 
     @property
     def allele_multiplicity(self):
         if self._allele_multiplicity is None:
             self._allele_multiplicity = pivot_table(self.df,
-                    rows = ['sample_id', 'marker_id'],
+                    index = ['sample_id'],
+                    columns = 'marker_id',
                     values = 'value',
-                    aggfunc = len)
+                    aggfunc = len,
+                    fill_value=0)
         return self._allele_multiplicity
 
 
     @property
     def sample_multiplicity(self):
         if self._sample_multiplicity is None:
-            self._sample_multiplicity = pivot_table(self.allele_multiplicity,
-                    rows = ['sample_id'],
-                    values = 'value',
-                    aggfunc = max)
+            # apply max to each row (axis=1)
+            self._sample_multiplicity = self.allele_multiplicity.max(1)
         return self._sample_multiplicity
