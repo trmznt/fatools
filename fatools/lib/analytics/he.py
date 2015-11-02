@@ -24,10 +24,12 @@ def summarize_he( analytical_sets ):
         # use Kruskal Wallis
         results['test'] = 'Kruskal-Wallis test'
         results['stats'] = kruskal( * [he_df[x] for x in labels])
+        results['warning'] = ''
 
     results['data'] = he_df
     results['mean'] = he_df.mean()
     results['stddev'] = he_df.std()
+    #raise RuntimeError
 
     return results
 
