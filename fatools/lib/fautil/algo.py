@@ -20,7 +20,7 @@ from bisect import bisect_left
 
 
 def find_raw_peaks( raw_data, params ):
-    
+
     max_height = max(raw_data)
     width_ratio = max(1, round(math.log( max_height/params.width_ratio )))
     widths = params.widths
@@ -258,7 +258,7 @@ def preannotate_channels( channels, params ):
 
     # peak_1 is overlap of peak_2 if
     #   brtime2 < ertime1 and ertime1 < ertime2
-    #   and height1 at rtime1 is a_fraction of height2 at rtime1 and 
+    #   and height1 at rtime1 is a_fraction of height2 at rtime1 and
     #   height1 at rtime2 is a_fraction of height2 at rtime2.
 
     # peak is broad if beta > beta_broad_threshold
@@ -453,6 +453,8 @@ def call_peaks( channel, params, func, min_rtime, max_rtime ):
         allele.type = peaktype.called
         allele.method = binningmethod.notavailable
 
+
+
 def bin_peaks(channel, params, marker):
 
     #sortedbins = marker.sortedbins
@@ -460,7 +462,7 @@ def bin_peaks(channel, params, marker):
     threshold = float(marker.repeats)/2 * 1.5
 
     for peak in channel.alleles:
-        
+
         if peak.size < 0: continue
 
         # check peak type
@@ -493,62 +495,16 @@ def bin_peaks(channel, params, marker):
 
 
 
-def bin_peaks_xxx( channel, params, marker ):
-    """
-    bin each of peaks with type peak-called, and annotate as either peak-bin,
-    peak-stutter or peak-artifact
-    """
-
-    binlist = marker.bins
-    # [ (label, mean, 25%percentile, 75%percentile), ...]
-
-    binpos = list( x[0] for x in binlist )
-    threshold = float(marker.repeats) / 2 * 1.5
-
-    # peak is stutter if peak is in the same of bin of higher peak
-    for peak in channel.alleles:
-        
-        if peak.size < 0: continue
-
-        # check peak type
-        if peak.type in [ peaktype.overlap, peaktype.noise, peaktype.artifact ]:
-            continue
-
-        if not marker.min_size < peak.size < marker.max_size:
-            peak.type = peaktype.unassigned
-            continue
-
-        size = peak.size
-        pos = bisect_left( binpos, size )
-
-        if pos == 0:
-            value = binlist[0]
-        elif pos == len(binlist):
-            value = binlist[-1]
-        else:
-            before = binlist[pos - 1]
-            after = binlist[pos]
-            if after[0] - size < size - before[0]:
-                value = after
-            else:
-                value = before
-        if abs(value[0] - size) > threshold:
-            print('WARN: binned peak with size: %3.2f for value: %3.2f is above range threshold: %2.1f'
-                    % (size, value[0], threshold) )
-
-        peak.bin = value[1]
-        peak.type = peaktype.bin
-
-
 def postannotate_peaks( channels, params ):
     """
     post annotate peaks with peak-overlap or peak stutter
     """
 
-    # peak is stutter if peak is in the same bin or 
+    # peak is stutter if peak is in the same bin or
 
     pass
-    
+
+
 
 # helper functions
 
@@ -613,7 +569,7 @@ def half_area(y, threshold, baseline):
     index = 1
     limit = len(y)
 
-    while ( edge > area * threshold and edge < old_edge and 
+    while ( edge > area * threshold and edge < old_edge and
             index < limit and y[index] >= baseline ):
         old_edge = edge
         area += y[index]
@@ -627,7 +583,7 @@ def half_area(y, threshold, baseline):
 
 
 def is_overlap(peak_1, peak_2):
-    
+
     if peak_1.brtime > peak_2.brtime:
         peak_1, peak_2 = peak_2, peak_1
 
@@ -672,7 +628,7 @@ def generate_scoring_function( strict_params, relax_params ):
         dp_score, dp_rss, dp_z, dp_peaks = alignment_result
 
         if method == 'strict':
-            if ( dp_score >= strict_params['min_dpscore'] and 
+            if ( dp_score >= strict_params['min_dpscore'] and
                     dp_rss <= strict_params['max_rss'] and
                     len(dp_peaks) >= strict_params['min_sizes'] ):
                 return (1, None)
@@ -703,7 +659,7 @@ def generate_scoring_function( strict_params, relax_params ):
             else:
                 dp_peaks_part = max( 0, - delta_peaks / 0.5 * relax_params['min_sizes'] - 1)
                 msg.append( 'Missing peaks = %d' % delta_peaks )
-            
+
             # total overall score
             score = 0.3 * dp_score_part + 0.5 * dp_rss_part + 0.2 * dp_peaks_part
             return (score, msg)
