@@ -24,6 +24,9 @@ def summarize_moi(analytical_sets):
     for analytical_set in analytical_sets:
         moi_sets[analytical_set.label] = calculate_moi(analytical_set.allele_df)
 
+    # because of the non-normality of the dataset, we will just have to use
+    # rank-based (parametric/catagorical) statistical test
+
     return moi_sets
 
 
@@ -31,6 +34,7 @@ class MoISummary(object):
 
     def __init__(self):
         pass
+
 
 def calculate_moi(allele_df):
     # given allele_df, return (moi_table)
