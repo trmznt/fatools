@@ -18,7 +18,7 @@ def summarize_he( analytical_sets ):
     if len(labels) == 2:
         # use Mann-Whitney / Wilcoxon test
         results['test'] = 'Wilcoxon test (paired)'
-        results['stats'] = wilcoxon( he_df[labels[0], labels[1]])
+        results['stats'] = wilcoxon( he_df[labels[0]], he_df[labels[1]])
 
     elif len(labels) > 2:
         # use Kruskal Wallis
