@@ -40,8 +40,11 @@ class Selector(object):
 
     def spec_to_sample_ids(self, spec_list, dbh, sample_ids=None):
 
-        ids = set()
+        global_ids = set()
         for spec in spec_list:
+
+            # initial spec
+            ids = set()
 
             if 'query' in spec:
 
@@ -70,13 +73,29 @@ class Selector(object):
                 ids.update( batch.sample_ids )
 
             else:
-                raise RuntimeError('sample spec format is incorrect')
+                raise RuntimeError(
+                    'sample spec format is incorrect, mandatory fields must exist!')
+
+            # filtering spec
+
+            q = dbh.session().query(dbh.Sample.id).filter(dbh.Sample.id.in_(ids))
+
+            if 'category' in spec:
+                q = q.filter(dbh.Sample.category == int(spec['category']))
+            if 'int1' in spec:
+                q = q.filter(dbh.Sample.int1 == int(spec['int1']))
+            if 'int2' in spec:
+                q = q.filter(dbh.Sample.int2 == int(spec['int2']))
+
+            ids = set(x.id for x in q)
+
+            global_ids.update( ids )
 
         if sample_ids is not None:
             assert type(sample_ids) is set, "Please provide sample_ids as set"
-            ids = ids.intersection( sample_ids )
+            global_ids = global_ids.intersection( sample_ids )
 
-        return ids
+        return global_ids
 
 
     def get_sample_sets(self, dbh, sample_ids=None):
