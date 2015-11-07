@@ -1,5 +1,5 @@
 
-import sys, argparse, yaml, csv, transaction
+import sys, argparse, yaml, csv, transaction, os
 from fatools.lib.utils import cout, cerr, cexit, get_dbhandler, tokenize
 
 
@@ -142,7 +142,7 @@ def main(args):
             keys = input('Do you want to continue [y/n]? ')
             if not keys.lower().strip().startswith('y'):
                 sys.exit(1)
-            
+
         do_dbmgr(args)
 
 
@@ -275,6 +275,64 @@ def do_initsample(args, dbh):
     b = dbh.Batch.search(args.batch, dbh.session)
     cout('INFO - using batch code: %s' % b.code)
 
+    name, ext = os.path.splitext( args.infile )
+
+    if ext in [ '.csv', '.tab', '.tsv' ]:
+
+        delim = ',' if ext == '.csv' else '\t'
+
+        dict_samples, errlog, sample_codes = b.get_sample_class().csv2dict(
+                open(args.infile), with_report=True, delimiter = delim )
+
+        if dict_samples is None:
+            cout('Error processing sample info file')
+            cout('\n'.join(errlog))
+            cexit('Terminated!')
+
+    elif ext in ['.json', '.yaml']:
+        payload = yaml.load( open(args.infile) )
+        sample_codes = payload['codes']
+        dict_samples = payload['samples']
+
+    inserted=0
+    updated=0
+
+    # get default location and subject first (to satisfy RDBMS constraints)
+    null_location = dbh.search_location(auto=True)
+    null_subject = dbh.search_subject('null', auto=True) ## <- this shouldn't be here !!
+
+    session = dbh.session()
+
+    with session.no_autoflush:
+
+        for sample_code in sample_codes:
+            d_sample = dict_samples[sample_code]
+
+            db_sample = b.search_sample( sample_code )
+
+            if not db_sample:
+                db_sample = b.add_sample( sample_code )
+                inserted += 1
+                cout('INFO - sample: %s added.' % db_sample.code)
+                db_sample.location = null_location
+                db_sample.subject = null_subject
+                #print(d_sample)
+                #dbh.session().flush( [db_sample] )
+
+            else:
+                cout('INFO - sample: %s being updated...' % db_sample.code)
+                updated += 1
+
+            db_sample.update( d_sample )
+            session.flush( [db_sample] )
+
+
+    cout('INFO - inserted new %d sample(s), updated %d sample(s)' %
+            (inserted, updated))
+
+    return
+
+
     inrows = csv.reader( open(args.infile),
                 delimiter = ',' if args.infile.endswith('.csv') else '\t' )
 
@@ -330,7 +388,7 @@ def do_uploadfsa(args, dbh):
 
             a = s.add_fsa_assay( trace, filename=fsa_filename, panel_code = fsa_panel,
                         options = options, species = args.species, dbhandler = dbh)
-            cerr('INFO - sample: %s assay: %s panel: %s has been uploaded' % 
+            cerr('INFO - sample: %s assay: %s panel: %s has been uploaded' %
                         (s.code, a.filename, fsa_panel))
 
         except Exception as exc:
@@ -413,7 +471,7 @@ def do_viewbin(args, dbh):
 
 
 def do_updatebins(args, dbh):
-    
+
     with open(args.updatebins) as f:
         updated_bins = yaml.load( f )
 
@@ -499,7 +557,7 @@ def do_exportfsa(args, dbh):
 # helpers
 
 def get_assay_list( args, dbh ):
-    
+
     if not args.batch:
         cerr('ERR - need --batch argument!')
         sys.exit(1)
