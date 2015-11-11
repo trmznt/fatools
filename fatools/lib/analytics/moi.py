@@ -50,7 +50,8 @@ def calculate_moi(allele_df):
     moi.group = sm.groupby(sm)
     moi.histogram = moi.group.count()
     moi.alleles = am_filter_dist.groupby(am_filter_dist).count()
+    moi.mean = sm.mean()
+    moi.std = sm.std()
 
-    raise RuntimeError
     return moi
 
