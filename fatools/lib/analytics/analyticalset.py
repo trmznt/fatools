@@ -86,7 +86,7 @@ class AnalyticalSet(object):
                 except KeyError:
                     self._sample_marker[sample_id] = { marker_id }   # create initial set
         return self._sample_marker
-    
+
 
     def get_filtered_sample_ids(self):
         """ get sample_ids that passed sample quality assessment """
@@ -167,13 +167,18 @@ class AnalyticalSetContainer(list):
         super().__init__()
         self._sample_sets = sample_sets
         self._params = params
+        self._total_samples = 0
+        self._sample_ids = set()
         for s in self._sample_sets:
+            if len(s) <= 0: continue
             self.append( AnalyticalSet( s, params, marker_ids, dbh ) )
+            self._total_samples += s.N
+            self._sample_ids.update( s.sample_ids )
 
 
     def get_sample_sets(self):
         return self._sample_sets
-            
+
 
     def get_filtered_sample_ids(self):
         """ return a filtered sample_ids, ie sample with minimum number of marker """
@@ -200,7 +205,7 @@ class AnalyticalSetContainer(list):
                 marker_counts[marker_id] += count
 
         return marker_counts
-        
+
 
     def get_filtered_analytical_sets(self):
         """ return a filtered analytical set container """
@@ -209,11 +214,13 @@ class AnalyticalSetContainer(list):
 
     @property
     def total_samples(self):
-        return self._sample_sets.total_samples
+        return self._total_samples
+
 
     @property
     def sample_ids(self):
-        return self._sample_sets.sample_ids
+        return self._sample_ids
+
 
 
 def get_analytical_sets(dbh, sample_sets, params, marker_ids=None):
@@ -222,7 +229,7 @@ def get_analytical_sets(dbh, sample_sets, params, marker_ids=None):
     sets = AnalyticalSetContainer( sample_sets, params, marker_ids, dbh )
 
     return sets
-        
+
 
 
 

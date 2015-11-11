@@ -26,6 +26,9 @@ class SampleSet(object):
     def N(self):
         return len( self.sample_ids )
 
+    def __len__(self):
+        return self.N
+
 
 
 class SampleSetContainer(list):
