@@ -459,12 +459,13 @@ def do_viewbin(args, dbh):
         cexit('ERR - please provide marker code')
 
     markers = [ dbh.get_marker(code) for code in args.marker.split(',') ]
+    batch = dbh.get_batch( args.batch or 'default')
 
     for m in markers:
         cout('Marker: %s' % m.label)
         cout('    Bin   Mean   25%P   75%P   Width')
         cout('  ====================================')
-        for binset in m.bins:
+        for binset in m.get_bin(batch).sortedbins:
             cout('   %3d  %5.2f  %5.2f  %5.2f  %4.2f' %
                     (binset[0], binset[1], binset[2], binset[3], binset[3] - binset[2]))
 
