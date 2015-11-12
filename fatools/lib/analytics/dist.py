@@ -30,19 +30,20 @@ class DistanceMatrix(object):
         self._haplotype_sets = haplotype_sets
         self.H = None   # haplotypes as pandas DataFrame
         self.M = None   # the distance matrix
-        self.S = None   # set index
+        self.S = None   # set index, containing (haplo_set, start, length)
+        self.V = None   # array of all distance values
 
 
     def calculate_distance(self, dfunc):
 
         for idx, hs in enumerate(self._haplotype_sets):
-            if hs.total_samples <= 0:
+            if hs.N <= 0:
                 continue
             if self.H is None:
-                self.L = [idx] * hs.total_samples
+                self.S = [ (hs, 0, hs.N) ]
                 self.H = hs.haplotype_df
                 continue
-            self.L += [idx] * hs.total_samples
+            self.S.append( (hs, len(self.H), hs.N) )
             self.H = self.H.append(hs.haplotype_df)
 
         (m, v) = dfunc(self.H)

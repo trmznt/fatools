@@ -17,13 +17,21 @@ class HaploSet(object):
 
 
     @property
-    def total_samples(self):
+    def N(self):
         return len(self._sample_ids)
 
 
     @property
     def sample_ids(self):
         return self._sample_ids
+
+    @property
+    def colour(self):
+        return self._analytical_set.colour
+
+    @property
+    def label(self):
+        return self._analytical_set.label
 
 
 
