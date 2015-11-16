@@ -4,6 +4,12 @@
 
 import numpy as np
 
+def null_distance( genotable ):
+    """ return null distance, usable for the purpose of just building
+        DistanceMatrix object with proper DataFrame
+    """
+    return (None, None)
+
 def simple_distance( genotable ):
     """ return proportion of difference alleles """
 
