@@ -209,3 +209,18 @@ def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
     plt.close()
 
 
+
+def summarize_haplotypes(haplotype_sets):
+
+    summaries = {}
+    H = {}  # dictionary containing all haplotype_sets
+
+    for hs in haplotype_sets:
+        summaries[hs.label] = summarize_haplotype_df(hs.haplotype_df)
+
+    # check all haplotypes, finding singletons (or dualtons, tripletons, etc)
+
+
+def summarize_haplotype_df(haplotype_df):
+
+    pass
