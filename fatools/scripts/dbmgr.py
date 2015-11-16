@@ -79,6 +79,9 @@ def init_argparser( parser=None ):
     p.add_argument('--exportsample', default=False, action='store_true',
             help = 'export sample data to tab-delimited file')
 
+    p.add_argument('--viewpeakcachedb', default=False, action='store_true',
+            help = 'view/summarize content of peakcachedb')
+
     ## options
 
     p.add_argument('--infile', default=False,
@@ -125,6 +128,9 @@ def init_argparser( parser=None ):
 
     p.add_argument('--abort', default=False, action='store_true',
             help = 'abort for any warning')
+
+    p.add_argument('--peakcachedb', default=None,
+            help = 'peakcache DB filename')
 
     return p
 
@@ -182,6 +188,8 @@ def do_dbmgr(args, dbh = None, warning=True):
         do_setbinbatch(args, dbh)
     elif args.exportfsa is not False:
         do_exportfsa(args, dbh)
+    elif args.viewpeakcachedb is not False:
+        do_viewpeakcachedb(args, dbh)
     else:
         if warning:
             cerr('Unknown command, nothing to do!')
@@ -553,6 +561,23 @@ def do_exportfsa(args, dbh):
 
     outfile.close()
 
+
+def do_viewpeakcachedb(args, dbh):
+
+    from leveldb import LevelDB
+    from collections import defaultdict
+
+    ldb = LevelDB(args.peakcachedb, create_if_missing=False)
+
+    batches = defaultdict(int)
+
+    for key in ldb.RangeIter(include_value=False):
+        batch_code = bytes(key.split(b'|', 1)[0])
+        batches[batch_code] += 1
+
+    cout('Peakcache DB: %s' % args.peakcachedb)
+    for (k,v) in batches.items():
+        cout('\t%s\t%4d' % (k.decode(),v))
 
 
 # helpers
