@@ -362,36 +362,38 @@ def do_uploadfsa(args, dbh):
 
     b = dbh.get_batch(args.batch)
 
-    inrows = csv.reader( open(args.infile),
+    inrows = csv.DictReader( open(args.infile),
                 delimiter = ',' if args.infile.endswith('.csv') else '\t' )
-    next(inrows)
+    #next(inrows)
 
     total_fsa = 0
     line_counter = 1
-    for row in inrows:
+    for r in inrows:
 
         line_counter += 1
 
-        if not row[0] or row[0].startswith('#'):
+        #if not row[0] or row[0].startswith('#'):
+        #    continue
+        if not (r['FILENAME'] and r['SAMPLE']) or '#' in [ r['FILENAME'][0], r['SAMPLE'][0] ]:
             continue
 
-        if len(row) < 3:
-            cerr('ERR - line %d only has %d item(s)' % (line_counter, len(row)))
+        #if len(row) < 3:
+        #    cerr('ERR - line %d only has %d item(s)' % (line_counter, len(row)))
 
-        sample_code, fsa_filename, fsa_panel = row[0], row[1], row[2]
-        if len(row) >= 4:
-            options = tokenize( row[3] )
+        sample_code, fsa_filename, fsa_panel = r['SAMPLE'], r['FILENAME'], r['PANEL']
+        if r['OPTIONS']:
+            options = tokenize( r['OPTIONS'] )
         else:
             options = None
 
         try:
 
-            s = b.search_sample(row[0])
+            s = b.search_sample(sample_code)
             if not s:
-                cerr('ERR - sample %s does not exist' % row[0])
+                cerr('ERR - sample %s does not exist' % sample_code)
                 sys.exit(1)
 
-            with open( args.indir + '/' + row[1], 'rb') as f:
+            with open( args.indir + '/' + fsa_filename, 'rb') as f:
                 trace = f.read()
 
             a = s.add_fsa_assay( trace, filename=fsa_filename, panel_code = fsa_panel,
