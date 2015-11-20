@@ -48,6 +48,16 @@ def export_major_r(analytical_sets, dbh, outstream):
     return output
 
 
+def export_alleledf(analytical_sets, dbh, outstream):
+    """ export allele dataframe to file suitable for loading
+        into R or Python's pandas
+    """
+
+    # format: LABEL SAMPLE MARKER ALLELE SIZE HEIGHT AREA BETA THETA SYM SCORE TYPE
+
+    df = None
+
+
 def write_csv(output, outstream, delimiter='\t'):
 
     writer = csv.writer(outstream, delimiter=delimiter)
@@ -60,6 +70,7 @@ export_format = {
     'major_tab': export_major_tab,
     'tab': export_tab,
     'major_r': export_major_r,
+    'alleledf': export_alleledf,
 }
 
 
@@ -108,9 +119,9 @@ def tabulate_data( allele_df, dbh ):
                             index='sample_id', columns='marker_id', values='assay_id',
                             aggfunc = lambda x: tuple(x) )
 
-    buf.append( tuple( ['Sample', 'ID'] + 
+    buf.append( tuple( ['Sample', 'ID'] +
                     [ dbh.get_marker_by_id(x).code for x in table.columns ] ) )
-    buf2.append( tuple( ['Sample', 'ID'] + 
+    buf2.append( tuple( ['Sample', 'ID'] +
                     [ dbh.get_marker_by_id(x).code for x in heights.columns ] ) )
     buf3.append( tuple( ['Sample', 'ID'] +
                     [ dbh.get_marker_by_id(x).code for x in assay_ids.columns ] ) )

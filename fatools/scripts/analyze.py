@@ -46,7 +46,7 @@ def init_argparser(parser=None):
             help = 'YAML query file')
 
     p.add_argument('--outformat', default=False,
-            help = 'format output type (html, tab, arlequin)')
+            help = 'format output type (html, tab, arlequin, alleledf)')
 
     p.add_argument('--outfile', default=False,
             help = 'output filename, or - for stdout/console')
@@ -154,7 +154,7 @@ def do_binsummary(args, dbh):
         dbh.session().flush()
 
     if args.outfile:
-        
+
         output_dict = {}
         for marker in markers:
             output_dict[marker.label] = {
@@ -196,13 +196,13 @@ def do_corralleles(args, dbh):
 
 
 def get_sample_sets(args, dbh):
-    
+
     pass
 
 
 def get_analytical_sets( args, dbh ):
 
-    
+
     query = load_yaml( open(args.yamlquery).read() )
     sample_sets = query['selector'].get_sample_sets(dbh)
     pprint(sample_sets)
@@ -260,8 +260,8 @@ def make_allele_report( summaries, dbh ):
             for data in summary[marker_id]['alleles']:
                 _('        %3d  %5.3f  %3d  %5.2f - %5.2f  %5.2f  %4.2f' %
                         (data[0], data[1], data[2], data[4], data[5], data[8], data[6]))
-    
+
     return '\n'.join(lines)
 
 
-    
+
