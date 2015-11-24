@@ -55,7 +55,18 @@ def export_alleledf(analytical_sets, dbh, outstream):
 
     # format: LABEL SAMPLE MARKER ALLELE SIZE HEIGHT AREA BETA THETA SYM SCORE TYPE
 
-    df = None
+    outstream.write('LABEL\tMARKER\tSAMPLE\tBIN\tSIZE\tHEIGHT\tRATIO\n')
+
+    for analytical_set in analytical_sets:
+
+        allele_df = analytical_set.allele_df.df
+        for t in allele_df.itertuples():
+            (marker_id, sample_id, value, size, height, assay_id, ratio) = t[1:]
+            marker = dbh.get_marker_by_id(marker_id)
+            sample = dbh.get_sample_by_id(sample_id)
+            outstream.write('%s\t%s\t%s\t%d\t%f\t%d\t%f\n' %
+                (analytical_set.label, marker.code, sample.code, value, size, height, ratio))
+
 
 
 def write_csv(output, outstream, delimiter='\t'):
