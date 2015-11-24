@@ -123,18 +123,23 @@ class base_sqlhandler(object):
         if params.abs_threshold > 0:
             q = q.filter( self.Allele.height > params.abs_threshold )
 
-        if params.rel_threshold == 0 and params.rel_cutoff == 0:
-            df = DataFrame( [ (marker_id, sample_id, value, size, height, assay_id )
+        if params.rel_threshold == 0 and params.rel_cutoff == 0 and params.stutter_ratio == 0:
+            df = DataFrame( [ (marker_id, sample_id, value, size, height, assay_id, -1 )
                     for ( sample_id, assay_id, marker_id, value, size, height ) in q ] )
 
         else:
 
             alleles = []
 
+            # loop control
             max_height = 0
             last_marker_id = 0
             last_sample_id = 0
-            skip_flag = False
+            skip_flag = False       # whether to skip the current sample & marker
+            stutter_flag = False    # whether current allele is considered stutter
+            current_alleles = None  # contains the alleles of current sample & marker
+
+            # the loop
             for ( sample_id, assay_id, marker_id, value, size, height ) in q:
                 if sample_id == last_sample_id:
                     if last_marker_id == marker_id:
@@ -142,6 +147,7 @@ class base_sqlhandler(object):
                             continue
                         ratio = height / max_height
                         if ratio < params.rel_threshold:
+                            skip_flag = True
                             continue
                         if (    params.rel_cutoff > 0 and
                                 ratio > params.rel_cutoff ):
@@ -151,20 +157,41 @@ class base_sqlhandler(object):
                             del alleles[-1]
                             continue
 
+                        stutter_flag = False
+                        if params.stutter_ratio > 0:
+                            for dval, dsize, dheight in current_alleles:
+                                allele_range = abs(dsize - size)
+                                allele_ratio = height/dheight
+                                if ( (  allele_range < params.stutter_range and
+                                        allele_ratio < params.stutter_ratio ) or
+                                      ( allele_range < params.stutter_baserange and
+                                        allele_ratio < params.stutter_baseratio )):
+                                    stutter_flag = True
+                                    break
+                                    current_alleles.append( (value, size, height) )
+                                    print(sample_id, marker_id, value, size, height, allele_ratio)
+                                    continue
+
+                        current_alleles.append( (value, size, height) )
+                        if stutter_flag:
+                            continue
+
                 else:
                     last_sample_id = sample_id
                     last_marker_id = marker_id
                     max_height = height
                     skip_flag = False
+                    ratio = 1
+                    current_alleles = [ (value, size, height) ]
 
-                alleles.append( (marker_id, sample_id, value, size, height, assay_id) )
+                alleles.append( (marker_id, sample_id, value, size, height, assay_id, ratio) )
 
             df = DataFrame( alleles )
 
         if len(df) == 0:
             return df
 
-        df.columns = ( 'marker_id', 'sample_id', 'value', 'size', 'height', 'assay_id' )
+        df.columns = ( 'marker_id', 'sample_id', 'value', 'size', 'height', 'assay_id', 'ratio' )
         return df
 
 

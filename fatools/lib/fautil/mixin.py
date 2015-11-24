@@ -14,7 +14,7 @@ import pprint, sys, time
 
 class PanelMixIn(object):
     """ contains Panel methods """
-    
+
     def update(self, obj):
         raise NotImplementedError('PROG/ERR - child class must provide this method')
 
@@ -31,7 +31,7 @@ class PanelMixIn(object):
             if  obj.data is not None:
                 self.data = obj.data
 
-    
+
     def get_marker_codes(self):
         """ return a list of marker codes """
         if self.data:
@@ -48,7 +48,7 @@ class PanelMixIn(object):
         """ return marker instance with marker_code """
         raise NotImplementedError('PROG/ERR - child class must provide this method')
 
-    
+
     def get_ladder_code(self):
         if self.data:
             return self.data['ladder']
@@ -275,7 +275,7 @@ class SampleMixIn(object):
 
 
     def new_fsa_assay(self, trace, filename, panel):
-        
+
         raise NotImplementedError('PROG/ERR - child class must override this method!')
 
 
@@ -400,7 +400,7 @@ class ChannelMixIn(object):
                 assay.report = assay.report + '//' + '|'.join(remarks)
             else:
                 assay.report = '|'.join(remarks)
-        
+
         return (dpscore, rss, len(aligned_peaks), len(ladder_sizes), qcscore, remarks, method)
 
 
@@ -411,7 +411,7 @@ class ChannelMixIn(object):
             return
 
         algo.call_peaks( self, params, func, min_rtime, max_rtime )
-        
+
 
     def size(self, params):
 
@@ -441,11 +441,19 @@ class ChannelMixIn(object):
 
     def postannotate(self, params):
 
-        raise NotImplementedError()
+        # self sanity check
+        if self.marker.code == 'ladder':
+            return
+
+        if self.marker.code == 'undefined':
+            return
+
+        algo.postannotate_peaks( self.allelesets[0], params )
+        #raise NotImplementedError()
 
 
     def tag(self):
-        
+
         return '%s|%s|%s|%s|%s' % (self.assay.sample.batch.code,
                         self.assay.sample.code, self.assay.filename,
                         self.assay.runtime, self.dye.upper())
@@ -485,7 +493,7 @@ class ChannelMixIn(object):
 
         from fatools.lib import const
         std_sizes = const.ladders['LIZ600']['sizes']
-        
+
         x = std_sizes
         y = [ x * 0.1 for x in peak_sizes ]
 
@@ -587,9 +595,12 @@ class AssayMixIn(object):
         self.status = assaystatus.called
 
 
-    def postannotate(self, params):
+    def postannotate(self, params, markers = None):
         """ annotate peaks for size-based stutter, etc """
         for c in self.channels:
+            if c == self.ladder: continue
+            if markers and c.marker not in markers:
+                continue
             c.postannotate(params)
         self.status = assaystatus.annotated
 
@@ -630,7 +641,7 @@ class AssayMixIn(object):
         ladder_dye = ladders[ladder_code]['dye']
 
         # check excluded_markers
-        
+
         has_ladder = False
         marker_count = 0
         excluded = []
@@ -645,7 +656,7 @@ class AssayMixIn(object):
                 self.size_standard = ladder_code
                 self.ladder = channel
                 continue
-            
+
             try:
                 marker = panel.get_marker_by_dye( channel.dye.upper() )
             except KeyError:
@@ -686,7 +697,7 @@ class AssayMixIn(object):
         if not hasattr(self, '_trace'):
             self._trace = traceio.read_abif_stream( io.BytesIO( self.raw_data ) )
         return self._trace
-        
+
 
 
 class AlleleSetMixIn(object):

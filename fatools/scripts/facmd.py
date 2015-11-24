@@ -38,6 +38,9 @@ def init_argparser(parser=None):
     p.add_argument('--bin', default=False, action='store_true',
             help = 'binning peaks')
 
+    p.add_argument('--postannotate', default=False, action='store_true',
+            help = 'post annotate peaks')
+
     p.add_argument('--listpeaks', default=False, action='store_true',
             help = 'list all peaks')
 
@@ -156,6 +159,9 @@ def do_facmd(args, dbh=None):
         executed += 1
     if args.bin is not False:
         do_bin(args, dbh)
+        executed += 1
+    if args.postannotate is not False:
+        do_postannotate(args, dbh)
         executed += 1
     if args.setallele is not False:
         do_setallele(args, dbh)
@@ -299,6 +305,27 @@ def do_bin(args, dbh):
         counter += 1
 
 
+def do_postannotate(args, dbh):
+
+    cerr('I: Post-annotating peaks...')
+
+    scanning_parameter = params.Params()
+
+    if args.marker:
+        markers = [ dbh.get_marker( code ) for code in args.marker.split(',') ]
+    else:
+        markers = None
+
+
+    assay_list = get_assay_list( args, dbh )
+    counter = 1
+    for (assay, sample_code) in assay_list:
+        cerr('I: [%d/%d] - Post-annotating: %s | %s' %
+                (counter, len(assay_list), sample_code, assay.filename))
+        assay.postannotate( scanning_parameter.nonladder, markers )
+        counter += 1
+
+
 
 def do_findpeaks( args, dbh ):
 
@@ -402,7 +429,7 @@ def do_listpeaks( args, dbh ):
         for channel in assay.channels:
             if markers and channel.marker not in markers:
                 continue
-            cout('Marker => %s | %s [%d]' % (channel.marker.code, channel.dye, 
+            cout('Marker => %s | %s [%d]' % (channel.marker.code, channel.dye,
                     len(channel.alleles)))
             for p in channel.alleles:
                 cout( '  ' + str(p) )
@@ -410,7 +437,7 @@ def do_listpeaks( args, dbh ):
 def do_showtrace( args, dbh ):
 
     assay_list = get_assay_list( args, dbh )
-    
+
     from matplotlib import pylab as plt
 
     for (assay, sample_code) in assay_list:
@@ -456,7 +483,7 @@ def do_showz( args, dbh ):
 # helpers
 
 def get_assay_list( args, dbh ):
-    
+
     if not args.batch:
         cerr('ERR - need --batch argument!')
         sys.exit(1)
@@ -496,14 +523,14 @@ def printout_assay( assay, outfile=sys.stdout, fmt='text' ):
                     len(assay.ladder.alleles), assay.method) )
         return ''
 
-        
+
     buf = []
     _ = buf.append
 
     _( 'Assay: %s -- Sample: %s' % (assay.filename, assay.sample.code) )
     if assay.status in ( assaystatus.aligned, assaystatus.called,
                         assaystatus.annotated, assaystatus.binned ):
-        _( ' => Score: %3.2f, DP: %5.2f, RSS: %5.2f, N-peak: %d' % 
+        _( ' => Score: %3.2f, DP: %5.2f, RSS: %5.2f, N-peak: %d' %
             ( assay.score, assay.dp, assay.rss, assay.ladder_peaks ))
 
     return '\n'.join( buf )

@@ -495,15 +495,29 @@ def bin_peaks(channel, params, marker):
 
 
 
-def postannotate_peaks( channels, params ):
+def postannotate_peaks( channel, params ):
     """
-    post annotate peaks with peak-overlap or peak stutter
+    post annotate binned peaks with peak stutter
     """
 
-    # peak is stutter if peak is in the same bin or
+    # peak is stutter if the range < params.stutter_range and
+    # ratio < params.stutter_ratio
 
-    pass
+    alleles = sorted(list(channel.alleles), key = lambda x: x.height)
+    prev_alleles = []
 
+    for allele in alleles:
+        if allele.type != peaktype.bin: continue
+        for prev_allele in prev_alleles:
+            if (    abs(prev_allele.size - allele.size) < params.stutter_range and
+                    allele.height/prev_allele.height < params.stutter_ratio ):
+                allele.type = peaktype.stutter
+            prev_alleles.append( allele )
+
+
+    # XXX: Note on stutter recognition
+    # real stutters can be defined as a peak having at least 2 minor peak in consecutive
+    # or around it, minor peak < stutter_ratio
 
 
 # helper functions

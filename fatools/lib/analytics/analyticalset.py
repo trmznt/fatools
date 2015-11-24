@@ -80,7 +80,7 @@ class AnalyticalSet(object):
     def sample_marker(self):
         if self._sample_marker is None:
             self._sample_marker = {}
-            for (idx, marker_id, sample_id, value, size, height, assay_id) in self.allele_df.df.itertuples():
+            for (idx, marker_id, sample_id, value, size, height, assay_id, ratio) in self.allele_df.df.itertuples():
                 try:
                     self._sample_marker[sample_id].add( marker_id )
                 except KeyError:

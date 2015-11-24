@@ -147,6 +147,10 @@ class Filter(object):
         self.marker_qual_threshold = 0.0    # includes markers with sample more than %
         self.peaktype = peaktype.bin
         self.sample_options = None
+        self.stutter_ratio = 0.0
+        self.stutter_range = 3.5
+        self.stutter_baserange = 4.5
+        self.stutter_baseratio = 0.1
 
 
     @staticmethod
@@ -160,6 +164,8 @@ class Filter(object):
         params.sample_qual_threshold = float( d['sample_qual_threshold'] )
         params.marker_qual_threshold = float( d['marker_qual_threshold'] )
         params.sample_option = d['sample_option']
+        params.stutter_ratio = float(d.get('stutter_ratio', 0))
+        params.stutter_range = float(d.get('stutter_range', 3.5))
         return params
 
 

@@ -9,7 +9,7 @@ class ScanningParameter(object):
         self.min_height = 1
         self.min_size = 100
         self.max_size = 600
-        self.stutter_threshold = 1.25
+        #self.stutter_threshold = 1.25
         self.overlap_threshold = 1.10
         self.bin_relative_ratio = 0.5
         self.widths = np.arange( 5, 15) #3, 10)
@@ -24,13 +24,15 @@ class ScanningParameter(object):
         self.max_beta = 15
         self.max_gradient_threshold = 0
         self.overlap_height_threshold = 0.75
-        self.stutter_rtime_threshold = 10
-        self.stutter_height_threshold = 0.5
-        self.stutter_size_threshold = 1.25
+        #self.stutter_rtime_threshold = 10
+        #self.stutter_height_threshold = 0.5
+        #self.stutter_size_threshold = 1.25
         self.height = -1    # if this is > 0, then the peaks will be filtered based on this peak
         self.ignoredpeaks = None
         self.width_ratio = 2000
         self.expected_peak_number = 0
+        self.stutter_ratio = 0.10
+        self.stutter_range = 4.5
 
 
 class LadderScanningParameter(ScanningParameter):
@@ -59,4 +61,4 @@ class Params(object):
     ladder = LadderScanningParameter()
     nonladder = ScanningParameter()
 
-    
+
