@@ -1,4 +1,6 @@
 
+import pandas
+
 #
 #
 # Multiplicity of Infection (MoI) calculation
@@ -47,6 +49,8 @@ def calculate_moi(allele_df):
     am_filter = am.applymap(lambda x: 1 if x > 1 else 0)
     am_filter_dist = am_filter.sum(1)
 
+    moi.sample_dist = pandas.concat([sm, am_filter_dist], axis=1)
+    moi.sample_dist.columns = ('MOI', 'MLOCI')
     moi.group = sm.groupby(sm)
     moi.histogram = moi.group.count()
     moi.alleles = am_filter_dist.groupby(am_filter_dist).count()
