@@ -316,7 +316,7 @@ def do_initsample(args, dbh):
 
     # get default location and subject first (to satisfy RDBMS constraints)
     null_location = dbh.search_location(auto=True)
-    null_subject = dbh.search_subject('null', auto=True) ## <- this shouldn't be here !!
+    #null_subject = dbh.search_subject('null', auto=True) ## <- this shouldn't be here !!
 
     session = dbh.session()
 
@@ -332,7 +332,7 @@ def do_initsample(args, dbh):
                 inserted += 1
                 cout('INFO - sample: %s added.' % db_sample.code)
                 db_sample.location = null_location
-                db_sample.subject = null_subject
+                #db_sample.subject = null_subject
                 #print(d_sample)
                 #dbh.session().flush( [db_sample] )
 
