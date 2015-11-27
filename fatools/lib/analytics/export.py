@@ -73,6 +73,8 @@ def export_moidf(analytical_sets, dbh, outstream):
         R or Python's pandas
     """
 
+    from fatools.lib.analytics.moi import calculate_moi
+
     # format: LABEL SAMPLE MOI MLOCI
 
     outstream.write('LABEL\tSAMPLE\tMOI\tMLOCI\n')
@@ -81,9 +83,9 @@ def export_moidf(analytical_sets, dbh, outstream):
         moi_result = calculate_moi(analytical_set.allele_df)
         label = analytical_set.label
         for t in moi_result.sample_dist.itertuples():
-            (sample_id, moi_number, mloci_number) = t[1:]
+            (sample_id, moi_number, mloci_number) = t
             if dbh:
-                sample_code = dbh.get_sample_by_id(sample_id)
+                sample_code = dbh.get_sample_by_id(sample_id).code
             else:
                 sample_code = str(sample_id)
             outstream.write('%s\t%s\t%d\t%d\n' %
