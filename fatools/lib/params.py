@@ -39,6 +39,7 @@ class LadderScanningParameter(ScanningParameter):
 
     def __init__(self):
         super().__init__()
+        self.min_rtime = 20
         self.min_relative_ratio = 0
         self.max_relative_ratio = 0
         self.min_height_ratio = 0
