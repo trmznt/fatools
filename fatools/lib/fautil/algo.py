@@ -503,7 +503,7 @@ def postannotate_peaks( channel, params ):
     # peak is stutter if the range < params.stutter_range and
     # ratio < params.stutter_ratio
 
-    alleles = sorted(list(channel.alleles), key = lambda x: x.height)
+    alleles = sorted(list(channel.alleles), key = lambda x: x.height, reverse=True)
     prev_alleles = []
 
     for allele in alleles:
@@ -512,7 +512,9 @@ def postannotate_peaks( channel, params ):
             if (    abs(prev_allele.size - allele.size) < params.stutter_range and
                     allele.height/prev_allele.height < params.stutter_ratio ):
                 allele.type = peaktype.stutter
-            prev_alleles.append( allele )
+
+        # added this allele to prev_alleles
+        prev_alleles.append( allele )
 
 
     # XXX: Note on stutter recognition
