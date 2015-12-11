@@ -10,6 +10,7 @@ class base_sqlhandler(object):
     Batch = None
     Sample = None
     Assay = None
+    Allele = None
 
     def __init__(self):
         self.engine = None
@@ -61,6 +62,9 @@ class base_sqlhandler(object):
 
     def get_assay_by_id(self, id):
         return self.get_by_id(self.Assay, id)
+
+    def get_allele_by_id(self, id):
+        return self.get_by_id(self.Allele, id)
 
     def get_by_id(self, class_, id):
         assert class_ and id

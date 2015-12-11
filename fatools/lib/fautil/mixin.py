@@ -713,6 +713,13 @@ class AlleleSetMixIn(object):
 
 class AlleleMixIn(object):
 
+    def _update(self, obj):
+
+        if type(obj) == dict:
+
+            self.type_id = obj['type_id']
+
+
     def __repr__(self):
         return '<Allele [%3d] %5d %6d>' % (self.size, self.rtime, self.height)
 
