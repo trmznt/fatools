@@ -96,6 +96,10 @@ def init_argparser(parser=None):
 
     p.add_argument('--excluded_peaks')
 
+    p.add_argument('--stutter_ratio', default=0, type=float)
+
+    p.add_argument('--stutter_range', default=0, type=float)
+
     p.add_argument('--force', default=False, action='store_true',
             help = 'force the method (even if need short-cutting)' )
 
@@ -315,6 +319,11 @@ def do_postannotate(args, dbh):
         markers = [ dbh.get_marker( code ) for code in args.marker.split(',') ]
     else:
         markers = None
+
+    if args.stutter_ratio > 0:
+        scanning_parameter.nonladder.stutter_ratio = args.stutter_ratio
+    if args.stutter_range > 0:
+        scanning_parameter.nonladder.stutter_range = args.stutter_range
 
 
     assay_list = get_assay_list( args, dbh )

@@ -319,12 +319,12 @@ class Marker(Base, MarkerMixIn):
     min_size = Column(types.Integer, nullable=False, default=0)
     max_size = Column(types.Integer, nullable=False, default=0)
     """ range of allele size for this marker """
-    
+
     related_to_id = Column(types.Integer, ForeignKey('markers.id'),
                           nullable=True)
     related_to = relationship("Marker", uselist=False)
     """ points to related marker """
-    
+
     z_params = Column(types.String(32), nullable=False, default='')
     """ mathematical expression correlating with the related_to marker """
 
@@ -334,7 +334,7 @@ class Marker(Base, MarkerMixIn):
 
 
     def update(self, obj):
-        
+
         self._update( obj )
         if type(obj) == dict and 'related_to' in obj:
             related_marker = Marker.search( d['related_to'],
@@ -520,7 +520,7 @@ class Channel(Base, ChannelMixIn):
 
     assay_id = Column(types.Integer, ForeignKey('assays.id', ondelete='CASCADE'),
                         nullable=False)
-    assay = relationship(Assay, uselist=False, primaryjoin = assay_id == Assay.id, 
+    assay = relationship(Assay, uselist=False, primaryjoin = assay_id == Assay.id,
                     backref=backref('channels', lazy='dynamic'))
 
     marker_id = Column(types.Integer, ForeignKey('markers.id'), nullable=False)
@@ -543,7 +543,7 @@ class Channel(Base, ChannelMixIn):
     max_height = Column(types.Integer, nullable=False, default=-1)
     min_height = Column(types.Integer, nullable=False, default=-1)
     """ basic descriptive statistics for data"""
-        
+
     data = deferred(Column(NPArray, nullable=False))
     """ data after smoothed using savitzky-golay algorithm and baseline correction
         using top hat morphologic transform
@@ -677,7 +677,7 @@ class Allele(Base, AlleleMixIn):
     height = Column(types.Float, nullable=False, default=-1)
     area = Column(types.Float, nullable=False, default=-1)
     rtime = Column(types.Integer, nullable=False, default=-1)
-    delta = Column(types.Float, nullable=False, default=-1)     # bin - actual size 
+    delta = Column(types.Float, nullable=False, default=-1)     # bin - actual size
     beta = Column(types.Float, nullable=False, default=-1)      # area / height
     theta = Column(types.Float, nullable=False, default=-1)     # height / width
 
@@ -688,7 +688,7 @@ class Allele(Base, AlleleMixIn):
     ertime = Column(types.Integer, nullable=False, default=-1)
     wrtime = Column(types.Integer, nullable=False, default=-1)
     srtime = Column(types.Float, nullable=False, default=-1)    # log2( right_area/left_area )
-    w25rtime = Column(types.Float, nullable=False, default=-1)
+    w25rtime = Column(types.Integer, nullable=False, default=-1)
     w50rtime = Column(types.Integer, nullable=False, default=-1)
     w75rtime = Column(types.Integer, nullable=False, default=-1)
     lshared = Column(types.Boolean, nullable=False, default=False)

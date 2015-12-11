@@ -75,7 +75,7 @@ def greedy_align( data, ladders, peaks, qcfunc ):
         for j in range(1, J):
             
             # use the first & last peak to estimate Z
-            initial_peak_pairs = [  (peaks[i].rtime, ladders[0]),
+            initial_peak_pairs = [  (peaks[i].rtime, ladders[1]),
                                     (peaks[-j].rtime, ladders[-1]) ]
 
             # use this for z_align, and obtain rss

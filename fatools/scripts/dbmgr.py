@@ -46,8 +46,13 @@ def init_argparser( parser=None ):
     p.add_argument('--initbatch', default=False, action='store_true',
             help = 'create new batch')
 
+
     p.add_argument('--showbatches', default=False, action='store_true',
             help = 'show available batch(es)')
+
+    p.add_argument('--showsample', default=False, action='store_true',
+            help = 'show sample data details')
+
 
     p.add_argument('--initbin', default=False, action='store_true',
             help = 'create initial bin')
@@ -108,6 +113,9 @@ def init_argparser( parser=None ):
     p.add_argument('--fsa', default='',
             help = 'assay filename list (comma separated, no space)')
 
+    p.add_argument('--fsaid', default='',
+            help = 'assay id list (comma separated, no space, integers')
+
     p.add_argument('--assayprovider', default='',
             help = 'assay provider vendor/group')
 
@@ -164,6 +172,8 @@ def do_dbmgr(args, dbh = None, warning=True):
         do_initbatch(args, dbh)
     elif args.showbatches is not False:
         do_showbatches(args, dbh)
+    elif args.showsample is not False:
+        do_showsample(args, dbh)
     elif args.initsample is not False:
         do_initsample(args, dbh)
     elif args.importpanel is not False:
@@ -273,7 +283,6 @@ def do_showbatches(args, dbh):
         cout('  %s' % batch.code)
 
 
-
 def do_initsample(args, dbh):
 
     if not args.batch:
@@ -307,7 +316,7 @@ def do_initsample(args, dbh):
 
     # get default location and subject first (to satisfy RDBMS constraints)
     null_location = dbh.search_location(auto=True)
-    null_subject = dbh.search_subject('null', auto=True) ## <- this shouldn't be here !!
+    #null_subject = dbh.search_subject('null', auto=True) ## <- this shouldn't be here !!
 
     session = dbh.session()
 
@@ -323,7 +332,7 @@ def do_initsample(args, dbh):
                 inserted += 1
                 cout('INFO - sample: %s added.' % db_sample.code)
                 db_sample.location = null_location
-                db_sample.subject = null_subject
+                #db_sample.subject = null_subject
                 #print(d_sample)
                 #dbh.session().flush( [db_sample] )
 
@@ -504,12 +513,12 @@ def do_removebatch(args, dbh):
 
 
 
-def do_removeassay(args, dbh):
+def do_removefsa(args, dbh):
 
     assay_list = get_assay_list( args, dbh )
 
     batch = dbh.get_batch(args.batch)
-    if batch and not (args.sample or args.assay):
+    if batch and not (args.sample or args.fsa or args.fsaid):
         # remove all assay in this batch
         batch.remove_assays()
         cerr('INFO - removing all assays from batch %s' % batch.code)
@@ -582,6 +591,21 @@ def do_viewpeakcachedb(args, dbh):
         cout('\t%s\t%4d' % (k.decode(),v))
 
 
+def do_showsample(args, dbh):
+
+    from fatools.lib.const import channelstatus
+
+    batch = dbh.get_batch(args.batch)
+    for code in args.sample.split(','):
+        sample = batch.search_sample(code)
+        cout('Sample: %s' % sample.code)
+        for fsa in sample.assays:
+            marker_codes = [ c.marker.code for c in fsa.channels
+                    if c.status == channelstatus.assigned]
+            cout(' % 3d - %s | %s | %s' %
+                    (fsa.id, fsa.filename, fsa.panel.code, ','.join(marker_codes)) )
+
+
 # helpers
 
 def get_assay_list( args, dbh ):
@@ -601,13 +625,18 @@ def get_assay_list( args, dbh ):
 
     assays = []
     if args.fsa:
-        assays = args.assay.split(',')
+        assays = args.fsa.split(',')
+
+    fsaids = []
+    if args.fsaid:
+        fsaids = [int(x) for x in args.fsaid.split(',')]
 
     assay_list = []
     for sample in batch.samples:
         if samples and sample.code not in samples: continue
         for assay in sample.assays:
             if assays and assay.filename not in assays: continue
+            if fsaids and assay.id not in fsaids: continue
             assay_list.append( (assay, sample.code) )
 
     cerr('INFO - number of assays to be processed: %d' % len(assay_list))

@@ -24,8 +24,8 @@ class ScanningParameter(object):
         self.max_beta = 15
         self.max_gradient_threshold = 0
         self.overlap_height_threshold = 0.75
-        #self.stutter_rtime_threshold = 10
-        #self.stutter_height_threshold = 0.5
+        self.stutter_rtime_threshold = 10
+        self.stutter_height_threshold = 0.5
         #self.stutter_size_threshold = 1.25
         self.height = -1    # if this is > 0, then the peaks will be filtered based on this peak
         self.ignoredpeaks = None
@@ -39,6 +39,7 @@ class LadderScanningParameter(ScanningParameter):
 
     def __init__(self):
         super().__init__()
+        self.min_rtime = 20
         self.min_relative_ratio = 0
         self.max_relative_ratio = 0
         self.min_height_ratio = 0
