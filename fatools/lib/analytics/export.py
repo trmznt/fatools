@@ -92,6 +92,44 @@ def export_moidf(analytical_sets, dbh, outstream):
                 (label, sample_code, moi_number, mloci_number))
 
 
+def export_arlequin(analytical_sets, dbh, outstream, recode=False):
+    """ export MLGT to Arlequin format
+        recode: whether to use population-spesific alleles
+    """
+
+    _ = [   '[Profile]',
+            '  Title="MsAF exported data"',
+            '  NbSamples=%d' % len(analytical_sets),
+            '  DataType=MICROSAT',
+            '  GenotypicData=0',
+            '  GameticPhase=0',
+            '  MissingData="?"',
+            '  LocusSeparator=WHITESPACE',
+            '',
+    ]
+
+    _ += [  '[Data]',
+            '  [[Samples]]',
+    ]
+
+    for (idx, analytical_set) in enumerate(analytical_sets):
+
+        _ += [  '    SampleName="%s"' % analytical_set.label,
+                '    SampleSize=%d' % analytical_set.sample_set.N,
+                '    SampleData={',
+        ]
+
+        for e in analytical_set.allele_df.mlgt.itertuples():
+            if recode:
+                _.append('    %d 1 ' % e[0] + ' '.join('%02d%03d' % (idx,x) for x in e[1:]))
+            else:
+                _.append('    %d 1 ' % e[0] + ' '.join('%03d' % x for x in e[1:]))
+
+        _.append('    }')
+
+    outstream.write( '\n'.join(_))
+
+
 def write_csv(output, outstream, delimiter='\t'):
 
     writer = csv.writer(outstream, delimiter=delimiter)
@@ -106,6 +144,7 @@ export_format = {
     'major_r': export_major_r,
     'alleledf': export_alleledf,
     'moidf': export_moidf,
+    'arlequin': export_arlequin,
 }
 
 
