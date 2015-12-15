@@ -130,6 +130,18 @@ def export_arlequin(analytical_sets, dbh, outstream, recode=False):
     outstream.write( '\n'.join(_))
 
 
+def export_flat(analytical_set, dbh, outstream):
+    """ export MLGT from single analytical set to flat format, eg:
+        SAMPLECODE ALLELE1 ALLELE2 ALLELE3 ALLELE4
+    """
+
+    for e in analytical_set.allele_df.mlgt.itertuples():
+        row = [ str(e[0])]
+        outstream.write(
+            (' '.join( row + list( str(int(x)) for x in e[1:]) ) + '\n').encode('ASCII')
+        )
+
+
 def write_csv(output, outstream, delimiter='\t'):
 
     writer = csv.writer(outstream, delimiter=delimiter)
