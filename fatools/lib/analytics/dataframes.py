@@ -96,12 +96,16 @@ class AlleleDataFrame(object):
 
     @property
     def mlgt(self):
-        """ return MLGT (Multi Locus GenoTyping) dataframe """
+        """ return MLGT (Multi Locus GenoTyping) dataframe
+            this will drop samples with NaN (or None) allele, hence please
+            check the
+        """
         if self._mlgt_df is None:
             self._mltg_df = pivot_table(self.dominant_df,
                     index = 'sample_id',
                     columns = 'marker_id',
-                    values = 'value')
+                    values = 'value',
+                    dropna=False).dropna(how='any')
         return self._mltg_df
 
 
