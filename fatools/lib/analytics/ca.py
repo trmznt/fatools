@@ -82,10 +82,11 @@ def mca( distance_matrix, dim = 2 ):
 
     # build up haplotype dataframe
 
+    from fatools.lib.utils import acquire_R, release_R
     from rpy2 import robjects
     from rpy2.robjects import pandas2ri
 
-    pandas2ri.activate()
+    acquire_R()
 
     r_df = pandas2ri.py2ri(distance_matrix.H)
     robjects.globalenv['haplo_data'] = r_df
@@ -99,12 +100,9 @@ def mca( distance_matrix, dim = 2 ):
     # get the individual coordinate
     coord = pandas2ri.ri2py(mca_res.rx('ind')[0].rx('coord')[0])
 
+    release_R()
+
     return (coord, None)
-
-    #mca_result = mca_func(r_df, ** { 'quanti.sup': [1,2,3] })
-    #
-
-    raise RuntimeError
 
 
 def pca( distance_matrix, dim = 2 ):
