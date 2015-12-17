@@ -38,6 +38,8 @@ class DistanceMatrix(object):
         self.M = None   # the distance matrix
         self.S = None   # set index, containing (haplo_set, start, length)
         self.V = None   # array of all distance values
+        self.I = None   # sample_id for each samples (useful for NJ)
+        self.C = None   # color for each samples (useful for NJ)
 
 
     def calculate_distance(self, dfunc):
@@ -48,9 +50,12 @@ class DistanceMatrix(object):
             if self.H is None:
                 self.S = [ (hs, 0, hs.N) ]
                 self.H = hs.haplotype_df
+                self.I = hs.haplotype_df.index
+                self.C = [ hs.colour ] * hs.N
                 continue
             self.S.append( (hs, len(self.H), hs.N) )
             self.H = self.H.append(hs.haplotype_df)
+            self.C += [ hs.colour ] * hs.N
 
         (m, v) = dfunc(self.H)
         self.M = m
@@ -59,7 +64,12 @@ class DistanceMatrix(object):
 
     @property
     def total_samples(self):
-        return len(self.L)
+        return len(self.H)
+
+
+    @property
+    def sample_ids(self):
+        return self.H.index
 
 
 
