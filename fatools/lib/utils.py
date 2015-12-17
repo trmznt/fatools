@@ -1,5 +1,5 @@
 
-import sys
+import sys, base64, os, math
 
 def cout(s, nl=True, flush=False):
     sys.stdout.write(s)
@@ -20,7 +20,7 @@ def get_dbhandler(args, initial=False):
     """ return suitable handler from args """
 
     if args.sqldb:
-        
+
         from fatools.lib.sqlmodels.handler import SQLHandler
 
         return SQLHandler(args.sqldb, initial)
@@ -46,4 +46,31 @@ def tokenize(options, converter=None):
 
     return opt_dict
 
-    
+
+random_string = lambda n: base64.b64encode(os.urandom(int(math.ceil(0.75*n))), b'-_')[:n].decode('UTF-8')
+
+
+_R_lock_ = None
+
+def acquire_R():
+
+    global _R_lock_
+    if _R_lock_ is None:
+
+        # initialize rpy2 and set thread lock
+
+        from rpy2 import robjects
+        from rpy2.robjects import pandas2ri
+        import threading
+
+        pandas2ri.activate()
+        _R_lock_ = threading.Lock()
+
+    _R_lock_.acquire()
+
+
+def release_R():
+
+    global _R_lock_
+
+    _R_lock_.release()
