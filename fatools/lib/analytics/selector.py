@@ -4,8 +4,8 @@ from fatools.lib.analytics.sampleset import SampleSet, SampleSetContainer
 from fatools.lib.const import peaktype
 
 #colour_list = [ 'r', 'g', 'b' ]
-colour_list = ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c',
-                '#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928']
+colour_list = [ '#1f78b4','#33a02c','#e31a1c','#ff7f00','#6a3d9a','#b15928',
+                '#a6cee3','#b2df8a','#fb9a99','#fdbf6f','#cab2d6','#ffff99']
 
 
 class Selector(object):
