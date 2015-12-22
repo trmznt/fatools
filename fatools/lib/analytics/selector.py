@@ -14,9 +14,9 @@ class Selector(object):
         self.samples = samples
         self._sample_sets = None
 
-    @staticmethod
-    def from_dict(d):
-        selector = Selector()
+    @classmethod
+    def from_dict(cls, d):
+        selector = cls()
         selector.samples = d
         return selector
 
@@ -24,10 +24,10 @@ class Selector(object):
         return { 'samples': self.samples }
 
 
-    @staticmethod
-    def load(yaml_text):
+    @classmethod
+    def load(cls, yaml_text):
         d = yaml.load( yaml_text )
-        selector = Selector.from_dict( d )
+        selector = cls.from_dict( d )
         return selector
 
     def dump(self):
@@ -89,6 +89,8 @@ class Selector(object):
             if 'int2' in spec:
                 q = q.filter(dbh.Sample.int2 == int(spec['int2']))
 
+            q = self.filter_sample(spec, dbh, q)
+
             ids = set(x.id for x in q)
 
             global_ids.update( ids )
@@ -131,6 +133,10 @@ class Selector(object):
 
         return self._sample_sets
 
+
+    def filter_sample(self, spec_list, dbh, q):
+        """ please override this method as necessary"""
+        return q
 
 
 class Filter(object):
