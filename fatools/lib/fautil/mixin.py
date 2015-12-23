@@ -601,7 +601,7 @@ class AssayMixIn(object):
             if c == self.ladder: continue
             if markers and c.marker not in markers:
                 continue
-            c.postannotate(params)
+            c.postannotate(params.nonladder)
         self.status = assaystatus.annotated
 
 

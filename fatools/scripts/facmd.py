@@ -256,7 +256,8 @@ def do_alignladder( args, dbh ):
     for (assay, sample_code) in assay_list:
         cerr('I: [%d/%d] - Aligning: %s | %s' %
                 (counter, len(assay_list), sample_code, assay.filename))
-        (dpscore, rss, no_of_peaks, no_of_ladders, qcscore, remarks, method) = assay.alignladder( args.excluded_peaks, force_mode = args.force )
+        (dpscore, rss, no_of_peaks, no_of_ladders, qcscore, remarks,
+            method) = assay.alignladder( args.excluded_peaks, force_mode = args.force )
         if qcscore < 0.9:
             msg = 'W! low ladder QC'
         else:
@@ -284,7 +285,7 @@ def do_call(args, dbh):
     for (assay, sample_code) in assay_list:
         cerr('I: [%d/%d] - Calling: %s | %s' %
                 (counter, len(assay_list), sample_code, assay.filename))
-        assay.call( scanning_parameter.nonladder )
+        assay.call( scanning_parameter )
         counter += 1
 
 
@@ -305,7 +306,7 @@ def do_bin(args, dbh):
     for (assay, sample_code) in assay_list:
         cerr('I: [%d/%d] - Binning: %s | %s' %
                 (counter, len(assay_list), sample_code, assay.filename))
-        assay.bin( scanning_parameter.nonladder, markers )
+        assay.bin( scanning_parameter, markers )
         counter += 1
 
 
@@ -331,7 +332,7 @@ def do_postannotate(args, dbh):
     for (assay, sample_code) in assay_list:
         cerr('I: [%d/%d] - Post-annotating: %s | %s' %
                 (counter, len(assay_list), sample_code, assay.filename))
-        assay.postannotate( scanning_parameter.nonladder, markers )
+        assay.postannotate( scanning_parameter, markers )
         counter += 1
 
 
