@@ -173,6 +173,7 @@ class AnalyticalSetContainer(list):
         self._params = params
         self._total_samples = 0
         self._sample_ids = set()
+        self._marker_ids = marker_ids
         for s in self._sample_sets:
             if len(s) <= 0: continue
             self.append( AnalyticalSet( s, params, marker_ids, dbh ) )
@@ -224,6 +225,11 @@ class AnalyticalSetContainer(list):
     @property
     def sample_ids(self):
         return self._sample_ids
+
+
+    @property
+    def marker_ids(self):
+        return self._marker_ids
 
 
 
