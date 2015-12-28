@@ -64,6 +64,10 @@ class AnalyticalSet(object):
         return self._sample_set.colour
 
     @property
+    def N(self):
+        return self._sample_set.N
+
+    @property
     def marker_df(self):
         """ return a dataframe of:
                 sample_id   marker_id1  marker_id2  marker_id3

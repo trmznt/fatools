@@ -3,6 +3,8 @@ import yaml
 from fatools.lib.utils import cerr, cout
 from fatools.lib.analytics.selector import Selector, Filter
 from fatools.lib.analytics.analyticalset import get_analytical_sets
+from fatools.lib.analytics.haploset import get_haplotype_sets
+from pandas import DataFrame
 from pprint import pprint
 
 def load_yaml(yaml_text):
@@ -29,6 +31,7 @@ class Query(object):
         self._analytical_sets = None
         self._filtered_sample_sets = None
         self._filtered_analytical_sets = None
+        self._filtered_haplotype_sets = None
 
 
     def get_sample_sets(self, sample_ids = None):
@@ -83,4 +86,48 @@ class Query(object):
             self._filtered_analytical_sets = filtered_analytical_sets
 
         return self._filtered_analytical_sets
+
+
+    def get_filtered_haplotype_sets(self):
+        if self._filtered_haplotype_sets is None:
+            self._filtered_haplotype_sets = get_haplotype_sets(
+                    self.get_filtered_analytical_sets())
+        return self._filtered_haplotype_sets
+
+
+    def get_sample_summary(self, mode='allele'):
+        """ return a pandas dataframe containing (label, initial, filtered) headings
+            since sample_summary does not involve analysis anymore, it is included here
+        """
+
+        if mode not in [ 'allele', 'mlgt' ]:
+            raise RuntimeError('unknown get_sample_summary() mode: %s' % mode)
+
+        # count initial sample set
+        initial_samples = {}
+        for sample_set in self.get_sample_sets():
+            initial_samples[sample_set.label] = sample_set.N
+
+        # count filtered sample set
+        filtered_samples = {}
+        for analytical_set in self.get_filtered_analytical_sets():
+            filtered_samples[analytical_set.label] = analytical_set.N
+
+        if not mode == 'mlgt':
+            return DataFrame( { 'Initial Samples': initial_samples,
+                            'Filtered Samples': filtered_samples },
+                            columns = [ 'Initial Samples', 'Filtered Samples']
+                )
+
+        # count MLGs sample set
+        mlg_samples = {}
+        for haplotype_set in self.get_filtered_haplotype_sets():
+            mlg_samples[haplotype_set.label] = haplotype_set.N
+
+        return DataFrame( { 'Initial Samples': initial_samples,
+                            'Filtered Samples': filtered_samples,
+                            'MLG Samples': mlg_samples },
+                            columns = [ 'Initial Samples', 'Filtered Samples', 'MLG Samples']
+                )
+
 
