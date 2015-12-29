@@ -162,11 +162,11 @@ def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
     fig = plt.figure( figsize = (21, 4 * m), dpi=600 )
 
     axes = {}
+    axhlines = set()
 
     for idx, allele_report in enumerate(allele_reports.values(), 1):
         pprint(allele_report)
         colour = allele_report['colour']
-        y = idx+1
         for (marker_id, summary) in allele_report['summary'].items():
             if marker_id in axes:
                 ax = axes[marker_id]
@@ -174,10 +174,29 @@ def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
                 ax = fig.add_subplot( m, 1, len(axes) + 1 )
                 axes[marker_id] = ax
 
+            x = []
+            y = []
+
+
             for allele_params in summary['alleles']:
                 data = allele_params[9]
-                ax.vlines( data[0], [idx], [y], colors = [ colour ] )
-                ax.vlines( data[0], [0], [1], colors = ['k'])
+
+                x += list(data[0])
+                y += list(data[1])
+
+            if rfu_height:
+                max_y = max(y)
+                y = [ (idx + h/max_y) for h in y ]
+            else:
+                y = [ (idx + 1) for h in y ]
+            idxs = [ idx ] * len(x)
+
+            ax.vlines( x, idxs, y, colors = colour )
+            ax.vlines( x, 0, 1, colors = 'k')
+            if not (ax, idx) in axhlines:
+                # just to make sure we don't duplicate these lines
+                ax.axhline( idx, color='#aaaaaa' )
+                axhlines.add( (ax, idx) )
 
 
     for (marker_id, ax) in axes.items():
