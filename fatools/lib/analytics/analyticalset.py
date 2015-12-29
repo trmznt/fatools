@@ -173,12 +173,20 @@ class AnalyticalSetContainer(list):
         self._params = params
         self._total_samples = 0
         self._sample_ids = set()
-        self._marker_ids = marker_ids
+        self._marker_ids = set(marker_ids) if marker_ids else None
         for s in self._sample_sets:
             if len(s) <= 0: continue
-            self.append( AnalyticalSet( s, params, marker_ids, dbh ) )
+            a_set = AnalyticalSet( s, params, marker_ids, dbh )
+            self.append( a_set )
             self._total_samples += s.N
             self._sample_ids.update( s.sample_ids )
+
+            # checking marker_ids consistency
+            if not self._marker_ids:
+                self._marker_ids = set(a_set.marker_ids)
+            elif (self._marker_ids ^ set(a_set.marker_ids)):
+                raise RuntimeError(
+                    'Inconsistence marker set for sample set: %s' % a_set.label)
 
 
     def get_sample_sets(self):
