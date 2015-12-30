@@ -59,7 +59,7 @@ def calculate_moi(allele_df):
     moi.med = sm.median()
     moi.max = sm.max()
     moi.N = sum(moi.histogram)
-    moi.M = sum(moi.histogram[1:])
+    moi.M = moi.N - moi.histogram.get(1,0)
     moi.markers = am_filter.sum()
     moi.markers.sort_values(ascending=False, inplace=True)
 
