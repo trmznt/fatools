@@ -56,6 +56,20 @@ def calculate_moi(allele_df):
     moi.alleles = am_filter_dist.groupby(am_filter_dist).count()
     moi.mean = sm.mean()
     moi.std = sm.std()
+    moi.med = sm.median()
+    moi.max = sm.max()
+    moi.N = sum(moi.histogram)
+    moi.M = sum(moi.histogram[1:])
+    moi.markers = am_filter.sum()
+    moi.markers.sort_values(ascending=False, inplace=True)
+
+    # polyclonality ranks
+    moi.markers_rank = []
+    marker_id_rank = []
+    for (marker_id, polyclonality) in moi.markers.items():
+        marker_id_rank.append( marker_id )
+        temp_df = am_filter[marker_id_rank].apply(lambda x: 1 if any(x) else 0, axis=1)
+        moi.markers_rank.append( (marker_id, sum(temp_df)) )
 
     return moi
 
