@@ -348,7 +348,10 @@ def do_findpeaks( args, dbh ):
         cexit('ERR - please provide cache db filename')
 
     # opening LevelDB database
-    peakdb = leveldb.LevelDB(args.peakcachedb)
+    if args.peakcachedb == '-':
+        peakdb = None
+    else:
+        peakdb = leveldb.LevelDB(args.peakcachedb)
 
     scanning_parameter = params.Params()
     assay_list = get_assay_list( args, dbh )
@@ -557,7 +560,11 @@ def do_parallel_find_peaks( channel_list, peakdb ):
     counter = 0
     with concurrent.futures.ProcessPoolExecutor() as executor:
         for (tag, peaks) in executor.map( find_peaks_p, channel_list ):
-            peakdb.Put(tag.encode(), pickle.dumps(peaks))
+            if peakdb:
+                peakdb.Put(tag.encode(), pickle.dumps(peaks))
+            else:
+                cout('== channel %s\n' % tag )
+                cout(str(peaks))
             counter += 1
             cerr('I: [%d/%d] channel %s => %d peak(s)' % (counter, total, tag, len(peaks)))
 
