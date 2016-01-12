@@ -5,7 +5,10 @@ import numpy as np
 class ScanningParameter(object):
 
     def __init__(self):
-        self.method = 'cwt' # 'mlpy' is fast, 'cwt' is accurate, 'relmax' is so-so
+
+        self.method = 'pd'
+        # 'mlpy' is fast, 'cwt' is accurate, 'relmax' is so-so, 'pd' is peak detect
+
         self.min_height = 1
         self.min_size = 100
         self.max_size = 600

@@ -55,7 +55,8 @@ class alignmethod(object):
 
 class scanningmethod(object):
     notapplicable = 'notapplicable'
-    cwt = 'cwt'
+    cwt = 'cwt'     # CWT-based from scipy
+    pd = 'pd'       # peak detection from peakutils
 
 
 class allelemethod(object):
@@ -101,7 +102,7 @@ ladders = { 'LIZ600': { 'dye': 'LIZ',
                             'max_rss': 25.0,
                             'min_dpscore': 13.0,
                             'min_sizes': 16
-                        }                   
+                        }
                     },
 }
 

@@ -52,14 +52,25 @@ def find_raw_peaks( raw_data, params ):
         indices = filter_by_snr( get_consensus_indices( indice_set ),
             raw_data, params.min_snr )
 
+    elif params.method == 'pd':
+        from peakutils import indexes
+        indices = indexes( raw_data, 0.05, 4 )
+        pprint.pprint(indices)
+
     else:
         raise RuntimeError('unknown peak finding method: %s' % params.method)
 
-    if not indices:
+    if indices is None or len(indices) == 0:
         return []
 
 
     # filter for absolute heights within proximity
+
+    # special cases for pd (peak detect) method:
+
+    if params.method == 'pd':
+        return [ ( int(i), int(raw_data[i]) )
+                    for i in indices if raw_data[i] > params.min_height ]
 
     raw_peaks = []
     max_len = len(raw_data)
