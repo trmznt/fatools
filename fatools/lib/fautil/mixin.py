@@ -282,6 +282,8 @@ class SampleMixIn(object):
     def _update(self, obj):
 
         if type(obj) == dict:
+            if 'code' in obj:
+                self.code = obj['code']
             if 'type' in obj:
                 self.type = obj['type']
             if 'altcode' in obj:
