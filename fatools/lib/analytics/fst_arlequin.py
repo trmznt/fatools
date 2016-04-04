@@ -606,7 +606,7 @@ TestSignificancePairewiseFST=1
 #NumPermutationsFST is the number of permutations to be perfromed to test the significance
 #of pairwise distances between populations
 
-NumPermutationsFST=100
+NumPermutationsFST=100000
 
 #ComputePairwiseFST controls if FST's should be computed between all pairs of populations
 
@@ -653,10 +653,9 @@ UnequalPopSizeDiv=0
 NumPermutPopDiff=100000
 
 #NumDememoPopDiff is the number of steps in the burnin of the markov chain used for the
+#exact test of popualtion differentiation
 
-exact test of popualtion differentiation
-
-NumDememoPopDiff=10000
+NumDememoPopDiff=100000
 
 #PrecProbPopDiffcontrols the required precision on the estimated p-value of the exact test
 #of population differentiation. OBSOLETE FEATURE LET THE KEY VALUE TO ZERO
@@ -749,5 +748,5 @@ NumSimulFuTest=1000
 #NumPermMantel is the number of permutations to be perform to get the significance of
 #the correlation between different matrices
 
-NumPermMantel=1000
+NumPermMantel=100000
 """
