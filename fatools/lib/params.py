@@ -34,8 +34,8 @@ class ScanningParameter(object):
         self.ignoredpeaks = None
         self.width_ratio = 2000
         self.expected_peak_number = 0
-        self.stutter_ratio = 0.10
-        self.stutter_range = 4.5
+        self.stutter_ratio = 0.95
+        self.stutter_range = 3.5
 
 
 class LadderScanningParameter(ScanningParameter):
