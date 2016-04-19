@@ -87,6 +87,9 @@ def init_argparser( parser=None ):
     p.add_argument('--viewpeakcachedb', default=False, action='store_true',
             help = 'view/summarize content of peakcachedb')
 
+    p.add_argument('--reassignmarker', default=False, action='store_true',
+            help = 'reassign marker (using dye)')
+
     ## options
 
     p.add_argument('--infile', default=False,
@@ -110,11 +113,20 @@ def init_argparser( parser=None ):
     p.add_argument('-s', '--sample', default='',
             help = 'sample code list (comma separated, no space)')
 
+    p.add_argument('--panel', default='',
+            help = 'panel list (comma separated)')
+
+    p.add_argument('--dye', default='',
+            help = 'dye list (comma separated, no space)')
+
     p.add_argument('--fsa', default='',
             help = 'assay filename list (comma separated, no space)')
 
     p.add_argument('--fsaid', default='',
             help = 'assay id list (comma separated, no space, integers')
+
+    p.add_argument('--dye', default='',
+            help = 'dye name')
 
     p.add_argument('--assayprovider', default='',
             help = 'assay provider vendor/group')
@@ -184,6 +196,8 @@ def do_dbmgr(args, dbh = None, warning=True):
         do_initdb(args, dbh)
     elif args.clearfsa is not False:
         do_clearfsa(args, dbh)
+    elif args.reassignmarker is not False:
+        do_reassignmarker(args, dbh)
     elif args.initbin is not False:
         do_initbin(args, dbh)
     elif args.viewbin is not False:
@@ -278,7 +292,7 @@ def do_initbatch(args, dbh):
 def do_showbatches(args, dbh):
 
     cout('Available batch(es):')
-    batches = dbh.get_batches()
+    batches = dbh.get_batches(None)
     for batch in batches:
         cout('  %s' % batch.code)
 
@@ -446,6 +460,28 @@ def do_reassign(args, dbh):
     else:
         pass
 
+
+def do_reassignmarker(args, dbh):
+
+    cerr('Reassign marker')
+
+    from fatools.lib.const import channelstatus
+
+    assay_list = get_assay_list( args, dbh )
+
+    marker = dbh.get_marker(args.marker) if args.marker else None
+
+    for (assay, sample_code) in assay_list:
+        if args.panel and assay.panel.code == args.panel:
+            for c in assay.channels:
+                if c.dye.upper() == args.dye.upper():
+                    print("%s reassign dye %s -- %s >> %s" %
+                        (assay.filename, c.dye, c.marker.code, marker.code))
+                    c.marker = marker
+                    if marker.code == 'undefined':
+                        c.status = channelstatus.unassigned
+                    else:
+                        c.status = channelstatus.assigned
 
 
 def do_initbin(args, dbh):
