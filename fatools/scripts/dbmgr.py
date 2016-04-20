@@ -589,7 +589,7 @@ def do_exportfsa(args, dbh):
 
     outdir = None
     if args.outdir:
-        os.mkdirs(args.outdir)
+        os.makedirs(args.outdir)
         outdir = args.outdir + '/'
 
     if args.outfile:
