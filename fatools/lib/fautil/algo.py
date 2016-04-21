@@ -54,8 +54,9 @@ def find_raw_peaks( raw_data, params ):
 
     elif params.method == 'pd':
         from peakutils import indexes
-        indices = indexes( raw_data, 0.05, 4 )
-        pprint.pprint(indices)
+        indices = indexes( raw_data, 1e-3, 4 )
+        #pprint.pprint(indices)
+        #print('indices: %d' % len(indices))
 
     else:
         raise RuntimeError('unknown peak finding method: %s' % params.method)
@@ -202,7 +203,7 @@ def scan_peaks( channel, params, peakdb ):
 
     initial_peaks = find_peaks( channel.data, params, raw_peaks)
     # peaks = ( rtime, height, area, brtime, ertime )
-    #cerr('DEBUG - initial peaks: %d' % len(peaks))
+    #cerr('DEBUG - initial peaks: %d' % len(initial_peaks))
 
     # perform futher cleaning for ladder channels
     if params.expected_peak_number:

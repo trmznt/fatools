@@ -19,12 +19,12 @@ def fast_align( data, ladders, peaks , qcfunc ):
 
     hq_score = mq_score = None
 
-    if len(hq_peaks) > 2 and ( len(hq_peaks) >= len(ladders) - 1 
+    if len(hq_peaks) > 2 and ( len(hq_peaks) >= len(ladders) - 1
                                 or len(peaks) == len(ladders) ):
         cerr(' -> fast_align() HQ peak: %d => ' % len(hq_peaks), nl=False)
         hq_result = do_fast_align( hq_peaks, ladders, peaks )
         (hq_score, hq_msg) = qcfunc( hq_result, method = 'strict' )
-        cerr('%d | %4.2f | %6.2f | %3.2f' % 
+        cerr('%d | %4.2f | %6.2f | %3.2f' %
                 (len(hq_result[3]), hq_result[0], hq_result[1], hq_score))
         if hq_score > 0.95:
             return (hq_score, hq_msg, hq_result, alignmethod.fast_hq)
@@ -35,7 +35,7 @@ def fast_align( data, ladders, peaks , qcfunc ):
         cerr(' -> fast_align() MQ peak: %d => ' % len(mq_peaks), nl=False)
         mq_result = do_fast_align( mq_peaks, ladders, peaks )
         (mq_score, mq_msg) = qcfunc( mq_result, method = 'strict' )
-        cerr('%d | %4.2f | %6.2f | %3.2f' % 
+        cerr('%d | %4.2f | %6.2f | %3.2f' %
                 (len(mq_result[3]), mq_result[0], mq_result[1], mq_score))
         if mq_score > 0.95:
             return (mq_score, mq_msg, mq_result, alignmethod.fast_mq)
@@ -73,7 +73,7 @@ def greedy_align( data, ladders, peaks, qcfunc ):
 
     for i in range(0, I):
         for j in range(1, J):
-            
+
             # use the first & last peak to estimate Z
             initial_peak_pairs = [  (peaks[i].rtime, ladders[1]),
                                     (peaks[-j].rtime, ladders[-1]) ]
@@ -128,7 +128,7 @@ def greedy_align( data, ladders, peaks, qcfunc ):
 
 
 def z_align( peaks, ladders, peak_pairs ):
-    """ generated Z (3rd polynomial curve function) based on peak pairs, 
+    """ generated Z (3rd polynomial curve function) based on peak pairs,
         then realign ladders & peaks """
 
     # peak_pairs is [ (rtime, size), ... ]
@@ -139,7 +139,7 @@ def z_align( peaks, ladders, peak_pairs ):
     while True:
 
         # optimize locally just by using simple peak assignment
-            
+
         z, _rss_ = dp.estimate_z( [ x[1] for x in peak_pairs ],
                                 [ x[0] for x in peak_pairs ],
                                 3 if len(peak_pairs) > 2 else 1)
