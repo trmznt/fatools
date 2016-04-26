@@ -12,12 +12,16 @@ class Selector(object):
 
     def __init__(self, samples = []):
         self.samples = samples
+        self.global_options = None
         self._sample_sets = None
 
     @classmethod
     def from_dict(cls, d):
         selector = cls()
+        if '_:_' in d:
+            global_options = d.pop('_:_')
         selector.samples = d
+        selector.global_options = global_options
         return selector
 
     def to_dict(self):
@@ -169,7 +173,7 @@ class Filter(object):
         params.rel_cutoff = float( d['rel_cutoff'] )
         params.sample_qual_threshold = float( d['sample_qual_threshold'] )
         params.marker_qual_threshold = float( d['marker_qual_threshold'] )
-        params.sample_option = d['sample_option']
+        params.sample_filtering = d['sample_filtering']
         params.stutter_ratio = float(d.get('stutter_ratio', 0))
         params.stutter_range = float(d.get('stutter_range', 3.5))
         return params
