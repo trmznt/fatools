@@ -96,6 +96,27 @@ class AnalyticalSet(object):
         """ get sample_ids that passed sample quality assessment """
         if self._filtered_sample_ids is None:
             self._filtered_sample_ids, self._sample_genotyped_dist = self.assess_sample_quality()
+
+            # further filtering for sample: none, strict/low-complexity or unique haplotype
+            # N / S / U
+
+            sample_filtering = self._params.sample_filtering.upper()
+            if sample_filtering == 'S':
+                # strict / low-complexity samples
+
+                # get sample_ids from strict / low_complexity samples
+
+                raise NotImplementedError()
+
+            elif sample_filtering == 'U':
+                # only unique haplotype samples
+
+                # get unique haplotypes
+                # set sample_ids from the unique haplotypes
+                # refilter sample_genotyped_dist based on sample_ids
+
+                raise NotImplementedError()
+
         return self._filtered_sample_ids
 
 
