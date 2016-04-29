@@ -24,6 +24,7 @@ class AlleleDataFrame(object):
         # genotypes and MLGT
         self._genotype_df = None
         self._mlgt_df = None
+        self._unique_mlgt_df = None
 
         # moi
         self._allele_multiplicity = None
@@ -98,7 +99,7 @@ class AlleleDataFrame(object):
     def mlgt(self):
         """ return MLGT (Multi Locus GenoTyping) dataframe
             this will drop samples with NaN (or None) allele, hence please
-            check the
+            check the dataframe first
         """
         if self._mlgt_df is None:
             self._mltg_df = pivot_table(self.dominant_df,
@@ -107,6 +108,16 @@ class AlleleDataFrame(object):
                     values = 'value',
                     dropna=False).dropna(how='any')
         return self._mltg_df
+
+
+    @property
+    def unique_mlgt(self):
+        """ return unique MLGT dataframe (randomly select samples with
+            identical MLGT)
+        """
+        if self._unique_mlgt_df is None:
+            self._unique_mlgt_df = self.mlgt.drop_duplicates()
+        return self._unique_mlgt_df
 
 
     @property
