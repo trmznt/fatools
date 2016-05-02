@@ -29,6 +29,7 @@ class AlleleDataFrame(object):
         # moi
         self._allele_multiplicity = None
         self._sample_multiplicity = None
+        self._locus_multiplicity = None
 
 
     @property
@@ -138,3 +139,10 @@ class AlleleDataFrame(object):
             # apply max to each row (axis=1)
             self._sample_multiplicity = self.allele_multiplicity.max(1)
         return self._sample_multiplicity
+
+
+    @property
+    def locus_multiplicity(self):
+        if self._locus_multiplicity is None:
+            self._locus_multiplicity = self.allele_multiplicity.applymap(lambda x: 1 if x > 1 else 0)
+        return self._locus_multiplicity
