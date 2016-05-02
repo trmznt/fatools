@@ -101,21 +101,22 @@ class AnalyticalSet(object):
             # N / S / U
 
             sample_filtering = self._params.sample_filtering.upper()
+
             if sample_filtering == 'S':
                 # strict / low-complexity samples
 
                 # get sample_ids from strict / low_complexity samples
+                locus_mult = self.allele_df.locus_multiplicity
+                locus_mult_dist = locus_mult.sum(1)
+                self._filtered_sample_ids = set( int(x) for x in
+                        locus_mult_dist[locus_mult_dist <= 1].index.values )
 
-                raise NotImplementedError()
 
             elif sample_filtering == 'U':
                 # only unique haplotype samples
 
-                # get unique haplotypes
-                # set sample_ids from the unique haplotypes
-                # refilter sample_genotyped_dist based on sample_ids
-
-                raise NotImplementedError()
+                # get index from unique haplotypes
+                self._filtered_sample_ids = set( int(x) for x in self.allele_df.unique_mlgt.index.values )
 
         return self._filtered_sample_ids
 
