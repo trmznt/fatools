@@ -33,6 +33,13 @@ class Query(object):
         self._filtered_analytical_sets = None
         self._filtered_haplotype_sets = None
 
+    @property
+    def dbh(self):
+        return self._dbh
+
+    @property
+    def options(self):
+        return self._params['options']
 
     def get_sample_sets(self, sample_ids = None):
         if self._sample_sets is None or sample_ids:
