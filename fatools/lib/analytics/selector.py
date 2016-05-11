@@ -175,7 +175,7 @@ class Filter(object):
         params.rel_cutoff = float( d['rel_cutoff'] )
         params.sample_qual_threshold = float( d['sample_qual_threshold'] )
         params.marker_qual_threshold = float( d['marker_qual_threshold'] )
-        params.sample_filtering = d['sample_filtering']
+        params.sample_filtering = d.get('sample_filtering', 'N')
         params.stutter_ratio = float(d.get('stutter_ratio', 0))
         params.stutter_range = float(d.get('stutter_range', 3.5))
         return params
