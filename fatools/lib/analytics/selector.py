@@ -20,6 +20,8 @@ class Selector(object):
         selector = cls()
         if '_:_' in d:
             global_options = d.pop('_:_')
+        else:
+            global_options = {}
         selector.samples = d
         selector.global_options = global_options
         return selector
