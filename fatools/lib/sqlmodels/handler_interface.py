@@ -149,6 +149,7 @@ class base_sqlhandler(object):
                     if last_marker_id == marker_id:
                         if skip_flag:
                             continue
+                        rank += 1
                         ratio = height / max_height
                         if ratio < params.rel_threshold:
                             skip_flag = True
@@ -186,16 +187,17 @@ class base_sqlhandler(object):
                     max_height = height
                     skip_flag = False
                     ratio = 1
+                    rank = 1
                     current_alleles = [ (value, size, height) ]
 
-                alleles.append( (marker_id, sample_id, value, size, height, assay_id, ratio) )
+                alleles.append( (marker_id, sample_id, value, size, height, assay_id, ratio, rank) )
 
             df = DataFrame( alleles )
 
         if len(df) == 0:
             return df
 
-        df.columns = ( 'marker_id', 'sample_id', 'value', 'size', 'height', 'assay_id', 'ratio' )
+        df.columns = ( 'marker_id', 'sample_id', 'value', 'size', 'height', 'assay_id', 'ratio', 'rank' )
         return df
 
 
