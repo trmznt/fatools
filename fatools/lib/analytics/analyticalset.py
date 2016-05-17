@@ -108,15 +108,17 @@ class AnalyticalSet(object):
                 # get sample_ids from strict / low_complexity samples
                 locus_mult = self.allele_df.locus_multiplicity
                 locus_mult_dist = locus_mult.sum(1)
-                self._filtered_sample_ids = set( int(x) for x in
-                        locus_mult_dist[locus_mult_dist <= 1].index.values )
+                low_complex_ids = set( int(x) for x in
+                                    locus_mult_dist[locus_mult_dist <= 1].index.values )
+                self._filtered_sample_ids = self._filtered_sample_ids & low_complex_ids
 
 
             elif sample_filtering == 'U':
                 # only unique haplotype samples
 
                 # get index from unique haplotypes
-                self._filtered_sample_ids = set( int(x) for x in self.allele_df.unique_mlgt.index.values )
+                unique_ids = set( int(x) for x in self.allele_df.unique_mlgt.index.values )
+                self._filtered_sample_ids = self._filtered_sample_ids & unique_ids
 
         return self._filtered_sample_ids
 
