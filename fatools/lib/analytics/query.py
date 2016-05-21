@@ -33,6 +33,10 @@ class Query(object):
         self._filtered_analytical_sets = None
         self._filtered_haplotype_sets = None
 
+        for p in self._params.values():
+            if hasattr(p, 'dbh'):
+                setattr(p, 'dbh', self._dbh)
+
     @property
     def dbh(self):
         return self._dbh
