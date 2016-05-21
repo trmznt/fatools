@@ -130,6 +130,25 @@ def export_arlequin(analytical_sets, dbh, outstream, recode=False):
     outstream.write( '\n'.join(_))
 
 
+def export_demetics(analytical_sets, dbh, outstream):
+    """ export genotype data for export_demetics
+        individual population fragment.length locus
+        (individual -> sample code, population -> label, fragment.length -> allele, locus -> marker)
+    """
+
+    outstream.write('individual\tpopulation\tfragment.length\tlocus\n')
+
+    for analytical_set in analytical_sets:
+
+        allele_df = analytical_set.allele_df.df
+        for t in allele_df.itertuples():
+            (marker_id, sample_id, value, size, height, assay_id, ratio, rank) = t[1:]
+            marker = dbh.get_marker_by_id(marker_id)
+            sample = dbh.get_sample_by_id(sample_id)
+            outstream.write('%s\t%s\t%d\t%s\n' %
+                (sample.code, analytical_set.label, value, marker.code))
+
+
 def export_flat(analytical_set, dbh, outstream):
     """ export MLGT from single analytical set to flat format, eg:
         SAMPLECODE ALLELE1 ALLELE2 ALLELE3 ALLELE4
