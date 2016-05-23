@@ -92,7 +92,7 @@ class AlleleDataFrame(object):
                     index = ['sample_id'],
                     columns = ['marker_id'],
                     values = ['value', 'height'],
-                    aggfunc = tuple)
+                    aggfunc = lambda *x: tuple(*x) )
         return self._genotype_df
 
 
