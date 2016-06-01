@@ -528,6 +528,7 @@ class AssayMixIn(object):
         """ clear all channels """
         for c in self.channels:
             c.clear()
+        self.status = assaystatus.assigned
 
 
     def preprocess(self, params):
