@@ -1,5 +1,6 @@
 
 import pandas
+from scipy.stats import ranksums, kruskal
 
 #
 #
@@ -29,7 +30,20 @@ def summarize_moi(analytical_sets):
     # because of the non-normality of the dataset, we will just have to use
     # rank-based (parametric/catagorical) statistical test
 
-    return moi_sets
+    stats = {}
+    if len(moi_sets) == 2:
+        # use Mann-Whitney / Wilxocon rank-sum (non-paired) test
+        values = [ x.sample_dist['MOI'] for x in moi_sets.values() ]
+        stats['test'] = 'Wilcoxon ranksum / Mann-Whitney U-test'
+        stats['stats'] = ranksums( *values )
+
+    elif len(moi_sets) > 2:
+        # use Kruskal-Wallis
+        values = [ x.sample_dist['MOI'] for x in moi_sets.values() ]
+        stats['test'] = 'Kruskal-Wallis H-test'
+        stats['stats'] = kruskal(*values)
+
+    return (moi_sets, stats)
 
 
 class MoISummary(object):
