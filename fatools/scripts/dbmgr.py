@@ -190,6 +190,8 @@ def do_dbmgr(args, dbh = None, warning=True):
         do_initsample(args, dbh)
     elif args.importpanel is not False:
         do_importpanel(args, dbh)
+    elif args.exportpanel is not False:
+        do_exportpanel(args, dbh)
     elif args.importmarker is not False:
         do_importmarker(args, dbh)
     elif args.initdb is not False:
@@ -245,6 +247,25 @@ def do_importpanel(args, dbh):
         else:
             dbh.session.add(p)
             cout("INFO: panel %s added." % p.code)
+
+
+def do_exportpanel(args, dbh):
+
+    panel_code= args.panel
+    if panel_code == '*':
+        # export all panel
+        panel_code = None
+
+    elif ',' in panel:
+        panel_code =  panel.split(',')
+
+    else:
+        panel_code = [ panel_code.strip() ]
+
+    panel_dict = [ p.to_dict() for p in dbh.get_panel(panel_code) ]
+
+    yaml.dump( panel_dict, open(args.outfile, 'w') )
+    cerr('Panels exported to file %s' % args.outfile)
 
 
 

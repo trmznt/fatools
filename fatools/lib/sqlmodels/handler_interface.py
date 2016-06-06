@@ -39,13 +39,25 @@ class base_sqlhandler(object):
 
     def get_panel(self, panel_code):
         try:
-            return self.Panel.search(panel_code, self.session)
+            if panel_code == None:
+                return self.get_panels()
+            elif type(panel_code) == list:
+                return [ self.Panel.search(p, self.session) for p in panel_code ]
+            else:
+                return self.Panel.search(panel_code, self.session)
         except NoResultFound:
             raise RuntimeError('Panel code %s does not exist!' % panel_code)
 
     def get_batch(self, batch_code):
-        assert batch_code
-        return self.Batch.search(batch_code, self.session)
+        try:
+            if batch_code == None:
+                return self.get_batches()
+            elif type(batch_code) == list:
+                return [ self.Batch.search(b, self.session) for b in batch_code ]
+            else:
+                return self.Batch.search(batch_code, self.session)
+        except NoResultFound:
+            raise RuntimeError('Batch code %s does not exist!' % batch_code)
 
     def get_marker(self, marker_code):
         assert marker_code
