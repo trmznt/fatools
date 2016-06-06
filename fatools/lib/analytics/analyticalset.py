@@ -102,7 +102,16 @@ class AnalyticalSet(object):
 
             sample_filtering = self._params.sample_filtering.upper()
 
-            if sample_filtering == 'S':
+            if sample_filtering == 'M':
+                # monoclonal samples
+
+                sample_mult = self.allele_df.sample_multiplicity
+                monoclonal_ids = set( int(x) for x in
+                                    sample_mult[sample_mult == 1].index.values )
+                self._filtered_sample_ids = self._filtered_sample_ids & monoclonal_ids
+
+
+            elif sample_filtering == 'S':
                 # strict / low-complexity samples
 
                 # get sample_ids from strict / low_complexity samples
@@ -111,7 +120,6 @@ class AnalyticalSet(object):
                 low_complex_ids = set( int(x) for x in
                                     locus_mult_dist[locus_mult_dist <= 1].index.values )
                 self._filtered_sample_ids = self._filtered_sample_ids & low_complex_ids
-
 
             elif sample_filtering == 'U':
                 # only unique haplotype samples
