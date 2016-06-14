@@ -5,6 +5,22 @@ from itertools import zip_longest
 from pandas import pivot_table
 
 
+class autostream(object):
+
+    def __init__( self, outstream ):
+        self.outstream = outstream
+        if 'b' in self.outstream.mode:
+            self.write = self.encoder
+        else:
+            self.write = self.outstream.write
+
+    def encoder(self, buff):
+        if type(buff) == str:
+            self.outstream.write( buff.encode('ASCII') )
+        else:
+            self.outstream.write( buff )
+
+
 def export_major_tab(analytical_sets, dbh, outstream):
 
     output = []
@@ -154,10 +170,12 @@ def export_flat(analytical_set, dbh, outstream):
         SAMPLECODE ALLELE1 ALLELE2 ALLELE3 ALLELE4
     """
 
+    out = autostream( outstream )
+
     for e in analytical_set.allele_df.mlgt.itertuples():
         row = [ str(e[0])]
-        outstream.write(
-            (' '.join( row + list( str(int(x)) for x in e[1:]) ) + '\n').encode('ASCII')
+        out.write(
+            (' '.join( row + list( str(int(x)) for x in e[1:]) ) + '\n')
         )
 
 
