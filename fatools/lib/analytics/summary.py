@@ -151,6 +151,8 @@ def summarize_bins( analytical_sets ):
 def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
 
     from matplotlib import pyplot as plt
+    from matplotlib.figure import Figure
+    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
     from matplotlib.ticker import MultipleLocator
 
 
@@ -163,6 +165,7 @@ def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
 
     axes = {}
     axhlines = set()
+    binsets = {}
 
     for idx, allele_report in enumerate(allele_reports.values(), 1):
         pprint(allele_report)
@@ -170,15 +173,17 @@ def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
         for (marker_id, summary) in allele_report['summary'].items():
             if marker_id in axes:
                 ax = axes[marker_id]
+                bins = binsets[marker_id]
             else:
                 ax = fig.add_subplot( m, 1, len(axes) + 1 )
                 axes[marker_id] = ax
+                bins = binsets[marker_id] = set()
 
             x = []
             y = []
 
-
             for allele_params in summary['alleles']:
+                bins.add( allele_params[0] )
                 data = allele_params[9]
 
                 x += list(data[0])
