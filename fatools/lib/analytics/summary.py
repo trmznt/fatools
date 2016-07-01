@@ -167,7 +167,7 @@ def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
     axhlines = set()
     binsets = {}
 
-    for idx, allele_report in enumerate(allele_reports.values(), 1):
+    for idx, allele_report in enumerate(allele_reports.values(), 0):
         pprint(allele_report)
         colour = allele_report['colour']
         for (marker_id, summary) in allele_report['summary'].items():
@@ -197,7 +197,7 @@ def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
             idxs = [ idx ] * len(x)
 
             ax.vlines( x, idxs, y, colors = colour )
-            ax.vlines( x, 0, 1, colors = 'k')
+            ax.vlines( x, 0, -0.05, colors = 'k')
             if not (ax, idx) in axhlines:
                 # just to make sure we don't duplicate these lines
                 ax.axhline( idx, color='#aaaaaa' )
@@ -208,10 +208,10 @@ def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
 
         ax.get_xaxis().set_tick_params( which='both', direction='out' )
         ax.get_yaxis().set_tick_params( which='both', direction='out' )
-        minor_locator = MultipleLocator(1)
-        major_locator = MultipleLocator(5)
-        ax.get_xaxis().set_major_locator( major_locator )
-        ax.get_xaxis().set_minor_locator( minor_locator )
+        ax.get_xaxis().set_minor_locator( MultipleLocator(1) )
+        ax.get_xaxis().set_ticks( sorted(list(binsets[marker_id])) )
+        ax.get_yaxis().set_minor_locator( MultipleLocator(0.25))
+        ax.get_yaxis().set_major_locator( plt.NullLocator() )
 
         for label in ax.get_xticklabels():
             label.set_size( 'xx-small' )
@@ -222,7 +222,7 @@ def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
             ax.set_ylabel( dbh.get_marker_by_id(marker_id).label )
         else:
             ax.set_ylabel( marker_id )
-        ax.set_ylim(0)
+        ax.set_ylim(-0.05)
         #ax.set_xlim(min(data[0]), max(data[0]))
         ax.set_xlim(auto = True)
 
