@@ -80,9 +80,9 @@ class ABIF_DirEntry(object):
 
     def __repr__(self):
         if self.etype in [ 18, 19]:
-            return '<ABIF etype: %s, data: "%s">' % (self.etype, self.data) 
+            return '<ABIF etype: %s, data: "%s">' % (self.etype, self.data)
         elif self.num < 10 and self.etype not in [10,11]:
-            return '<ABIF etype: %s, data: %s>' % (self.etype, str(self.data)) 
+            return '<ABIF etype: %s, data: %s>' % (self.etype, str(self.data))
         return '<ABIF etype: %s, size: %d>' % (self.etype, self.num)
 
 
@@ -209,6 +209,17 @@ def read_abif_stream(istream):
     return t
 
 
+FILTER_SETS = {
+    'G5': {
+        '6-FAM':    { 'filter': 'B', 'rgb': (0,0,1) },
+        'VIC':      { 'filter': 'G', 'rgb': (0,1,0) },
+        'NED':      { 'filter': 'Y', 'rgb': (0.95,0.95,0) },
+        'PET':      { 'filter': 'R', 'rgb': (1,0.5,0) },
+        'LIZ':      { 'filter': 'O', 'rgb': (1,0,0) }
+    }
+}
+
+
 if __name__ == '__main__':
     """ write spectra in abif file to tab-separated text file """
     for infile in sys.argv[1:]:
@@ -222,4 +233,3 @@ if __name__ == '__main__':
             for p in zip( * [ c[2] for c in channels ] ):
                 out.write( '\t'.join( str(x) for x in p ) )
                 out.write( '\n' )
-
