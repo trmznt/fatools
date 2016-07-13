@@ -53,15 +53,15 @@ class base_sqlhandler(object):
             if batch_code == None:
                 return self.get_batches()
             elif type(batch_code) == list:
-                return [ self.Batch.search(b, self.session) for b in batch_code ]
+                return [ self.Batch.search(b, self.session()) for b in batch_code ]
             else:
-                return self.Batch.search(batch_code, self.session)
+                return self.Batch.search(batch_code, self.session())
         except NoResultFound:
             raise RuntimeError('Batch code %s does not exist!' % batch_code)
 
     def get_marker(self, marker_code):
         assert marker_code
-        return self.Marker.search(marker_code, self.session)
+        return self.Marker.search(marker_code, self.session())
 
     def get_marker_by_id(self, id):
         return self.get_by_id(self.Marker, id)
@@ -80,20 +80,20 @@ class base_sqlhandler(object):
 
     def get_by_id(self, class_, id):
         assert class_ and id
-        return class_.get(id, self.session)
+        return class_.get(id, self.session())
 
 
     ## getter for multi root classes
     ## this will return a query object that can be further filtered by the caller
 
     def get_markers(self):
-        return self.Marker.query(self.session)
+        return self.Marker.query(self.session())
 
     def get_panels(self):
-        return self.Panel.query(self.session)
+        return self.Panel.query(self.session())
 
     def get_batches(self):
-        return self.Batch.query(self.session)
+        return self.Batch.query(self.session())
 
     def get_by_ids(self):
         pass
@@ -116,7 +116,7 @@ class base_sqlhandler(object):
         assert marker_ids
         assert params
 
-        q = self.session.query( self.AlleleSet.sample_id, self.Channel.assay_id,
+        q = self.session().query( self.AlleleSet.sample_id, self.Channel.assay_id,
                 self.Allele.marker_id, self.Allele.bin,
                 self.Allele.size, self.Allele.height
             ).join(self.Allele).join(self.Channel)
