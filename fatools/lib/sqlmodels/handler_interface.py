@@ -117,7 +117,7 @@ class base_sqlhandler(object):
         assert params
 
         q = self.session().query( self.AlleleSet.sample_id, self.Channel.assay_id,
-                self.Allele.marker_id, self.Allele.bin,
+                self.Allele.marker_id, self.Allele.id, self.Allele.bin,
                 self.Allele.size, self.Allele.height
             ).join(self.Allele).join(self.Channel)
 
@@ -140,8 +140,8 @@ class base_sqlhandler(object):
             q = q.filter( self.Allele.height > params.abs_threshold )
 
         if params.rel_threshold == 0 and params.rel_cutoff == 0 and params.stutter_ratio == 0:
-            df = DataFrame( [ (marker_id, sample_id, value, size, height, assay_id, -1 )
-                    for ( sample_id, assay_id, marker_id, value, size, height ) in q ] )
+            df = DataFrame( [ (marker_id, sample_id, value, size, height, assay_id, allele_id, 1, -1 )
+                    for ( sample_id, assay_id, marker_id, allele_id, value, size, height ) in q ] )
 
         else:
 
@@ -156,7 +156,7 @@ class base_sqlhandler(object):
             current_alleles = None  # contains the alleles of current sample & marker
 
             # the loop
-            for ( sample_id, assay_id, marker_id, value, size, height ) in q:
+            for ( sample_id, assay_id, marker_id, allele_id, value, size, height ) in q:
                 if sample_id == last_sample_id:
                     if last_marker_id == marker_id:
                         if skip_flag:
@@ -202,14 +202,14 @@ class base_sqlhandler(object):
                     rank = 1
                     current_alleles = [ (value, size, height) ]
 
-                alleles.append( (marker_id, sample_id, value, size, height, assay_id, ratio, rank) )
+                alleles.append( (marker_id, sample_id, value, size, height, assay_id, allele_id, ratio, rank) )
 
             df = DataFrame( alleles )
 
         if len(df) == 0:
             return df
 
-        df.columns = ( 'marker_id', 'sample_id', 'value', 'size', 'height', 'assay_id', 'ratio', 'rank' )
+        df.columns = ( 'marker_id', 'sample_id', 'value', 'size', 'height', 'assay_id', 'allele_id', 'ratio', 'rank' )
         return df
 
 

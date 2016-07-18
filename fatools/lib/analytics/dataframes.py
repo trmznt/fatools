@@ -91,7 +91,7 @@ class AlleleDataFrame(object):
             self._genotype_df = pivot_table(self.df,
                     index = ['sample_id'],
                     columns = ['marker_id'],
-                    values = ['value', 'height'],
+                    values = ['value', 'height', 'assay_id', 'allele_id'],
                     aggfunc = lambda x: tuple(x) )
         return self._genotype_df
 
