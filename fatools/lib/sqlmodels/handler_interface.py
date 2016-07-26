@@ -42,9 +42,9 @@ class base_sqlhandler(object):
             if panel_code == None:
                 return self.get_panels()
             elif type(panel_code) == list:
-                return [ self.Panel.search(p, self.session) for p in panel_code ]
+                return [ self.Panel.search(p, self.session()) for p in panel_code ]
             else:
-                return self.Panel.search(panel_code, self.session)
+                return self.Panel.search(panel_code, self.session())
         except NoResultFound:
             raise RuntimeError('Panel code %s does not exist!' % panel_code)
 
