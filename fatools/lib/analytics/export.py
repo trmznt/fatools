@@ -150,6 +150,7 @@ def export_demetics(analytical_sets, dbh, outstream):
     """ export genotype data for export_demetics
         individual population fragment.length locus
         (individual -> sample code, population -> label, fragment.length -> allele, locus -> marker)
+        demetics deals better with non-space-containing label
     """
 
     outstream.write('individual\tpopulation\tfragment.length\tlocus\n')
@@ -158,11 +159,11 @@ def export_demetics(analytical_sets, dbh, outstream):
 
         allele_df = analytical_set.allele_df.df
         for t in allele_df.itertuples():
-            (marker_id, sample_id, value, size, height, assay_id, ratio, rank) = t[1:]
+            (marker_id, sample_id, value, size, height, assay_id, allele_id, ratio, rank) = t[1:]
             marker = dbh.get_marker_by_id(marker_id)
             sample = dbh.get_sample_by_id(sample_id)
             outstream.write('%s\t%s\t%d\t%s\n' %
-                (sample.code, analytical_set.label, value, marker.code))
+                (sample.code, reformat_label(analytical_set.label), value, marker.code))
 
 
 def export_flat(analytical_set, dbh, outstream):
@@ -281,4 +282,8 @@ def tabulate_data( allele_df, dbh ):
 
 
     return (buf, buf2, buf3)
+
+def reformat_label(label):
+    """ some software can't deal with space or non-alphanumeric characters """
+    return label.replace(' ','').replace('|','_').replace('#','_').replace('/','_')
 
