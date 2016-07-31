@@ -1,7 +1,9 @@
 from fatools.lib.analytics.export import export_demetics
 from fatools.lib.utils import cerr, cout, random_string
 from subprocess import call
+from collections import defaultdict
 import numpy as np
+import datetime
 
 
 def run_demetics(analytical_sets, dbh, tmp_dir, mode='d.jost'):
@@ -26,9 +28,31 @@ def run_demetics(analytical_sets, dbh, tmp_dir, mode='d.jost'):
             % (tmp_dir, data_file)
         )
 
+    today = datetime.date.today().strftime('%Y-%m-%d')
+
+    # TODO: prepare stdout & stderr
     ok = call( [ 'Rscript', script_file] )
 
     if ok != 0:
         raise RuntimeError('Rscript for DEMEtics run unsuccessfully. Please inspect the error log.')
 
+    # demetics save its output to files with names AND dates...
+    #mean_file = "%s/dat.pairwise.Dest.mean.%s.txt" % (tmp_dir, today)
+    ci_file = "%s/dat.pairwise.Dest.mean.ci.%s.txt" % (tmp_dir, today)
+
+    d = defaultdict(dict)
+    with open(ci_file) as infile:
+        in_data = False
+        for r in infile:
+            r = r.strip()
+            if not in_data:
+                if r == 'Dest.mean Population1 Population2 Lower.0.95.CI Upper.0.95.CI':
+                    in_data = True
+                continue
+
+            cols = r.split()
+            d[cols[1]][cols[2]] = float(cols[0])
+            d[cols[2]][cols[1]] = ( float(cols[3]), float(cols[4]) )
+
     raise RuntimeError('please inspect here: %s' % tmp_dir)
+
