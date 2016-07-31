@@ -51,8 +51,8 @@ def run_demetics(analytical_sets, dbh, tmp_dir, mode='d.jost'):
                 continue
 
             cols = r.split()
-            d[cols[1]][cols[2]] = float(cols[0])
-            d[cols[2]][cols[1]] = ( float(cols[3]), float(cols[4]) )
+            d[cols[1]][cols[2]] = '%4.3f' % float(cols[0])
+            d[cols[2]][cols[1]] = '%6.3f - %6.3f' % ( float(cols[3]), float(cols[4]) )
 
-    raise RuntimeError('please inspect here: %s' % tmp_dir)
+    return d
 
