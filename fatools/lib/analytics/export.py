@@ -154,16 +154,21 @@ def export_demetics(analytical_sets, dbh, outstream):
     """
 
     outstream.write('individual\tpopulation\tfragment.length\tlocus\n')
+    labels = []
+    label_pos = 0
 
     for analytical_set in analytical_sets:
 
+        labels.append( analytical_set.label )
+        label_id = label_pos
+        label_pos += 1
         allele_df = analytical_set.allele_df.df
         for t in allele_df.itertuples():
             (marker_id, sample_id, value, size, height, assay_id, allele_id, ratio, rank) = t[1:]
             marker = dbh.get_marker_by_id(marker_id)
-            sample = dbh.get_sample_by_id(sample_id)
+            #sample = dbh.get_sample_by_id(sample_id)
             outstream.write('%s\t%s\t%d\t%s\n' %
-                (sample.code, reformat_label(analytical_set.label), value, marker.code))
+                (sample_id, label_id, value, marker.code))
 
 
 def export_flat(analytical_set, dbh, outstream):
