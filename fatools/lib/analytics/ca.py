@@ -119,3 +119,17 @@ def pca( distance_matrix, dim = 2 ):
 
     # this function hasn't been finished yet
     raise NotImplementedError
+
+
+def format_data(pca_res, dm):
+    """ return row of [sample_id, label, pc1, pc2, ...] """
+
+    dim = len(pca_res[0][0])
+    d = [ ('SAMPLE', 'LABEL') + tuple( 'PC%d' % (x+1) for x in range(dim)) ]
+
+    for i in range(len(dm.I)):
+        d.append( (str(dm.I[i]), dm.L[i]) + tuple( '%5.4f' % x for x in pca_res[0][i] ) )
+
+    return d
+
+
