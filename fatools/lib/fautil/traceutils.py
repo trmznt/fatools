@@ -1,9 +1,11 @@
 
 from math import factorial
 import numpy as np
-from scipy import ndimage
+import attr
+from scipy import ndimage, signal
 
 _TOPHAT_FACTOR = 0.01 #025   #05
+_MEDWINSIZE = 299
 
 def b(txt):
     """ return a binary string aka bytes """
@@ -21,6 +23,25 @@ def correct_baseline( signal ):
     return ndimage.white_tophat(signal, None,
                 np.repeat([1], int(round(signal.size * _TOPHAT_FACTOR)))
             )
+
+
+@attr.s
+class NormalizedTrace(object):
+    signal = attr.ib()
+    baseline = attr.ib()
+
+
+def normalize_baseline( raw ):
+    """ return mean, median, sd and smooth signal """
+
+    median_line = signal.medfilt(raw, [_MEDWINSIZE])
+    baseline = signal.savgol_filter( median_line, _MEDWINSIZE, 7)
+    corrected_baseline = raw - baseline
+    np.maximum(corrected_baseline, 0, out=corrected_baseline)
+    smooth = correct_baseline( signal.savgol_filter(corrected_baseline, 11, 7) )
+
+    return NormalizedTrace( signal=smooth, baseline = baseline )
+
 
 def search_peaks( signal, cwt_widths, min_snr ):
     """ returns [ (peak, height, area) ], ... ] """
@@ -103,6 +124,18 @@ def half_area(y, threshold):
     return area, index, shared
 
 
+@attr.s
+class TraceChannel(object):
+    dye_name = attr.ib()
+    dye_wavelength = attr.ib()
+    raw_channel = attr.ib()
+    smooth_channel = attr.ib()
+    median = attr.ib()
+    mean = attr.ib()
+    sd = attr.ib()
+    max_height = attr.ib()
+    min_height = attr.ib()
+
 
 def separate_channels( trace ):
     # return a list of [ 'dye name', dye_wavelength, numpy_array, numpy_smooth_baseline ]
@@ -113,9 +146,12 @@ def separate_channels( trace ):
             dye_name = trace.get_data(b('DyeN%d' % idx)).decode('UTF-8')
             dye_wavelength = trace.get_data(b('DyeW%d' % idx))
             raw_channel = np.array( trace.get_data(b('DATA%d' % data_idx)) )
-            sg_channel = correct_baseline( smooth_signal( raw_channel ) )
+            nt = normalize_baseline( raw_channel )
 
-            results.append( (dye_name, dye_wavelength, raw_channel, sg_channel) )
+            results.append( TraceChannel(dye_name, dye_wavelength, raw_channel,
+                            nt.signal, np.median(nt.baseline), np.mean(nt.baseline),
+                            np.std(nt.baseline), np.max(nt.baseline), np.min(nt.baseline))
+            )
         except KeyError:
             pass
 

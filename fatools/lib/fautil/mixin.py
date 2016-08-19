@@ -624,15 +624,16 @@ class AssayMixIn(object):
         t = self.get_trace()
 
         channels = traceutils.separate_channels( t )
-        for (n, wl, raw, sg) in channels:
+        for tc in channels:
             # check n (dye name)
-            if n not in dyes:
+            if tc.dye_name not in dyes:
                 raise RuntimeError('ERR - dye %s is unknown!' % n)
-            c = self.new_channel( raw_data = raw, data = sg, dye = n, wavelen = wl,
-                status = channelstatus.reseted,
-                median=int(np.median(raw)), mean=float(raw.mean()),
-                max_height=int(raw.max()), min_height=int(raw.min()),
-                std_dev = float(raw.std()) )
+            c = self.new_channel(   raw_data = tc.raw_channel, data = tc.smooth_channel,
+                                    dye = tc.dye_name, wavelen = tc.dye_wavelength,
+                                    status = channelstatus.reseted,
+                                    median=int(tc.median), mean=float(tc.mean),
+                                    max_height=int(tc.max_height), min_height=int(tc.min_height),
+                                    std_dev = float(tc.sd) )
 
 
     def assign_channels(self, excluded_markers=None):
