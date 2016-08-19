@@ -15,6 +15,7 @@ requires = [
     'pyyaml',
     'pandas',
     'leveldb',
+    'attrs',
     ]
 
 setup(name='fatools',
