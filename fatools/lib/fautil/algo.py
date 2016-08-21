@@ -275,7 +275,7 @@ def preannotate_channels( channels, params ):
 
     # peak is broad if beta > beta_broad_threshold
 
-    channel_peaks = [ list(channel.alleles) for channel in channels ]
+    channel_peaks = [ (list(channel.alleles), np.median(channel.data)) for channel in channels ]
 
     # reset all peak type, score the peaks and set the peak type to peak-noise,
     # peak-broad
@@ -284,7 +284,7 @@ def preannotate_channels( channels, params ):
     # also if height at either brtime or ertime is higher than 50% at rtime, it is
     # likely a noise
 
-    for peaks in channel_peaks:
+    for (peaks, med_baseline) in channel_peaks:
 
         if len(peaks) == 0: continue
 
@@ -303,6 +303,11 @@ def preannotate_channels( channels, params ):
             score = 1.0
 
             # extreme noise
+
+            if p.height < 2 * med_baseline:
+                p.qscore = 0.25
+                p.type = peaktype.noise
+                continue
 
             if p.wrtime < 6 or peak_beta_theta < 0.275 * avg_beta_theta:
                 p.qscore = 0.25
@@ -358,6 +363,9 @@ def preannotate_channels( channels, params ):
                 continue
 
             for p in channel.alleles:
+                if p.type == peaktype.noise:
+                    continue
+
                 if p.ertime - p.brtime < 3:
                     brtime = p.brtime
                     ertime = p.ertime
@@ -367,6 +375,9 @@ def preannotate_channels( channels, params ):
                 else:
                     brtime = p.brtime + 3
                     ertime = p.ertime - 3
+
+                if brtime > p.rtime: brtime = p.rtime
+                if ertime < p.rtime: ertime = p.rtime
 
                 brtime = max(0, brtime)
                 ertime = min(len(channel.data), len(channel_r.data), ertime)
@@ -380,6 +391,8 @@ def preannotate_channels( channels, params ):
 
                     # check how much is the relative height of this particular peak
                     rel_height = p.height / channel_r.data[p.rtime]
+                    if rel_height > 1.0:
+                        continue
 
                     (o_state, o_ratio, o_sym) = calc_overlap_ratio( channel.data,
                                                         channel_r.data, p.rtime,
@@ -389,21 +402,26 @@ def preannotate_channels( channels, params ):
                     if not o_state:
                         continue
 
+                    print('peak: %d | %s | %s <> %f | %f | %f' % (p.rtime, p.channel.dye, p.type, rel_height, o_ratio, o_sym))
                     if rel_height < 0.15:
                         if p.type != peaktype.noise:
                             p.type = peaktype.overlap
+                            print('peak: %d | %s -> overlap' % (p.rtime, p.channel.dye))
                         p.qscore -= 0.10
                         continue
 
-                    if rel_height < params.overlap_height_threshold and -0.25 < o_sym < 0.25:
+                    if ((rel_height < params.overlap_height_threshold and -0.5 < o_sym < 0.5) or
+                        (o_ratio < 0.25 and -1.5 < o_sym < 1.5 ) or
+                        (o_ratio < 0.75 and -0.5 < o_sym < 0.5 )):
                         if p.type != peaktype.noise:
                             p.type = peaktype.overlap
+                            print('peak: %d | %s -> overlap' % (p.rtime, p.channel.dye))
                         p.qscore -= 0.10
                         continue
 
     # checking for stutter peaks based on minimum rtime & rfu
 
-    for peaks in channel_peaks:
+    for (peaks, med_baseline) in channel_peaks:
         alleles = sorted( [ p for p in peaks ],
                         key = lambda x: x.rtime )
 
@@ -455,14 +473,16 @@ def call_peaks( channel, params, func, min_rtime, max_rtime ):
 
     for allele in channel.alleles:
         if not min_rtime < allele.rtime < max_rtime:
-            allele.type = peaktype.unassigned
+            if allele.type == peaktype.scanned:
+                allele.type = peaktype.unassigned
             continue
         size, deviation, qcall, method = func(allele.rtime)
         allele.size = size
         allele.bin = round(size)
         allele.deviation = deviation
         allele.qcall = qcall
-        allele.type = peaktype.called
+        if allele.type == peaktype.scanned:
+            allele.type = peaktype.called
         allele.method = binningmethod.notavailable
 
 
@@ -636,17 +656,22 @@ def calc_overlap_ratio(data, data_r, rtime, brtime, ertime):
         return ( boolean, total_ratio, log(right_ratio/left_ratio) )
     """
 
-    lr = rr = 1e-5
-    for x in range(brtime, rtime):
+    lr = rr = 0.0
+    lc = rc = 0
+    for x in range(brtime, rtime+1):
         if data[x] > data_r[x]:
             return (False, 0, 0)
         lr += data[x]/data_r[x]
-    for x in range(rtime, ertime):
+        lc += 1
+    for x in range(rtime, ertime+1):
         if data[x] > data_r[x]:
             return (False, 0, 0)
         rr += data[x]/data_r[x]
+        rc += 1
+    lrc = lr / lc
+    rrc = rr / rc
 
-    return (True, lr + rr, math.log2(rr/lr))
+    return (True, (lrc + rrc)/2, math.log2(rrc/lrc))
 
 
 def generate_scoring_function( strict_params, relax_params ):
