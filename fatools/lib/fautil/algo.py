@@ -529,7 +529,7 @@ def bin_peaks(channel, params, marker):
 
 def postannotate_peaks( channel, params ):
     """
-    post annotate binned peaks with peak stutter
+    post annotate binned peaks with peak stutter and broad signals
     """
 
     # peak is stutter if the range < params.stutter_range and
@@ -540,6 +540,9 @@ def postannotate_peaks( channel, params ):
 
     for allele in alleles:
         if allele.type != peaktype.bin: continue
+        if allele.beta > params.max_beta:
+            allele.type = peaktype.broad
+            continue
         for prev_allele in prev_alleles:
             if (    abs(prev_allele.size - allele.size) < params.stutter_range and
                     allele.height/prev_allele.height < params.stutter_ratio ):
