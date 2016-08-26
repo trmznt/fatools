@@ -23,7 +23,7 @@ class ScanningParameter(object):
         self.min_height_ratio = 0
         self.min_rtime = 75
         self.max_rtime = 12500
-        self.max_peak_number = 15
+        self.max_peak_number = 20
         self.max_beta = 15
         self.max_gradient_threshold = 0
         self.overlap_height_threshold = 0.75
