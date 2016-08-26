@@ -309,7 +309,7 @@ def preannotate_channels( channels, params ):
                 p.type = peaktype.noise
                 continue
 
-            if p.wrtime < 6 or peak_beta_theta < 0.275 * avg_beta_theta:
+            if p.wrtime < 6 or (p.wrtime < 10 and peak_beta_theta < 0.275 * avg_beta_theta):
                 p.qscore = 0.25
                 p.type = peaktype.noise
                 continue
