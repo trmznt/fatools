@@ -77,7 +77,7 @@ def export_alleledf(analytical_sets, dbh, outstream):
 
         allele_df = analytical_set.allele_df.df
         for t in allele_df.itertuples():
-            (marker_id, sample_id, value, size, height, assay_id, ratio, rank) = t[1:]
+            (marker_id, sample_id, value, size, height, assay_id, allele_id, ratio, rank) = t[1:]
             marker = dbh.get_marker_by_id(marker_id)
             sample = dbh.get_sample_by_id(sample_id)
             outstream.write('%s\t%s\t%s\t%d\t%f\t%d\t%f\t%d\n' %
