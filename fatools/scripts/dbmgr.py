@@ -549,15 +549,18 @@ def do_viewbin(args, dbh):
 
 def do_updatebins(args, dbh):
 
-    with open(args.updatebins) as f:
+    with open(args.infile) as f:
         updated_bins = yaml.load( f )
+
+    batch = dbh.get_batch( args.batch or 'default')
 
     for (marker_label, marker_data) in updated_bins.items():
         if marker_data['label'] != marker_label:
             raise RuntimeError()
         marker = dbh.get_marker( marker_label )
-        marker.bins = marker_data['bins']
-        cerr('I: Updating bins for marker: %s' % marker.label)
+        binset = marker.get_bin(batch, recursive=False)
+        binset.bins = marker_data['bins']
+        cerr('I: Updating bins for marker: %s batch: %s' % (marker.label, batch.code))
 
 
 
