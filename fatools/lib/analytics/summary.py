@@ -160,7 +160,7 @@ def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
     for (label, allele_report) in allele_reports.items():
         marker_ids.update( allele_report['summary'].keys() )
 
-    m = len(marker_ids)
+    m = len(marker_ids) + 1 # add 1 for legends
     fig = plt.figure( figsize = (21, 4 * m), dpi=600 )
 
     axes = {}
@@ -215,6 +215,7 @@ def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
 
         for label in ax.get_xticklabels():
             label.set_size( 'xx-small' )
+            label.set_rotation(90)
         for label in ax.get_yticklabels():
             label.set_size( 'xx-small' )
 
@@ -226,6 +227,17 @@ def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
         #ax.set_xlim(min(data[0]), max(data[0]))
         ax.set_xlim(auto = True)
 
+    # create the legend plot by creating dummy
+
+    lx = fig.add_subplot( m, 1, m )
+    for label, allele_report in allele_reports.items():
+        lx.vlines( [0,0], [0], [0,0],
+                    colors = [ allele_report['colour'] ],
+                    label = label
+        )
+    leg = lx.legend(ncol = len(allele_reports) )
+        #lx.set_ylabel( 'Legend' )
+    lx.set_axis_off()
 
     fig.tight_layout()
 
