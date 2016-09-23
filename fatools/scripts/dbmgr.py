@@ -578,7 +578,7 @@ def do_removefsa(args, dbh):
     assay_list = get_assay_list( args, dbh )
 
     batch = dbh.get_batch(args.batch)
-    if batch and not (args.sample or args.fsa or args.fsaid):
+    if batch and not (args.sample or args.fsa or args.fsaid or args.panel):
         # remove all assay in this batch
         batch.remove_assays()
         cerr('INFO - removing all assays from batch %s' % batch.code)
@@ -691,12 +691,17 @@ def get_assay_list( args, dbh ):
     if args.fsaid:
         fsaids = [int(x) for x in args.fsaid.split(',')]
 
+    panels = []
+    if args.panel:
+        panels = args.panel.split(',')
+
     assay_list = []
     for sample in batch.samples:
         if samples and sample.code not in samples: continue
         for assay in sample.assays:
             if assays and assay.filename not in assays: continue
             if fsaids and assay.id not in fsaids: continue
+            if panels and assay.panel.code not in panels: continue
             assay_list.append( (assay, sample.code) )
 
     cerr('INFO - number of assays to be processed: %d' % len(assay_list))
