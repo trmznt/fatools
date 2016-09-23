@@ -36,7 +36,7 @@ def do_binsutil(args):
 
     if args.outfile:
         with open(args.outfile, 'w') as f:
-            yaml.dump({ args.marker: { 'label': args.marker, 'data': tbin.bins}}, f)
+            yaml.dump({ args.marker: { 'label': args.marker, 'bins': tbin.bins}}, f)
 
 
 class Bin(BinMixIn):
