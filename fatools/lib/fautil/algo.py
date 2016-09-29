@@ -162,12 +162,12 @@ def find_peaks( raw_data,  params, raw_peaks = None ):
 
         if idx > 0:
             prev_p = peaks[idx-1]
-            if peak[3] - prev_p[4] < 5 and peak[1] < prev_p[1]:
+            if peak[3] - prev_p[4] < 5 and peak[1] < params.artifact_ratio * prev_p[1]:
                 # we are artifact, just skip
                 continue
         if idx < len(peaks)-1:
             next_p = peaks[idx+1]
-            if next_p[3] - peak[4] < 5 and peak[1] < next_p[1]:
+            if next_p[3] - peak[4] < 5 and peak[1] < params.artifact_ratio * next_p[1]:
                 # we are another artifact, just skip
                 continue
 
