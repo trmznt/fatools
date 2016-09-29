@@ -69,6 +69,9 @@ def init_argparser(parser=None):
     p.add_argument('--marker', default=False,
             help = 'marker code')
 
+    p.add_argument('--panel', default='',
+            help = 'panel list (comma separated)')
+
     p.add_argument('--commit', default=False, action='store_true',
             help = 'commit to database')
 
@@ -514,11 +517,16 @@ def get_assay_list( args, dbh ):
     if args.assay:
         assays = args.assay.split(',')
 
+    panels = []
+    if args.panel:
+        panels = args.panel.split(',')
+
     assay_list = []
     for sample in batch.samples:
         if samples and sample.code not in samples: continue
         for assay in sample.assays:
             if assays and assay.filename not in assays: continue
+            if panels and assay.panel.code not in panels: continue
             assay_list.append( (assay, sample.code) )
 
     cerr('INFO - number of assays to be processed: %d' % len(assay_list))
