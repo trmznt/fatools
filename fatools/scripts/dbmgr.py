@@ -69,6 +69,9 @@ def init_argparser( parser=None ):
     p.add_argument('--removefsa', default=False, action='store_true',
             help = 'remove FSA from database')
 
+    p.add_argument('--renamefsa', default=False, action='store_true',
+            help = 'rename FSA filename')
+
     p.add_argument('--setbinbatch', default=False, action='store_true',
             help = 'set bins-related batch')
 
@@ -214,6 +217,8 @@ def do_dbmgr(args, dbh = None, warning=True):
         do_setbinbatch(args, dbh)
     elif args.exportfsa is not False:
         do_exportfsa(args, dbh)
+    elif args.renamefsa is not False:
+        do_renamefsa(args, dbh)
     elif args.viewpeakcachedb is not False:
         do_viewpeakcachedb(args, dbh)
     else:
@@ -631,6 +636,38 @@ def do_exportfsa(args, dbh):
                             assay.panel.code, exclude))
 
     outfile.close()
+
+
+def do_renamefsa(args, dbh):
+
+    cout('Renaming FSA files from input file: %s' % args.infile)
+
+    b = dbh.get_batch(args.batch)
+
+    inrows = csv.DictReader( open(args.infile),
+                delimiter = ',' if args.infile.endswith('.csv') else '\t' )
+    #next(inrows)
+
+    total_fsa = 0
+    line_counter = 1
+    for r in inrows:
+
+        line_counter += 1
+
+        #if not row[0] or row[0].startswith('#'):
+        #    continue
+        if not (r['FILENAME'] and r['SAMPLE']) or '#' in [ r['FILENAME'][0], r['SAMPLE'][0] ]:
+            continue
+
+        try:
+            sample_code, fsa_filename, fsa_new_filename = r['SAMPLE'], r['FILENAME'], r['NEWNAME']
+            s = b.search_sample(sample_code)
+            a = s.assays.filter( dbh.Assay.filename == fsa_filename ).one()
+            a.filename = fsa_new_filename
+
+        except:
+            cerr('Error in executing line %d' % line_counter)
+            raise
 
 
 def do_viewpeakcachedb(args, dbh):
