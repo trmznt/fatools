@@ -497,10 +497,6 @@ def bin_peaks(channel, params, marker):
 
         if peak.size < 0: continue
 
-        # check peak type
-        if peak.type in [ peaktype.overlap, peaktype.noise, peaktype.artifact ]:
-            continue
-
         if not marker.min_size < peak.size < marker.max_size:
             peak.type = peaktype.unassigned
             continue
@@ -523,6 +519,11 @@ def bin_peaks(channel, params, marker):
                 curr_bin = right_bin
 
         peak.bin = curr_bin[0]
+
+        # check peak type
+        if peak.type in [ peaktype.overlap, peaktype.noise, peaktype.artifact ]:
+            continue
+
         peak.type = peaktype.bin
 
 
