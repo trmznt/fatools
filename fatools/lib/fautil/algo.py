@@ -520,12 +520,9 @@ def bin_peaks(channel, params, marker):
 
         peak.bin = curr_bin[0]
 
-        # check peak type
-        if peak.type in [ peaktype.overlap, peaktype.noise, peaktype.artifact ]:
-            continue
-
-        peak.type = peaktype.bin
-
+        # only assigned peak as bin if it unassigned or called
+        if peak.type in [ peaktype.unassigned, peaktype.called ]:
+            peak.type = peaktype.bin
 
 
 def postannotate_peaks( channel, params ):
@@ -547,6 +544,10 @@ def postannotate_peaks( channel, params ):
         for prev_allele in prev_alleles:
             if (    abs(prev_allele.size - allele.size) < params.stutter_range and
                     allele.height/prev_allele.height < params.stutter_ratio ):
+                allele.type = peaktype.stutter
+            elif ( abs(prev_allele.size - allele.size) < (params.stutter_range/2+1)):
+                allele.type = peaktype.stutter
+            elif prev_allele.bin == allele.bin:
                 allele.type = peaktype.stutter
 
         # added this allele to prev_alleles
