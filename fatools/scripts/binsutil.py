@@ -22,6 +22,8 @@ def init_argparser(parser=None):
 
     p.add_argument('--anchor', type=int)
 
+    p.add_argument('--shift', type=float, default=0)
+
     return p
 
 

@@ -21,7 +21,7 @@ def do_binsutil(args):
     print(bins)
 
     tbin = Bin()
-    tbin.initbins(args.anchor, args.repeats, args.min, args.max)
+    tbin.initbins(args.anchor, args.repeats, args.min, args.max, args.shift)
 
     for i in range(0, 30):
         print('<<ITER:  %d >>' % i)
@@ -44,7 +44,7 @@ class Bin(BinMixIn):
     def __init__(self):
         self.bins = None
 
-    def initbins(self, anchor, repeats, min_range, max_range):
+    def initbins(self, anchor, repeats, min_range, max_range, shift=0):
 
         mod = anchor % repeats
         print('mod', mod)
@@ -55,7 +55,7 @@ class Bin(BinMixIn):
         #super().initbins(min_range, max_range, repeats)
         self.bins = []
         for i in range(min_range, max_range, repeats):
-            self.bins.append([i, float(i), i - 0.5, i + 0.5])
+            self.bins.append([i, float(i) + shift, i - 0.5 + shift, i + 0.5 + shift])
         print(self.bins)
 
     def adjust_bins(self, containers, reset=False, repeats=-1):
