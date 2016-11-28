@@ -4,7 +4,7 @@ from subprocess import call
 from fatools.lib.utils import random_string
 
 
-def plot_nj( distance_matrix, tmp_dir, fmt='pdf', label_callback=None ):
+def plot_nj( distance_matrix, tmp_dir, fmt='pdf', label_callback=None, tree_type='fan' ):
     """ NJ uses R's ape library
         R will be called as a separate process instead as a embedded library
         in order to utilize paralel processing in multiple processor
@@ -52,9 +52,10 @@ C <- as.vector( read.table("%s", sep='\\t', header=F, comment.char = '')[,1] )
 tree <- nj( M )
 %s
 %s
-plot(tree, "fan", tip.color = C, font=1, cex=0.7, label.offset = 0.009)
+plot(tree, "%s", tip.color = C, font=1, cex=0.7, label.offset = 0.009)
 legend('topright', inset=c(0,0), c(%s), col = c(%s), lty=1, cex=0.85, xpd=T)
 """ % (matrix_file, colors_file, label_cmd, cmd,
+        tree_type,
         ",".join( '"%s"' % hs.label for (hs,_,_) in distance_matrix.S),
         ",".join( '"%s"' % hs.colour for (hs,_,_) in distance_matrix.S) )
     )
