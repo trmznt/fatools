@@ -262,7 +262,7 @@ def do_exportpanel(args, dbh):
         panel_code = None
 
     elif ',' in panel_code:
-        panel_code =  panel.split(',')
+        panel_code =  panel_code.split(',')
 
     else:
         panel_code = [ panel_code.strip() ]
