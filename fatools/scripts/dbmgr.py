@@ -261,7 +261,7 @@ def do_exportpanel(args, dbh):
         # export all panel
         panel_code = None
 
-    elif ',' in panel:
+    elif ',' in panel_code:
         panel_code =  panel.split(',')
 
     else:
@@ -668,6 +668,26 @@ def do_renamefsa(args, dbh):
         except:
             cerr('Error in executing line %d' % line_counter)
             raise
+
+def do_exportpeaks(args, dbh):
+
+    cerr('Exporting all peaks to file: %s' % args.outfile)
+
+    b = dbh.get_batch(args.batch)
+
+    assay_list = get_assay_list( args, dbh )
+
+    if args.outfile:
+        outfile = open(args.outfile, 'w')
+    else:
+        outfile = sys.stdout
+    outfile.write('SAMPLE\tFILENAME\tID\tOPTIONS\n')
+
+    for (assay, sample_code) in assay_list:
+        pass
+        # pass for now
+        # continue later
+
 
 
 def do_viewpeakcachedb(args, dbh):
