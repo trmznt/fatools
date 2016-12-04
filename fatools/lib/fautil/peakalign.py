@@ -40,16 +40,23 @@ def fast_align( data, ladders, peaks , qcfunc ):
         if mq_score > 0.95:
             return (mq_score, mq_msg, mq_result, alignmethod.fast_mq)
 
-    hq_relax_score = mq_relax_score = -1
-    if hq_score:
-        hq_relax_score, hq_relax_msg = qcfunc(hq_result, method='relax')
-    if mq_score:
-        mq_relax_score, mq_relax_msg = qcfunc(mq_result, method='relax')
-    if hq_relax_score < 0 and mq_relax_score < 0:
-        return (0, None, None, None)
+    hq_relax_score, hq_relax_msg = qcfunc(hq_result, method='relax')
+    mq_relax_score, mq_relax_msg = qcfunc(mq_result, method='relax')
+
     if hq_relax_score >= mq_relax_score:
         return (hq_relax_score, hq_relax_msg, hq_result, alignmethod.fast_hqr)
     return (mq_relax_score, mq_relax_msg, mq_result, alignmethod.fast_mqr)
+
+
+def shift_align( data, ladders, peaks, qcfunc):
+    """ perform fast_align but with shifted peaks aka removing last peaks """
+
+    for i in [1, 2, 3]:
+        score = fast_align( data, ladders[:-i], peaks, qcfunc)
+        if score[0] > 0.5:
+            return score
+
+    return (0, None, None, None)
 
 
 def greedy_align( data, ladders, peaks, qcfunc ):
@@ -76,7 +83,7 @@ def greedy_align( data, ladders, peaks, qcfunc ):
 
             # use the first & last peak to estimate Z
             initial_peak_pairs = [  (peaks[i].rtime, ladders[1]),
-                                    (peaks[-j].rtime, ladders[-3]) ]
+                                    (peaks[-j].rtime, ladders[-1]) ]
 
             # use this for z_align, and obtain rss
             peak_pairs = z_align( peaks, ladders, initial_peak_pairs )

@@ -445,6 +445,7 @@ def preannotate_channels( channels, params ):
 def size_peaks( channel, params, ladders, qcfunc = None ):
 
     data = channel.data
+    scores = []
 
     # perform fast_align with both clean, high quality peaks and good peaks
     (score_0, msg_0, result_0, method_0) = pa.fast_align( data, ladders,
@@ -454,14 +455,26 @@ def size_peaks( channel, params, ladders, qcfunc = None ):
     if score_0 > 0.99:
         return (score_0, msg_0, result_0, method_0)
     cerr('fast_align(): %4.2f' % score_0)
+    scores.append( (score_0, msg_0, result_0, method_0) )
+
+    # perform shift_align with both clean, high quality peaks and good peaks
+    (score_0, msg_0, result_0, method_0) = pa.shift_align( data, ladders,
+                                                channel.alleles, qcfunc )
+
+
+    if score_0 > 0.99:
+        return (score_0, msg_0, result_0, method_0)
+    cerr('shift_align(): %4.2f' % score_0)
+    scores.append( (score_0, msg_0, result_0, method_0) )
 
     # perform greedy alignment
     (score_1, msg_1, result_1, method_1) = pa.greedy_align( data, ladders,
                                                 channel.alleles, qcfunc )
 
-    if score_1 >  score_0:
-        return (score_1, msg_1, result_1, method_1)
-    return (score_0, msg_0, result_0, method_0)
+    scores.append( (score_1, msg_1, result_1, method_1) )
+
+    scores.sort()
+    return scores[-1]
 
 
 
