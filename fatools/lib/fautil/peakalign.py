@@ -17,7 +17,7 @@ def fast_align( data, ladders, peaks , qcfunc ):
 
     #cerr( ' -> HQ peak: %d / %d' % (len(hq_peaks), len(peaks)) )
 
-    hq_score = mq_score = None
+    hq_score = mq_score = -1
 
     if len(hq_peaks) > 2 and ( len(hq_peaks) >= len(ladders) - 1
                                 or len(peaks) == len(ladders) ):
@@ -40,8 +40,11 @@ def fast_align( data, ladders, peaks , qcfunc ):
         if mq_score > 0.95:
             return (mq_score, mq_msg, mq_result, alignmethod.fast_mq)
 
-    hq_relax_score, hq_relax_msg = qcfunc(hq_result, method='relax')
-    mq_relax_score, mq_relax_msg = qcfunc(mq_result, method='relax')
+    hq_relax_score = mq_relax_score = -1
+    if hq_score >= 0:
+        hq_relax_score, hq_relax_msg = qcfunc(hq_result, method='relax')
+    if mq_score >= 0:
+        mq_relax_score, mq_relax_msg = qcfunc(mq_result, method='relax')
 
     if hq_relax_score >= mq_relax_score:
         return (hq_relax_score, hq_relax_msg, hq_result, alignmethod.fast_hqr)
