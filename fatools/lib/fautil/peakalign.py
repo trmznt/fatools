@@ -54,7 +54,7 @@ def fast_align( data, ladders, peaks , qcfunc ):
 def shift_align( data, ladders, peaks, qcfunc):
     """ perform fast_align but with shifted peaks aka removing last peaks """
 
-    for i in [1, 2, 3]:
+    for i in [1, 2, 3, 4, 5]:
         score = fast_align( data, ladders[:-i], peaks, qcfunc)
         if score[0] > 0.5:
             return score
