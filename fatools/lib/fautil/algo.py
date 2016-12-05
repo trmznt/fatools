@@ -54,7 +54,7 @@ def find_raw_peaks( raw_data, params ):
 
     elif params.method == 'pd':
         from peakutils import indexes
-        indices = indexes( raw_data, 1e-3, 4 )
+        indices = indexes( raw_data, 1e-5, 10 )
         #pprint.pprint(indices)
         #print('indices: %d' % len(indices))
 
@@ -71,7 +71,8 @@ def find_raw_peaks( raw_data, params ):
 
     if params.method == 'pd':
         return [ ( int(i), int(raw_data[i]) )
-                    for i in indices if raw_data[i] > params.min_height ]
+                    for i in indices if raw_data[i] > params.min_height and
+                        params.min_rtime < i < params.max_rtime ]
 
     raw_peaks = []
     max_len = len(raw_data)

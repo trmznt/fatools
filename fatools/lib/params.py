@@ -21,9 +21,9 @@ class ScanningParameter(object):
         self.min_relative_ratio = 0
         self.max_relative_ratio = 0
         self.min_height_ratio = 0
-        self.min_rtime = 75
+        self.min_rtime = 750
         self.max_rtime = 12500
-        self.max_peak_number = 20
+        self.max_peak_number = 30
         self.max_beta = 15
         self.max_gradient_threshold = 0
         self.overlap_height_threshold = 0.75
