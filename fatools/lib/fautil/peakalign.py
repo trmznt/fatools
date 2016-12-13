@@ -46,9 +46,13 @@ def fast_align( data, ladders, peaks , qcfunc ):
     if mq_score >= 0:
         mq_relax_score, mq_relax_msg = qcfunc(mq_result, method='relax')
 
+    if hq_relax_score < 0 and mq_relax_score < 0:
+        return (0, None, None, None)
+
     if hq_relax_score >= mq_relax_score:
         return (hq_relax_score, hq_relax_msg, hq_result, alignmethod.fast_hqr)
     return (mq_relax_score, mq_relax_msg, mq_result, alignmethod.fast_mqr)
+
 
 
 def shift_align( data, ladders, peaks, qcfunc):
