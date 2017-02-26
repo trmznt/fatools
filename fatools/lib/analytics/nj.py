@@ -12,6 +12,8 @@ def plot_nj( distance_matrix, tmp_dir, fmt='pdf', label_callback=None, tree_type
 
     # create matrix distance & color distance
 
+    #raise RuntimeError
+
     file_id = random_string(3)
 
     matrix_file = '%s/matrix-distance-%s.txt' % (tmp_dir, file_id)
@@ -28,6 +30,7 @@ def plot_nj( distance_matrix, tmp_dir, fmt='pdf', label_callback=None, tree_type
             out_m.write( '%s\t%s\n' % (str(name), '\t'.join( ['%2.3f' % x for x in vals] ) ))
 
         out_c.write('\n'.join( distance_matrix.C ) )
+        out_c.write('\n')
 
     if label_callback:
         with open(label_file, 'w') as labelout:
@@ -50,9 +53,11 @@ library(ape)
 M <- as.matrix( read.table("%s", sep='\\t', header=T) )
 C <- as.vector( read.table("%s", sep='\\t', header=F, comment.char = '')[,1] )
 tree <- nj( M )
+x = tree$edge[,2]
+edge_colors <- ifelse(x > length(C), "#474747", C[x])
 %s
 %s
-plot(tree, "%s", tip.color = C, font=1, cex=0.7, label.offset = 0.009)
+plot(tree, "%s", tip.color = C,  edge.color = edge_colors, font=1, cex=0.7, label.offset = 0.009)
 legend('topright', inset=c(0,0), c(%s), col = c(%s), lty=1, cex=0.85, xpd=T)
 """ % (matrix_file, colors_file, label_cmd, cmd,
         tree_type,
