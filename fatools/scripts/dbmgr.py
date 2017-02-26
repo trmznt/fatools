@@ -93,6 +93,9 @@ def init_argparser( parser=None ):
     p.add_argument('--reassignmarker', default=False, action='store_true',
             help = 'reassign marker (using dye)')
 
+    p.add_argument('--dumppeaks', default=False, action='store_true',
+            help = 'dump peaks to YAML file')
+
     ## options
 
     p.add_argument('--infile', default=False,
@@ -221,6 +224,8 @@ def do_dbmgr(args, dbh = None, warning=True):
         do_renamefsa(args, dbh)
     elif args.viewpeakcachedb is not False:
         do_viewpeakcachedb(args, dbh)
+    elif args.dumppeaks is not False:
+        do_dumppeaks(args, dbh)
     else:
         if warning:
             cerr('Unknown command, nothing to do!')
@@ -721,6 +726,37 @@ def do_showsample(args, dbh):
                     if c.status == channelstatus.assigned]
             cout(' % 3d - %s | %s | %s' %
                     (fsa.id, fsa.filename, fsa.panel.code, ','.join(marker_codes)) )
+
+
+def do_dumppeaks(args, dbh):
+
+    cerr('Dumping all peaks to file: %s' % args.outfile)
+
+    b = dbh.get_batch(args.batch)
+
+    assay_list = get_assay_list( args, dbh )
+
+    if args.outfile:
+        outfile = open(args.outfile, 'w')
+    else:
+        outfile = sys.stdout
+
+    data = {}
+    for (assay, sample_code) in assay_list:
+        print(assay.filename)
+
+        assay_data = {}
+
+        for c in assay.channels:
+
+            alleles = list(c.get_latest_alleleset().alleles)
+
+            assay_data[c.dye] = [ [p.rtime, p.height, p.qscore, p.size]
+                                for p in alleles ]
+
+        data[assay.filename] = assay_data
+
+    yaml.dump(data, outfile)
 
 
 # helpers
