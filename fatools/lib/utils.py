@@ -74,3 +74,29 @@ def release_R():
     global _R_lock_
 
     _R_lock_.release()
+
+
+# utility to deal with tab or comma delimited text buffer
+
+def detect_buffer( buf ):
+    """ return (buf, delimiter) """
+
+    # find our new line character, this is for Mac Excel blunder
+
+    n_count = buf.count('\n')
+    r_count = buf.count('\r')
+
+    if n_count == 0 and r_count > 0:
+        # Mac Excel
+        buf = buf.replace('\r', '\n')
+        n_count = r_count
+    elif r_count > n_count:
+        raise RuntimeError('Invalid text content')
+
+    # we detect delimiter
+    tab_count = buf.count('\t')
+    comma_count = buf.count(',')
+
+    if comma_count > tab_count and comma_count > n_count:
+        return (buf, ',')
+    return (buf, '\t')
