@@ -4,7 +4,7 @@ from subprocess import call
 from fatools.lib.utils import random_string
 
 
-def plot_nj( distance_matrix, tmp_dir, fmt='pdf', label_callback=None, tree_type='fan' ):
+def plot_nj( distance_matrix, tmp_dir, fmt='pdf', label_callback=None, tree_type='fan', branch_coloring=True ):
     """ NJ uses R's ape library
         R will be called as a separate process instead as a embedded library
         in order to utilize paralel processing in multiple processor
@@ -43,16 +43,9 @@ def plot_nj( distance_matrix, tmp_dir, fmt='pdf', label_callback=None, tree_type
     else:
         label_cmd = ''
 
-    with open(script_file, 'w') as scriptout:
-        if fmt == 'pdf':
-            cmd = 'pdf("%s", width = 11.2, height=7)' % njtree_file
-        elif fmt == 'png':
-            cmd = 'png("%s", width = 1024, height = 640)' % njtree_file
-        scriptout.write("""
-library(ape)
-M <- as.matrix( read.table("%s", sep='\\t', header=T) )
-C <- as.vector( read.table("%s", sep='\\t', header=F, comment.char = '')[,1] )
-tree <- nj( M )
+    if branch_coloring:
+        edge_color_cmd = (
+'''
 tree <- reorder(tree, "postorder")
 x = tree$edge[,2]
 edge_colors <- ifelse(x > length(C), "###", C[x])
@@ -68,11 +61,27 @@ for(i in 1:nrow(tree$edge)){
         }
     }
 }
+'''
+        )
+    else:
+        edge_color_cmd = '''edge_colors <- "#474747"'''
+
+    with open(script_file, 'w') as scriptout:
+        if fmt == 'pdf':
+            cmd = 'pdf("%s", width = 11.2, height=7)' % njtree_file
+        elif fmt == 'png':
+            cmd = 'png("%s", width = 1024, height = 640)' % njtree_file
+        scriptout.write("""
+library(ape)
+M <- as.matrix( read.table("%s", sep='\\t', header=T) )
+C <- as.vector( read.table("%s", sep='\\t', header=F, comment.char = '')[,1] )
+tree <- nj( M )
+%s
 %s
 %s
 plot(tree, "%s", tip.color = C,  edge.color = edge_colors, font=1, cex=0.7, label.offset = 0.009)
 legend('topright', inset=c(0,0), c(%s), col = c(%s), lty=1, cex=0.85, xpd=T)
-""" % (matrix_file, colors_file, label_cmd, cmd,
+""" % (matrix_file, colors_file, edge_color_cmd, label_cmd, cmd,
         tree_type,
         ",".join( '"%s"' % hs.label for (hs,_,_) in distance_matrix.S),
         ",".join( '"%s"' % hs.colour for (hs,_,_) in distance_matrix.S) )
