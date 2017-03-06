@@ -53,8 +53,21 @@ library(ape)
 M <- as.matrix( read.table("%s", sep='\\t', header=T) )
 C <- as.vector( read.table("%s", sep='\\t', header=F, comment.char = '')[,1] )
 tree <- nj( M )
+tree <- reorder(tree, "postorder")
 x = tree$edge[,2]
-edge_colors <- ifelse(x > length(C), "#474747", C[x])
+edge_colors <- ifelse(x > length(C), "###", C[x])
+# traversing by postorder
+for(i in 1:nrow(tree$edge)){
+    if (edge_colors[i] == "###") {
+        # get the color from previous mode
+        nodes <- which(tree$edge[,1] == tree$edge[i,2])
+        if(edge_colors[nodes[1]] == edge_colors[nodes[2]]) {
+            edge_colors[i] <- edge_colors[nodes[1]]
+        } else {
+            edge_colors[i] <- "#474747"
+        }
+    }
+}
 %s
 %s
 plot(tree, "%s", tip.color = C,  edge.color = edge_colors, font=1, cex=0.7, label.offset = 0.009)
