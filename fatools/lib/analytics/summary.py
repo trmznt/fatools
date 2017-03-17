@@ -215,14 +215,16 @@ def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
 
         for label in ax.get_xticklabels():
             label.set_size( 'xx-small' )
+            label.set_fontsize(12)
             label.set_rotation(90)
         for label in ax.get_yticklabels():
             label.set_size( 'xx-small' )
 
         if dbh:
-            ax.set_ylabel( dbh.get_marker_by_id(marker_id).label )
+            ax.set_ylabel( dbh.get_marker_by_id(marker_id).label, fontsize = 16 )
         else:
-            ax.set_ylabel( marker_id )
+            ax.set_ylabel( marker_id, fontsize = 16 )
+
         ax.set_ylim(-0.05)
         #ax.set_xlim(min(data[0]), max(data[0]))
         ax.set_xlim(auto = True)
@@ -235,7 +237,7 @@ def plot_alleles( allele_reports, filename, rfu_height=True, dbh=None ):
                     colors = [ allele_report['colour'] ],
                     label = label
         )
-    leg = lx.legend(ncol = len(allele_reports) )
+    leg = lx.legend(ncol = len(allele_reports), prop={'size': 18} )
         #lx.set_ylabel( 'Legend' )
     lx.set_axis_off()
 
