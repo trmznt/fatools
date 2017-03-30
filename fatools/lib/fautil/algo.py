@@ -56,7 +56,8 @@ def find_raw_peaks( raw_data, params ):
         from peakutils import indexes
         indices = indexes( raw_data, 1e-5, 10 )
         #pprint.pprint(indices)
-        #print('indices: %d' % len(indices))
+        cverr(3, 'indice size: %d' % len(indices))
+        cverr(3, 'indices => %s' % repr(indices))
 
     else:
         raise RuntimeError('unknown peak finding method: %s' % params.method)
