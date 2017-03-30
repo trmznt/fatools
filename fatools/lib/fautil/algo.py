@@ -156,6 +156,8 @@ def find_peaks( raw_data,  params, raw_peaks = None ):
         peaks.append( (peak, height, area, brtime, ertime, srtime, beta, theta) )
 
     peaks.sort()
+    cverr(3, 'peaks stage 1 size: %d' % len(peaks))
+    cverr(3, 'peaks stage 1: %s' % repr(peaks))
 
     non_artifact_peaks = []
 
@@ -175,9 +177,13 @@ def find_peaks( raw_data,  params, raw_peaks = None ):
 
         non_artifact_peaks.append( peak )
 
+    cverr(3, 'max_peak_number: %d' % params.max_peak_number)
+
     sorted_peaks = sorted( non_artifact_peaks, key = lambda x: (x[1], x[6] * x[7]),
                         reverse=True )[:params.max_peak_number]
     peaks = sorted( sorted_peaks )
+    cverr(3, 'peaks stage 3 size: %d' % len(peaks))
+    cverr(3, 'peaks stage 3: %s' % repr(peaks))
 
     return peaks
 
