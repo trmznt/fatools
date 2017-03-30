@@ -1,7 +1,7 @@
 
 
 import sys, argparse, yaml, csv, transaction
-from fatools.lib.utils import cout, cerr, get_dbhandler
+from fatools.lib.utils import cout, cerr, get_dbhandler, set_verbosity
 from fatools.lib import params
 from fatools.lib.const import assaystatus, peaktype
 from fatools.lib.fautil import algo
@@ -122,6 +122,9 @@ def init_argparser(parser=None):
     p.add_argument('--showz', default=False, action='store_true',
             help = 'show Z plot for ladder peaks')
 
+    p.add_argument('--verbose', default=0, type=int,
+            help = 'show verbositiy of the processing')
+
     return p
 
 
@@ -144,6 +147,9 @@ def do_facmd(args, dbh=None):
 
     if dbh is None:
         dbh = get_dbhandler(args)
+
+    if args.verbose != 0:
+        set_verbosity(args.verbose)
 
     executed = 0
     if args.clear is not False:

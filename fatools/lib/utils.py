@@ -16,6 +16,16 @@ def cexit(s, code=1):
     sys.exit(code)
 
 
+_VERBOSITY_ = 0
+def set_verbosity(value):
+    global _VERBOSITY_
+    _VERBOSITY_ = value
+
+def cverr(value, txt, nl=True, flush=False):
+    global _VERBOSITY_
+    if _VERBOSITY_ >= value:
+        cerr(txt, nl, flush)
+
 def get_dbhandler(args, initial=False):
     """ return suitable handler from args """
 

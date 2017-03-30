@@ -8,7 +8,7 @@ from scipy.interpolate import UnivariateSpline
 
 from fatools.lib.const import peaktype, binningmethod, allelemethod
 from fatools.lib.fautil.dpalign import estimate_z, align_peaks, plot_z
-from fatools.lib.utils import cout, cerr
+from fatools.lib.utils import cout, cerr, cverr
 
 import fatools.lib.fautil.peakalign as pa
 
