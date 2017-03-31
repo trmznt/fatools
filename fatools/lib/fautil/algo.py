@@ -219,7 +219,7 @@ def scan_peaks( channel, params, peakdb ):
     if params.expected_peak_number:
         epn = params.expected_peak_number
         peak_qualities = sorted([ (p[6] * p[7], p) for p in initial_peaks ], reverse=True)
-        low_scores = [ q[0] for q in peak_qualities[round(epn/3):epn] ]
+        low_scores = [ q[0] for q in peak_qualities[round(epn/3):round(epn * 1.5)] ]
         avg_low_score = sum(low_scores) / len(low_scores)
         ratio_low_score = (avg_low_score - low_scores[-1]) / low_scores[-1]
         if avg_low_score < 75:
@@ -229,7 +229,7 @@ def scan_peaks( channel, params, peakdb ):
         else:
             if avg_low_score - low_scores[-1] > low_scores[-1]:
             # peaks' height are likely not to evenly distributed
-                score_threshold = max(low_scores[-1] * 0.30, 4)
+                score_threshold = max(low_scores[-1] * 0.90, 4)
             else:
                 score_threshold = avg_low_score * 0.25
             height_threshold = 10
