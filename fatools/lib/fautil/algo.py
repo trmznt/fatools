@@ -213,6 +213,8 @@ def scan_peaks( channel, params, peakdb ):
     # peaks = ( rtime, height, area, brtime, ertime )
     #cerr('DEBUG - initial peaks: %d' % len(initial_peaks))
 
+    cverr(3, 'initial peaks: %d' % len(initial_peaks))
+
     # perform futher cleaning for ladder channels
     if params.expected_peak_number:
         epn = params.expected_peak_number
@@ -233,6 +235,7 @@ def scan_peaks( channel, params, peakdb ):
             height_threshold = 10
         peaks = [ q for q in peak_qualities
                             if q[0] > score_threshold and q[1][1] > height_threshold ]
+        cverr(3, 'after peak quality filtering: %d' % len(peaks))
         if len(peaks) > 1.5 * params.expected_peak_number:
             # try to remove peaks further
             saved_peaks = peaks
@@ -240,6 +243,7 @@ def scan_peaks( channel, params, peakdb ):
                 height_threshold += 1
                 saved_peaks = [ q for q in saved_peaks if q[0] > height_threshold ]
             peaks = saved_peaks
+            cverr(3, 'after reducing peaks number by height: %d' % len(peaks))
         peaks = sorted( [ q[1] for q in peaks ] )
 
     else:
