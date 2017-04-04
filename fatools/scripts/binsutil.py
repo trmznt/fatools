@@ -59,6 +59,6 @@ def main(args):
     do_binsutil(args)
 
 
-def do_binsutil(args, dbh):
+def do_binsutil(args, dbh=None):
     from fatools.lib.fautil import binsutil
     binsutil.do_binsutil(args)
