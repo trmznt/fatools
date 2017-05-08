@@ -113,27 +113,22 @@ def export_arlequin(analytical_sets, dbh, outstream, recode=False):
         recode: whether to use population-spesific alleles
     """
 
-    _ = [   '[Profile]',
-            '  Title="MsAF exported data"',
-            '  NbSamples=%d' % len(analytical_sets),
-            '  DataType=MICROSAT',
-            '  GenotypicData=0',
-            '  GameticPhase=0',
-            '  MissingData="?"',
-            '  LocusSeparator=WHITESPACE',
-            '',
-    ]
-
-    _ += [  '[Data]',
+    _ = [  '[Data]',
             '  [[Samples]]',
     ]
 
+    nbsamples = 0
+
     for (idx, analytical_set) in enumerate(analytical_sets):
 
+        if len(analytical_set.allele_df.mlgt) == 0: continue
+
         _ += [  '    SampleName="%s"' % analytical_set.label,
-                '    SampleSize=%d' % analytical_set.sample_set.N,
+                '    SampleSize=%d' % len(analytical_set.allele_df.mlgt),
                 '    SampleData={',
         ]
+
+        nbsamples += 1
 
         for e in analytical_set.allele_df.mlgt.itertuples():
             if recode:
@@ -142,6 +137,18 @@ def export_arlequin(analytical_sets, dbh, outstream, recode=False):
                 _.append('    %d 1 ' % e[0] + ' '.join('%03d' % x for x in e[1:]))
 
         _.append('    }')
+
+
+    _ = [   '[Profile]',
+            '  Title="MsAF exported data"',
+            '  NbSamples=%d' % nbsamples,
+            '  DataType=MICROSAT',
+            '  GenotypicData=0',
+            '  GameticPhase=0',
+            '  MissingData="?"',
+            '  LocusSeparator=WHITESPACE',
+            '',
+    ] + _
 
     outstream.write( '\n'.join(_))
 
