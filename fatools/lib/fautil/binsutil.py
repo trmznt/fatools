@@ -1,11 +1,33 @@
 import pandas, attr, yaml
 import numpy as np
 from fatools.lib.fautil.mixin import BinMixIn
+from fatools.lib.utils import cout, cerr
 from collections import defaultdict
 
 from IPython import embed
 
 def do_binsutil(args):
+
+    if args.optimize:
+        do_optimize(args)
+
+    elif args.summarize:
+        do_summarize(args)
+
+    else:
+        cerr('ERR: operation undefined!')
+
+
+def do_summarize(args):
+
+    d = pandas.read_table(args.infile)
+    peaks = d[ d['MARKER'] == args.marker ]
+    stats = bin_stats(peaks)
+    for s in sorted(stats.keys()):
+        cout(stats[s].repr())
+
+
+def do_optimize(args):
 
     d = pandas.read_table(args.infile)
 

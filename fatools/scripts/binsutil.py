@@ -35,9 +35,11 @@ def init_argparser(parser=None):
     p.add_argument('--show', default=False,
         help = 'show bins for a particular marker / batch')
 
-    p.add_argument('--optimize', default=False,
+    p.add_argument('--optimize', default=False, action='store_true',
         help = 'optimize bins for a particular marker / batch')
 
+    p.add_argument('--summarize', default=False, action='store_true',
+        help = 'summarize data frame')
 
     p.add_argument('--repeats', type=int)
 
@@ -59,6 +61,6 @@ def main(args):
     do_binsutil(args)
 
 
-def do_binsutil(args, dbh):
+def do_binsutil(args):
     from fatools.lib.fautil import binsutil
     binsutil.do_binsutil(args)
