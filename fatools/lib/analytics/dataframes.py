@@ -107,7 +107,7 @@ class AlleleDataFrame(object):
                     index = 'sample_id',
                     columns = 'marker_id',
                     values = 'value',
-                    dropna=False).dropna(how='any')
+                    dropna=False).reindex_axis(self.marker_ids, axis=1).dropna(how='any')
         return self._mltg_df
 
 
