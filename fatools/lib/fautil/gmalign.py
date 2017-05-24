@@ -33,8 +33,17 @@ class ZFunc(object):
         return (initial_z, initial_rss) based on anchor pairs
         """
 
+        # check which order we want to use for initial Z
+        if (    (self.anchor_sizes[-1] - self.anchor_sizes[0]) >
+                0.3 * (self.sizes[-1] - self.sizes[0])
+                and len(self.anchor_pairs) > 3
+            ):
+                orders = [1, 2]
+        else:
+                orders = [1]
+
         zresults = []
-        for order in [1, 2]:
+        for order in orders:
             zresult = estimate_z( self.anchor_rtimes, self.anchor_sizes, order )
 
             zres = align_dp(
