@@ -51,6 +51,13 @@ class alignmethod(object):
     greedy_filtered = 'greedy|filtered'
     greedy_shifted = 'greedy|shifted'
     greedy_scored = 'greedy|scored'
+    minim_strict = 'minim|strict'
+    minim_relax = 'minim|relax'
+    hcm_strict = 'hcm|strict'
+    hcm_relax = 'hcm|relax'
+    gm_strict = 'gm|strict'
+    gm_relax = 'gm|relax'
+    de_relax = 'de|relax'
 
 
 class scanningmethod(object):
@@ -88,7 +95,9 @@ ladders = { 'LIZ600': { 'dye': 'LIZ',
                             'max_rss': 56.25,
                             'min_dpscore': 33.0,
                             'min_sizes': 36
-                        }
+                        },
+                        'k': 6,
+                        'a': 2,
                     },
             'LIZ500': { 'dye': 'LIZ',
                         'sizes': [ 35, 50, 75, 100, 139, 150, 160, 200, 250, 300, 340, 350,
@@ -102,7 +111,9 @@ ladders = { 'LIZ600': { 'dye': 'LIZ',
                             'max_rss': 25.0,
                             'min_dpscore': 13.0,
                             'min_sizes': 16
-                        }
+                        },
+                        'k': 4,
+                        'a': 1,
                     },
 }
 

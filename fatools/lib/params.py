@@ -38,6 +38,14 @@ class ScanningParameter(object):
         self.stutter_range = 3.5
         self.artifact_ratio = 0.8
 
+        self.norm_thres = 0.05
+        self.min_dist = 10
+        self.min_rfu = 20
+        self.artifact_dist = 20
+
+        self.min_theta = 0
+        self.max_beta = 0
+
 
 class LadderScanningParameter(ScanningParameter):
 
@@ -60,6 +68,12 @@ class LadderScanningParameter(ScanningParameter):
         self.width_ratio = 5000
         self.expected_peak_number = 36
 
+        self.norm_thres = 0.05
+        self.min_rfu = 5
+
+        self.min_theta = 5
+        self.max_beta = 15
+
 
 class Params(object):
 
@@ -67,3 +81,44 @@ class Params(object):
     nonladder = ScanningParameter()
 
 
+default_panels = {
+    'GS600LIZ': {
+        'code': 'GS600LIZ',
+        'data': {
+            'ladder': 'LIZ600',
+            'markers': {
+                'x/VIC': dict(dye='VIC', filter='G'),
+                'x/PET': dict(dye='PET', filter='R'),
+                'x/NED': dict(dye='NED', filter='Y'),
+                'x/6-FAM': dict(dye='6-FAM', filter='B'),
+            }
+        }
+    },
+
+    'GS500LIZ': {
+        'code': 'GS500LIZ',
+        'data': {
+            'ladder': 'LIZ500',
+            'markers': {
+                'x/VIC': dict(dye='VIC', filter='G'),
+                'x/PET': dict(dye='PET', filter='R'),
+                'x/NED': dict(dye='NED', filter='Y'),
+                'x/6-FAM': dict(dye='6-FAM', filter='B'),
+            }
+        }
+    },
+
+}
+
+default_markers = {
+
+    'x/ladder': dict( code='ladder', species='x' ),
+
+    'x/VIC': dict( code='VIC', species='x' ),
+
+    'x/PET': dict( code='PET', species='x' ),
+
+    'x/NED': dict( code='NED', species='x' ),
+
+    'x/6-FAM': dict( code='6-FAM', species='x' ),
+}
