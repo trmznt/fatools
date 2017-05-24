@@ -35,7 +35,7 @@ class ZFunc(object):
 
         # check which order we want to use for initial Z
         if (    (self.anchor_sizes[-1] - self.anchor_sizes[0]) >
-                0.3 * (self.sizes[-1] - self.sizes[0])
+                0.2 * (self.sizes[-1] - self.sizes[0])
                 and len(self.anchor_pairs) > 3
             ):
                 orders = [1, 2]
