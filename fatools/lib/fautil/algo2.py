@@ -27,9 +27,9 @@ class Peak(object):
     bin = attr.ib(default=-1)
 
     def __repr__(self):
-        return "<P: %4d | %4d | %5d | %2d | %3.2f | b %3.2f | t %3.2f>" % (
+        return "<P: %4d | %4d | %5d | %2d | %+3.2f | b %4.1f | t %4.2f | o %3d>" % (
             self.rtime, self.rfu, self.area, self.ertime - self.brtime, self.srtime,
-            self.beta, self.theta)
+            self.beta, self.theta, self.omega)
 
 @attr.s
 class Channel(object):
@@ -175,7 +175,7 @@ def find_raw_peaks(data, params, offset, expected_peak_number=0):
         min_dist = params.min_dist
         indices = []
         norm_threshold = params.norm_thres
-        expected_peak_number = expected_peak_number * 1.1
+        expected_peak_number = expected_peak_number * 1.5
         while len(indices) <= expected_peak_number and norm_threshold > 1e-7:
             indices = indexes( obs_data, norm_threshold, min_dist)
             print(len(indices), norm_threshold)
@@ -306,12 +306,17 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
     # we need to adapt to the noise level of current channel
     if expected_peak_number > 0 and len(peaks) > expected_peak_number:
         #  gather min_theta and min_omega
-        thetas = sorted( [p.theta for p in peaks], reverse = True )
-        omegas = sorted( [p.omega for p in peaks], reverse = True )
-        min_theta = min(thetas[expected_peak_number], params.min_theta)
-        min_omega = min(omegas[expected_peak_number], 100)
-        min_theta_omega = min(500,
-                0.67 * thetas[expected_peak_number] * omegas[expected_peak_number])
+        theta = sorted( [p.theta for p in peaks], reverse = True )[ expected_peak_number]
+        omega = sorted( [p.omega for p in peaks], reverse = True )[ expected_peak_number]
+        # test for avery low quality FSA as we need to adapt
+        if theta < 4:
+            theta = 0.20 * theta
+        if omega < 50:
+            omega = 0.25 * omega
+
+        min_theta = min(theta, params.min_theta)
+        min_omega = min(omega, 100)
+        min_theta_omega = min(500, 0.25 * theta * omega)
         print('min theta & omega:', min_theta, min_omega, min_theta_omega)
     else:
         min_theta = 0
@@ -324,8 +329,10 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
         #filtered_peaks.append(p); continue
         print(p)
         if min_theta and min_omega and p.omega < min_omega and p.theta < min_theta:
+            print('! omega & theta')
             continue
         if min_theta_omega and p.theta * p.omega < min_theta_omega:
+            print('! theta_omega')
             continue
         #if p.theta < 1.5 and p.area < 100:
         #    continue
@@ -339,10 +346,11 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
         #    continue
         #if p.omega < 100 and p.theta < 5:
         #    continue
-        if ( params.max_beta and params.min_theta and
-                (p.beta > params.max_beta and p.theta < params.min_theta) ):
+        if ( params.max_beta and min_theta and
+                (p.beta > params.max_beta and p.theta < min_theta) ):
+            print('! max_beta')
             continue
-        #print('->')
+        print('->')
         filtered_peaks.append(p)
 
     #import pprint; pprint.pprint(filtered_peaks)
