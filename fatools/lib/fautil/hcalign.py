@@ -103,6 +103,8 @@ def align_hc( peaks, ladder):
 
     # generate cluster should use so-called balance tree
 
+    print(peak_clusters)
+
     if len(peak_clusters[-1]) == 1:
         if len( reduce(operator.add, peak_clusters ) ) > len(ladder_sizes):
             del peak_clusters[-1]
@@ -115,6 +117,17 @@ def align_hc( peaks, ladder):
     if len(peak_clusters) < ladder['k']:
         P = generate_tree( [ (n, 0) for n in reduce(operator.add, peak_clusters) ] )
         peak_clusters = generate_cluster(P, ladder['k'])
+
+    # short cut, in case we have good high quality peaks
+    if sum( len(c) for c in peak_clusters ) == len(ladder_sizes):
+        hq_peaks = sum(peak_clusters, [])
+        #hq_pairs = zip(hq_peaks, ladder_sizes)
+        zres = estimate_z(hq_peaks, ladder_sizes)
+        dp_result = align_dp( hq_peaks, ladder_sizes, zres.z, zres.rss )
+        dp_result.sized_peaks = pair_sized_peaks(peaks, dp_result.sized_peaks)
+        score, msg = ladder['qcfunc']( dp_result, method = 'relax')
+        if score > 0.9:
+            return AlignResult(score, msg, dp_result, const.alignmethod.hcm_strict)
 
     #print(">>> clusters:\n", peak_clusters)
     cluster_pairings, expected_missing = align_clusters( peak_clusters,
