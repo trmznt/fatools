@@ -12,8 +12,9 @@ import time
 class AlleleMixIn(object):
 
     def __repr__(self):
-        return "<A: %3d | %4d | %5d | %4.1f | %5.1f | %4.2f>" % (
-                    self.size, self.rtime, self.rfu, self.beta, self.theta, self.dev
+        return "<A: %3d | %4d | %5d | %2d | %+3.1f | %4.1f | %5.1f | %6d | %4.2f >" % (
+                    self.size, self.rtime, self.rfu, self.wrtime,
+                    self.srtime, self.beta, self.theta, self.omega, self.dev
         )
 
     @property
@@ -93,6 +94,8 @@ class ChannelMixIn(object):
         fsa.score = result.score
         fsa.duration = time.process_time() - start_time
 
+        #import pprint; pprint.pprint(dpresult.sized_peaks)
+        #print(fsa.z)
         cout('O: Score %3.2f | %5.2f | %d/%d | %s | %5.1f | %s' %
             (fsa.score, fsa.rss, fsa.nladder, len(ladder['sizes']), result.method,
             fsa.duration, fsa.filename) )
