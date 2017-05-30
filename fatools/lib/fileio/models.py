@@ -1,7 +1,8 @@
 
+from fatools.lib.utils import cout, cerr
 from fatools.lib.fautil.mixin2 import MarkerMixIn, PanelMixIn, ChannelMixIn, FSAMixIn, AlleleMixIn
 
-
+import os, pickle
 
 
 class Marker(MarkerMixIn):
@@ -41,7 +42,8 @@ class Panel(PanelMixIn):
 
 class Allele(AlleleMixIn):
 
-    def __init__(self, rtime, rfu, area, brtime, ertime, wrtime, srtime, beta, theta):
+    def __init__(self, rtime, rfu, area, brtime, ertime, wrtime, srtime,
+                    beta, theta, omega):
         self.rtime = rtime
         self.rfu = rfu
         self.area = area
@@ -51,6 +53,7 @@ class Allele(AlleleMixIn):
         self.srtime = srtime
         self.beta = beta
         self.theta = theta
+        self.omega = omega
 
         self.size = -1
         self.bin = -1
@@ -97,12 +100,24 @@ class FSA(FSAMixIn):
     @classmethod
     def from_file(cls, fsa_filename, panel, excluded_markers=None):
         fsa = cls()
-        fsa.filename = fsa_filename
+        fsa.filename = os.path.basename(fsa_filename)
         fsa._fhdl = open(fsa_filename, 'rb')
         fsa.set_panel(panel, excluded_markers)
 
-        # with fileio, we need to prepare channels everytime
-        fsa.create_channels()
+        # with fileio, we need to prepare channels everytime or seek from cache
+        cache_file = '.fatools_caches/channels/%s' % fsa.filename
+        if os.path.exists(cache_file):
+            if os.stat(fsa_filename).st_mtime < os.stat(cache_file).st_mtime:
+                cerr('I: uploading channel cache for %s' % fsa_filename)
+                fsa.channels = pickle.load( open(cache_file, 'rb') )
+                for c in fsa.channels:
+                    c.fsa = fsa
+        else:
+            fsa.create_channels()
+            if os.path.exists('.fatools_caches/channels'):
+                for c in fsa.channels: c.fsa = None
+                pickle.dump(fsa.channels, open(cache_file, 'wb'))
+                for c in fsa.channels: c.fsa = fsa
         return fsa
 
 
