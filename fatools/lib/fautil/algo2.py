@@ -4,14 +4,14 @@ import math
 from fatools.lib.utils import cverr
 from fatools.lib import const
 from fatools.lib.fautil.hcalign import align_hc
-from fatools.lib.fautil.gmalign import align_gm, align_de
+from fatools.lib.fautil.gmalign import align_gm, align_sh, align_de
 
 from scipy import signal, ndimage
 from peakutils import indexes
 
 import attr
 
-@attr.s
+@attr.s(repr=False)
 class Peak(object):
     rtime = attr.ib(default=-1)
     rfu = attr.ib(default=-1)
@@ -21,9 +21,15 @@ class Peak(object):
     srtime = attr.ib(default=-1)
     beta = attr.ib(default=-1)
     theta = attr.ib(default=-1)
+    omega = attr.ib(default=-1)
 
     size = attr.ib(default=-1)
     bin = attr.ib(default=-1)
+
+    def __repr__(self):
+        return "<P: %4d | %4d | %5d | %2d | %3.2f | b %3.2f | t %3.2f>" % (
+            self.rtime, self.rfu, self.area, self.ertime - self.brtime, self.srtime,
+            self.beta, self.theta)
 
 @attr.s
 class Channel(object):
@@ -63,7 +69,12 @@ def scan_peaks(channel, params, offset=0):
     """
     """
 
-    initial_peaks = find_peaks(channel.data, params, offset)
+    # check if channel is ladder channel, and adjust expected_peak_number accordingly
+    expected_peak_number = params.expected_peak_number
+    if channel.is_ladder():
+        expected_peak_number = len(channel.fsa.panel.get_ladder()['sizes'])
+
+    initial_peaks = find_peaks(channel.data, params, offset, expected_peak_number)
 
     # create alleles based on these peaks
     alleles = []
@@ -78,6 +89,7 @@ def scan_peaks(channel, params, offset=0):
             srtime = p.srtime,
             beta = p.beta,
             theta = p.theta,
+            omega = p.omega,
         )
         allele.type = const.peaktype.scanned
         allele.method = const.binningmethod.notavailable
@@ -100,7 +112,11 @@ def align_peaks(channel, params, ladder, anchor_pairs=None):
     for p in channel.get_alleles():
         p.size = -1
         p.status = const.peaktype.scanned
+        print(p)
 
+    #anchor_pairs = pairs
+    from fatools.lib.fautil import pmalign
+    return pmalign.align_pm( alleles, ladder )
 
     if anchor_pairs:
         return align_gm( alleles, ladder, anchor_pairs)
@@ -112,8 +128,11 @@ def align_peaks(channel, params, ladder, anchor_pairs=None):
 
     if result.initial_pairs:
         result = align_gm( alleles, ladder, result.initial_pairs )
-
         if result.score > 0.75:
+            return result
+
+    result = align_sh( alleles, ladder )
+    if result.score > 0.75:
             return result
 
     # perform differential evolution
@@ -142,23 +161,25 @@ def align_peaks(channel, params, ladder, anchor_pairs=None):
 
 # helper functions
 
-def find_raw_peaks(data, params, offset):
+def find_raw_peaks(data, params, offset, expected_peak_number=0):
     """
     params.min_dist
     params.norm_thres
     params.min_rfu
     params.max_peak_number
     """
-
+    print("expected:", expected_peak_number)
     # cut and pad data to overcome peaks at the end of array
     obs_data = np.append(data[offset:], [0,0,0])
-    if params.expected_peak_number:
+    if expected_peak_number:
+        min_dist = params.min_dist
         indices = []
         norm_threshold = params.norm_thres
-        expected_peak_number = params.expected_peak_number * 1.1
-        while len(indices) <= expected_peak_number and norm_threshold > 0.01:
-            indices = indexes( obs_data, norm_threshold, params.min_dist)
-            norm_threshold -= 0.005
+        expected_peak_number = expected_peak_number * 1.1
+        while len(indices) <= expected_peak_number and norm_threshold > 1e-7:
+            indices = indexes( obs_data, norm_threshold, min_dist)
+            print(len(indices), norm_threshold)
+            norm_threshold *= 0.5
     else:
         indices = indexes( obs_data, params.norm_thres, params.min_dist)
     cverr(3, '## raw indices: %d' % len(indices))
@@ -180,9 +201,9 @@ def find_raw_peaks(data, params, offset):
     return peaks
 
 
-def find_peaks(data, params, offset=0):
+def find_peaks(data, params, offset=0, expected_peak_number=0):
 
-    peaks = find_raw_peaks(data, params, offset)
+    peaks = find_raw_peaks(data, params, offset, expected_peak_number)
 
     # check for any peaks
     if not peaks:
@@ -194,7 +215,7 @@ def find_peaks(data, params, offset=0):
     #import pprint; pprint.pprint(peaks)
 
     # filter artefact peaks
-    non_artifact_peaks = filter_for_artifact(peaks, params)
+    non_artifact_peaks = filter_for_artifact(peaks, params, expected_peak_number)
 
     # for ladder, special filtering is applied
     if params.expected_peak_number:
@@ -213,7 +234,12 @@ def measure_peaks(peaks, data, offset=0):
                                     p.rtime, 5e-2, q50 )
         p.wrtime = p.ertime - p.brtime
         p.beta = p.area / p.rfu
-        p.theta = p.rfu / p.wrtime
+        if p.wrtime == 0:
+            p.theta = 0
+            p.omega = 0
+        else:
+            p.theta = p.rfu / p.wrtime
+            p.omega = p.area / p.wrtime
 
 
 def calculate_area(y, t, threshold, baseline):
@@ -263,26 +289,63 @@ def half_area(y, threshold, baseline):
     return area, index, shared
 
 
-def filter_for_artifact(peaks, params):
+def filter_for_artifact(peaks, params, expected_peak_number = 0):
     """
     params.max_peak_number
     params.artifact_ratio
     params.artifact_dist ~ 5
     """
 
+    # if the first peak is small, usually it is a noise
+    if len(peaks) > expected_peak_number and peaks[0].theta < 5 and peaks[0].omega < 30:
+        peaks = peaks[1:]
+
+    if len(peaks) == expected_peak_number:
+        return peaks
+
+    # we need to adapt to the noise level of current channel
+    if expected_peak_number > 0 and len(peaks) > expected_peak_number:
+        #  gather min_theta and min_omega
+        thetas = sorted( [p.theta for p in peaks], reverse = True )
+        omegas = sorted( [p.omega for p in peaks], reverse = True )
+        min_theta = min(thetas[expected_peak_number], params.min_theta)
+        min_omega = min(omegas[expected_peak_number], 100)
+        min_theta_omega = min(500,
+                0.67 * thetas[expected_peak_number] * omegas[expected_peak_number])
+        print('min theta & omega:', min_theta, min_omega, min_theta_omega)
+    else:
+        min_theta = 0
+        min_omega = 0
+        min_theta_omega = 0
+
     # filter for too sharp/thin peaks
     filtered_peaks = []
     for p in peaks:
+        #filtered_peaks.append(p); continue
+        print(p)
+        if min_theta and min_omega and p.omega < min_omega and p.theta < min_theta:
+            continue
+        if min_theta_omega and p.theta * p.omega < min_theta_omega:
+            continue
+        #if p.theta < 1.5 and p.area < 100:
+        #    continue
         if p.wrtime < 3:
             continue
         if p.rfu >= 25 and p.beta * p.theta < 6:
             continue
         if p.rfu < 25 and p.beta * p.theta < 3:
             continue
+        #if p.omega < 50:
+        #    continue
+        #if p.omega < 100 and p.theta < 5:
+        #    continue
         if ( params.max_beta and params.min_theta and
-                p.beta > params.max_beta and p.theta < params.min_theta ):
+                (p.beta > params.max_beta and p.theta < params.min_theta) ):
             continue
+        #print('->')
         filtered_peaks.append(p)
+
+    #import pprint; pprint.pprint(filtered_peaks)
 
     # filter for distance between peaks and their rfu ratio
     peaks = sorted(filtered_peaks, key = lambda x: x.rtime)
