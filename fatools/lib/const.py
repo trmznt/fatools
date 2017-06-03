@@ -53,6 +53,8 @@ class alignmethod(object):
     greedy_scored = 'greedy|scored'
     minim_strict = 'minim|strict'
     minim_relax = 'minim|relax'
+    pm_strict = 'pm|strict'
+    pm_relax = 'pm|relax'
     hcm_strict = 'hcm|strict'
     hcm_relax = 'hcm|relax'
     gm_strict = 'gm|strict'
