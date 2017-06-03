@@ -21,6 +21,11 @@ def set_verbosity(value):
     global _VERBOSITY_
     _VERBOSITY_ = value
 
+
+def is_verbosity(value):
+    global _VERBOSITY_
+    return (_VERBOSITY_ >= value)
+
 def cverr(value, txt, nl=True, flush=False):
     global _VERBOSITY_
     if _VERBOSITY_ >= value:
