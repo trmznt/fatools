@@ -1,13 +1,17 @@
 import numpy as np
 import math
 
-from fatools.lib.utils import cverr
+from fatools.lib.utils import cverr, is_verbosity
 from fatools.lib import const
 from fatools.lib.fautil.hcalign import align_hc
 from fatools.lib.fautil.gmalign import align_gm, align_sh, align_de
+from fatools.lib.fautil.pmalign import align_pm
+
 
 from scipy import signal, ndimage
+from scipy.optimize import curve_fit
 from peakutils import indexes
+from matplotlib import pyplot as plt
 
 import attr
 
@@ -115,16 +119,17 @@ def align_peaks(channel, params, ladder, anchor_pairs=None):
         print(p)
 
     #anchor_pairs = pairs
-    from fatools.lib.fautil import pmalign
-    return pmalign.align_pm( alleles, ladder )
 
     if anchor_pairs:
-        return align_gm( alleles, ladder, anchor_pairs)
+        return align_pm( alleles, ladder, anchor_pairs)
 
-    result = align_hc( alleles, ladder )
+    if len(alleles) <= len(ladder['sizes']) + 5:
+        result = align_hc( alleles, ladder )
 
-    if result.score > 0.9:
-        return result
+        if result.score > 0.9:
+            return result
+
+    return align_pm( alleles, ladder )
 
     if result.initial_pairs:
         result = align_gm( alleles, ladder, result.initial_pairs )
@@ -171,17 +176,20 @@ def find_raw_peaks(data, params, offset, expected_peak_number=0):
     print("expected:", expected_peak_number)
     # cut and pad data to overcome peaks at the end of array
     obs_data = np.append(data[offset:], [0,0,0])
-    if expected_peak_number:
+    if False: #expected_peak_number:
         min_dist = params.min_dist
         indices = []
         norm_threshold = params.norm_thres
-        expected_peak_number = expected_peak_number * 1.5
+        expected_peak_number = expected_peak_number * 1.8
         while len(indices) <= expected_peak_number and norm_threshold > 1e-7:
             indices = indexes( obs_data, norm_threshold, min_dist)
             print(len(indices), norm_threshold)
             norm_threshold *= 0.5
-    else:
+    elif False:
         indices = indexes( obs_data, params.norm_thres, params.min_dist)
+
+    indices = indexes( obs_data, 1e-7, params.min_dist)
+    cverr(5, '## indices: %s' % str(indices))
     cverr(3, '## raw indices: %d' % len(indices))
 
     if len(indices) == 0:
@@ -193,8 +201,16 @@ def find_raw_peaks(data, params, offset, expected_peak_number=0):
 
     # filter peaks by minimum rfu, and by maximum peak number after sorted by rfu
     peaks = [ Peak( int(i), int(data[i]) ) for i in indices
-            if (data[i] > params.min_rfu and params.min_rtime < i < params.max_rtime) ]
+            if (data[i] >= params.min_rfu and params.min_rtime < i < params.max_rtime) ]
     #peaks = sorted( peaks, key = lambda x: x.rfu )[:params.max_peak_number * 2]
+
+    #import pprint; pprint.pprint(peaks)
+    #print('======')
+
+    if expected_peak_number:
+        peaks.sort( key = lambda x: x.rfu, reverse = True )
+        peaks = peaks[: round(expected_peak_number * 2)]
+        peaks.sort( key = lambda x: x.rtime )
 
     cverr(3, '## peak above min rfu: %d' % len(peaks))
 
@@ -289,6 +305,11 @@ def half_area(y, threshold, baseline):
     return area, index, shared
 
 
+def math_func(x, a, b):
+    #return a*np.exp(x*b)
+    return a*x + b
+
+
 def filter_for_artifact(peaks, params, expected_peak_number = 0):
     """
     params.max_peak_number
@@ -296,46 +317,102 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
     params.artifact_dist ~ 5
     """
 
-    # if the first peak is small, usually it is a noise
-    if len(peaks) > expected_peak_number and peaks[0].theta < 5 and peaks[0].omega < 30:
-        peaks = peaks[1:]
+    # the following code in this function performs the necessary acrobatic act
+    # to select the most likely peaks that can be considered as true signals,
+    # which is especially necessary for ladder - size assignment
 
     if len(peaks) == expected_peak_number:
         return peaks
 
     # we need to adapt to the noise level of current channel
-    if expected_peak_number > 0 and len(peaks) > expected_peak_number:
-        #  gather min_theta and min_omega
-        theta = sorted( [p.theta for p in peaks], reverse = True )[ expected_peak_number]
-        omega = sorted( [p.omega for p in peaks], reverse = True )[ expected_peak_number]
-        # test for avery low quality FSA as we need to adapt
-        if theta < 4:
-            theta = 0.20 * theta
-        if omega < 50:
-            omega = 0.25 * omega
+    if expected_peak_number > 0:
+        epn = expected_peak_number
+        theta_peaks = sorted(peaks, key = lambda x: x.theta, reverse=True)[round(epn/2)+3:epn-1]
+        #theta_peaks = theta_peaks[2:4] + theta_peaks[round(epn/2):epn-1]
+        omega_peaks = sorted(peaks, key = lambda x: x.omega, reverse=True)
+        omega_peaks = omega_peaks[2:4] + omega_peaks[round(epn/2):epn-1]
+        rfu_peaks = sorted(peaks, key = lambda x: x.rfu, reverse=True)[:epn-1]
 
-        min_theta = min(theta, params.min_theta)
-        min_omega = min(omega, 100)
-        min_theta_omega = min(500, 0.25 * theta * omega)
-        print('min theta & omega:', min_theta, min_omega, min_theta_omega)
+        if theta_peaks[-1].theta < 8:
+            theta_peaks.sort()
+            thetas = np.array([ p.theta for p in theta_peaks ])
+            rtimes = [ p.rtime for p in theta_peaks ]
+
+            #plt.scatter(rtimes, thetas)
+            #plt.show()
+            popt, pcov = curve_fit( math_func, rtimes, 0.5 * thetas, p0 = [ -1, 1 ])
+
+            if is_verbosity(4):
+                xx = np.linspace( rtimes[0], rtimes[-1]+2000, 100 )
+                yy = math_func(xx, *popt)
+                plt.plot(xx, yy)
+                plt.scatter( [p.rtime for p in peaks], [p.theta for p in peaks])
+                plt.show()
+
+            q_theta = lambda x: x.theta >= math_func(x.rtime, *popt)
+
+        else:
+            q_theta = lambda x: x.theta >= min(theta_peaks[-1].theta, params.min_theta)
+
+
+        if omega_peaks[-1].omega < 200:
+            omega_peaks.sort()
+            omegas = np.array([ p.omega for p in omega_peaks ])
+            rtimes = [ p.rtime for p in omega_peaks ]
+
+            popt, pcov = curve_fit( math_func, rtimes, 0.25 * omegas, p0 = [ -1, 1 ])
+            if is_verbosity(4):
+                plt.scatter(rtimes, omegas)
+                xx = np.linspace( rtimes[0], rtimes[-1]+2000, 100 )
+                yy = math_func(xx, *popt)
+                plt.plot(xx, yy)
+                plt.scatter( [p.rtime for p in peaks], [p.omega for p in peaks])
+                plt.show()
+
+            q_omega = lambda x: ( x.omega >= math_func(x.rtime, *popt) or x.omega >= 100) #and
+                                    #math_func(x.rtime, *popt) > 0)
+
+        else:
+            q_omega = lambda x: x.omega >= min(omega_peaks[-1].omega, 125)
+
+
+        min_rfu = rfu_peaks[-1].rfu * 0.125
+
     else:
         min_theta = 0
         min_omega = 0
         min_theta_omega = 0
+        min_rfu = 2
+
 
     # filter for too sharp/thin peaks
     filtered_peaks = []
     for p in peaks:
         #filtered_peaks.append(p); continue
         print(p)
-        if min_theta and min_omega and p.omega < min_omega and p.theta < min_theta:
-            print('! omega & theta')
+
+        if not q_omega(p):
+            print('! q_omega')
             continue
-        if min_theta_omega and p.theta * p.omega < min_theta_omega:
-            print('! theta_omega')
-            continue
-        #if p.theta < 1.5 and p.area < 100:
+        #if not q_theta(p):
+        #    print('! q_theta')
         #    continue
+
+        #if min_theta and min_omega and p.omega < min_omega and p.theta < min_theta:
+        #    print('! omega & theta')
+        #    continue
+        #if min_theta_omega and p.theta * p.omega < min_theta_omega:
+        #    print('! theta_omega')
+        #    continue
+        if p.theta < 1.0 and p.area < 25 and p.omega < 5:
+            print('! extreme theta & area & omega')
+            continue
+        if p.rfu < min_rfu:
+            print('! extreme min_rfu')
+            continue
+        if p.beta > 25 and p.theta < 0.5:
+            print('! extreme beta')
+            continue
         if p.wrtime < 3:
             continue
         if p.rfu >= 25 and p.beta * p.theta < 6:
@@ -346,11 +423,10 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
         #    continue
         #if p.omega < 100 and p.theta < 5:
         #    continue
-        if ( params.max_beta and min_theta and
-                (p.beta > params.max_beta and p.theta < min_theta) ):
-            print('! max_beta')
-            continue
-        print('->')
+        #if ( params.max_beta and min_theta and
+        #        (p.beta > params.max_beta and p.theta < min_theta) ):
+        #    print('! max_beta')
+        #    continue
         filtered_peaks.append(p)
 
     #import pprint; pprint.pprint(filtered_peaks)
@@ -366,6 +442,7 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
             if ( p.brtime - prev_p.ertime < params.artifact_dist
                     and p.rfu < params.artifact_ratio * prev_p.rfu ):
                 # we are artifact, just skip
+                print('artifact1:', p)
                 continue
 
         if idx < len(peaks)-1:
@@ -373,6 +450,7 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
             if ( next_p.brtime - p.ertime < params.artifact_dist
                     and p.rfu < params.artifact_ratio * next_p.rfu ):
                 # we are artifact, just skip
+                print('artefact2:', p)
                 continue
 
         non_artifact_peaks.append( p )
@@ -380,9 +458,6 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
     #import pprint; pprint.pprint(non_artifact_peaks)
     #print(len(non_artifact_peaks))
 
-    #sorted_peaks = sorted( non_artifact_peaks, key = lambda x: (x.rtime, x.beta * x.theta),
-    #                    reverse=True )#[:params.max_peak_number]
-    #peaks = sorted( sorted_peaks, key = lambda x: x.rfu )
     peaks = non_artifact_peaks
 
     cverr(3, '## non artifact peaks: %d' % len(peaks))
