@@ -89,7 +89,7 @@ class Channel(ChannelMixIn):
 
 class FSA(FSAMixIn):
 
-    __slots__ = [ '_fhdl' ]
+    __slots__ = [ '_fhdl', '_trace' ]
 
     Channel = Channel
 
@@ -105,7 +105,7 @@ class FSA(FSAMixIn):
         return channel
 
     @classmethod
-    def from_file(cls, fsa_filename, panel, excluded_markers=None):
+    def from_file(cls, fsa_filename, panel, excluded_markers=None, cache=True):
         fsa = cls()
         fsa.filename = os.path.basename(fsa_filename)
         fsa._fhdl = open(fsa_filename, 'rb')
@@ -113,7 +113,7 @@ class FSA(FSAMixIn):
 
         # with fileio, we need to prepare channels everytime or seek from cache
         cache_file = '.fatools_caches/channels/%s' % fsa.filename
-        if os.path.exists(cache_file):
+        if cache and os.path.exists(cache_file):
             if os.stat(fsa_filename).st_mtime < os.stat(cache_file).st_mtime:
                 cerr('I: uploading channel cache for %s' % fsa_filename)
                 fsa.channels = pickle.load( open(cache_file, 'rb') )
@@ -121,7 +121,7 @@ class FSA(FSAMixIn):
                     c.fsa = fsa
         else:
             fsa.create_channels()
-            if os.path.exists('.fatools_caches/channels'):
+            if cache and os.path.exists('.fatools_caches/channels'):
                 for c in fsa.channels: c.fsa = None
                 pickle.dump(fsa.channels, open(cache_file, 'wb'))
                 for c in fsa.channels: c.fsa = fsa

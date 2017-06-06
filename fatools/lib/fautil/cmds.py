@@ -3,7 +3,7 @@
 from fatools.lib import params
 from fatools.lib.utils import cerr, cout, cverr, cexit, tokenize, detect_buffer, set_verbosity
 
-import argparse, yaml, csv
+import argparse, yaml, csv, os
 from io import StringIO
 
 
@@ -68,6 +68,12 @@ def init_argparser(parser=None):
 
     p.add_argument('--verbose', default=0, type=int,
             help = 'show verbosity')
+
+    p.add_argument('--use-cache', default=False, action='store_true',
+            help = 'prepare to use caches')
+
+    p.add_argument('--no-cache', default=False, action='store_true',
+            help = 'do not use caches')
 
     p.add_argument('--commit', default=False, action='store_true',
             help = 'commit to database')
@@ -228,10 +234,15 @@ def open_fsa( args ):
     fsa_list = []
     index = 1
 
+    # prepare caching
+    if args.use_cache:
+        if not os.path.exists('.fatools_caches/channels'):
+            os.makedirs('.fatools_caches/channels')
+
     if args.file:
         for fsa_filename in args.file.split(','):
             fsa_filename = fsa_filename.strip()
-            fsa = FSA.from_file(fsa_filename, panel)
+            fsa = FSA.from_file(fsa_filename, panel, cache = not args.no_cache)
             # yield (fsa, str(i))
             fsa_list.append( (fsa, str(index)) )
             index += 1
@@ -260,7 +271,7 @@ def open_fsa( args ):
             panel_code = r.get('PANEL', None) or args.panel
             panel = Panel.get_panel(panel_code)
 
-            fsa = FSA.from_file( fsa_filename, panel, options )
+            fsa = FSA.from_file( fsa_filename, panel, options, cache = not args.no_cache )
             if 'SAMPLE' in inrows.fieldnames:
 
                 # yield (fsa, r['SAMPLE'])
