@@ -1,3 +1,8 @@
+# fileio/models.py
+#
+# models here are used to ensure the integrity and consistency of each inherited model
+#
+
 
 from fatools.lib.utils import cout, cerr
 from fatools.lib.fautil.mixin2 import MarkerMixIn, PanelMixIn, ChannelMixIn, FSAMixIn, AlleleMixIn
@@ -83,6 +88,8 @@ class Channel(ChannelMixIn):
 
 
 class FSA(FSAMixIn):
+
+    __slots__ = [ '_fhdl' ]
 
     Channel = Channel
 

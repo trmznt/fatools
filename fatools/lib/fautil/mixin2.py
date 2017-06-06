@@ -114,6 +114,9 @@ class FSAMixIn(object):
     attrs: channels
     """
 
+    __slots__ = [   'panel', 'channels', 'excluded_markers', 'filename',
+                    'rss', 'z', 'score', 'nladder', 'duration',
+                ]
 
     def get_data_stream(self):
         """ return stream of data """
