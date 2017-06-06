@@ -4,7 +4,8 @@
 
 from fatools.lib.utils import cerr, cverr, cexit
 from fatools.lib import const
-from fatools.lib.fautil.alignutils import estimate_z, AlignResult, align_dp, pair_sized_peaks
+from fatools.lib.fautil.alignutils import ( estimate_z, AlignResult, align_dp,
+            pair_sized_peaks, generate_similarity )
 
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 from collections import defaultdict
@@ -123,7 +124,8 @@ def align_hc( peaks, ladder):
         hq_peaks = sum(peak_clusters, [])
         #hq_pairs = zip(hq_peaks, ladder_sizes)
         zres = estimate_z(hq_peaks, ladder_sizes)
-        dp_result = align_dp( hq_peaks, ladder_sizes, zres.z, zres.rss )
+        dp_result = align_dp( hq_peaks, ladder_sizes, [1.0] * len(hq_peaks),
+                                    zres.z, zres.rss )
         dp_result.sized_peaks = pair_sized_peaks(peaks, dp_result.sized_peaks)
         score, msg = ladder['qcfunc']( dp_result, method = 'relax')
         if score > 0.9:
@@ -153,7 +155,8 @@ def align_hc( peaks, ladder):
     rtimes, sizes = zip( *initial_pairs )
     zres = estimate_z(rtimes, sizes)
 
-    dp_result = align_dp( [p.rtime for p in peaks], ladder_sizes, zres.z, zres.rss )
+    dp_result = align_dp( [p.rtime for p in peaks], ladder_sizes,
+                            generate_similarity(peaks), zres.z, zres.rss )
     dp_result.sized_peaks = pair_sized_peaks(peaks, dp_result.sized_peaks)
     score, msg = ladder['qcfunc']( dp_result, method = 'strict')
     if score > 0.9:

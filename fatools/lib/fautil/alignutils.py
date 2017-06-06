@@ -57,6 +57,24 @@ def estimate_z( x, y, degree = 3 ):
     return ZResult(z, rss, p)
 
 
+def generate_similarity( peaks ):
+
+    rfus = [ p.rfu for p in peaks ]
+
+    # use the 2nd highest peaks since the 1st or 2nd may be noises
+    highest_rfu = list(sorted(rfus, reverse=True))[2]
+
+    N = len(rfus)
+    similarity = list( [ (np.log10( rfu/ highest_rfu ) + N) / N if rfu < highest_rfu
+                            else 1.0
+                            for rfu in rfus ] )
+    print(N,' =>')
+    print(rfus)
+    print(highest_rfu)
+    print(similarity)
+    return similarity
+
+
 def pair_sized_peaks( peaks, peak_pairs ):
     """ translate (rtime, size) to (size, peak)
 
@@ -75,7 +93,7 @@ def pair_sized_peaks( peaks, peak_pairs ):
     return sized_peaks
 
 
-def pair_f(f, rtimes, std_sizes, deviation=False):
+def pair_f(f, rtimes, std_sizes, similarity, deviation=False):
     """ match rtimes to std_sizes
 
         return: [ (rtime, size), ... ] or
@@ -85,8 +103,9 @@ def pair_f(f, rtimes, std_sizes, deviation=False):
 
     rtimes = list(reversed(rtimes))
     std_sizes = list(reversed(std_sizes))
+    similarity = list(reversed(similarity))
 
-    S = generate_scores( std_sizes, rtimes, f )
+    S = generate_scores( std_sizes, rtimes, similarity, f )
 
     result = dp(S, -5e-3)
 
@@ -104,7 +123,7 @@ def pair_f(f, rtimes, std_sizes, deviation=False):
     return peak_pairs
 
 
-def generate_scores(sizes, rtimes, func, tolerance = 4):
+def generate_scores_xxx(sizes, rtimes, func, tolerance = 4):
     """ return a numpy matrix for scoring peak similarity
             func -> polynomial fit funcs
             size[bp] = func(rtime[sec])
@@ -139,6 +158,35 @@ def generate_scores(sizes, rtimes, func, tolerance = 4):
     return M
 
 
+def generate_scores(sizes, rtimes, similarity, func, tolerance = 4):
+    """ return a numpy matrix for scoring peak similarity
+            func -> polynomial fit funcs
+            size[bp] = func(rtime[sec])
+
+        Score matrix is
+
+                  peak1   peak2   peak3
+        ladder1
+        ladder2
+        ladder3
+
+        S[ladder][peak] = 1 if ladder & peak are similar
+
+    """
+    M = np.zeros( (len(sizes), len(rtimes)), dtype='d' )
+
+    _TOL = 0.001
+    cutoff = tolerance * math.sqrt( -1.0 * math.log(_TOL))
+    ladder_N = len(sizes)
+
+    for c in range(0, len(rtimes)):
+        size = func( rtimes[c] )
+        for r in range(0, len(sizes)):
+            M[r][c] = similarity[c] * math.exp( - ((size - sizes[r])/(tolerance))**2  / 2 )
+
+    return M
+
+
 def plot(rtimes, sizes, z, peak_pairs):
     """ plot rtimes, sizes, z and peak pairs
     """
@@ -163,7 +211,7 @@ def plot(rtimes, sizes, z, peak_pairs):
     plt.show()
 
 
-def align_dp( rtimes, sizes, z, rss, order = 3):
+def align_dp( rtimes, sizes, similarity, z, rss, order = 3):
     """ align ladders with peaks using dynamic programming (global alignment)
         return (dpscore, RSS, Z, ladder_aligned_peaks)
     """
@@ -175,7 +223,7 @@ def align_dp( rtimes, sizes, z, rss, order = 3):
 
     while True:
 
-        S = generate_scores( sizes, rtimes, np.poly1d(z))
+        S = generate_scores( sizes, rtimes, similarity, np.poly1d(z))
 
         result = dp(S, -5e-3)
 

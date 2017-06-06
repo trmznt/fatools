@@ -32,7 +32,7 @@ def align_pm(peaks, ladder, anchor_pairs=None):
     print(rss)
     #plot(f.rtimes, f.sizes, z, pairs)
     # last dp
-    dp_result = align_dp(f.rtimes, f.sizes, z, rss)
+    dp_result = align_dp(f.rtimes, f.sizes, f.similarity, z, rss)
     import pprint; pprint.pprint(dp_result.sized_peaks)
     if is_verbosity(4):
         plot(f.rtimes, f.sizes, dp_result.z, [(x[1], x[0]) for x in dp_result.sized_peaks])
@@ -257,7 +257,7 @@ def estimate_pm(peaks, bpsizes):
     import pprint; pprint.pprint(scores[:5])
     zresult = scores[0][1]
 
-    dp_result = align_dp(f.rtimes, f.sizes, zresult.z, zresult.rss)
+    dp_result = align_dp(f.rtimes, f.sizes, f.similarity, zresult.z, zresult.rss)
     #import pprint; pprint.pprint(dp_result.sized_peaks)
     #plot(f.rtimes, f.sizes, dp_result.z, [(x[1], x[0]) for x in dp_result.sized_peaks])
 

@@ -5,7 +5,7 @@ from scipy.optimize import minimize, differential_evolution
 from fatools.lib.utils import cerr
 from fatools.lib import const
 from fatools.lib.fautil.alignutils import (estimate_z, pair_f, align_dp,
-            pair_sized_peaks, DPResult, AlignResult, plot)
+            pair_sized_peaks, DPResult, AlignResult, generate_similarity, plot)
 
 class ZFunc(object):
 
@@ -26,6 +26,10 @@ class ZFunc(object):
         self.anchor_sizes = [ a[1] for a in anchor_pairs]
         self.anchor_pairs = anchor_pairs
         self.penalty = 4 if estimate else 2
+        if estimate:
+            self.similarity = generate_similarity( self.peaks )
+        else:
+            self.similarity = [ 1.0 ] * len(self.peaks)
 
 
     def get_initial_z(self):
@@ -58,7 +62,7 @@ class ZFunc(object):
     def get_pairs(self, z):
 
         f = np.poly1d(z)
-        pairings = pair_f(f, self.rtimes, self.sizes, deviation=True)
+        pairings = pair_f(f, self.rtimes, self.sizes, self.similarity, deviation=True)
 
         pairs = []
         rss = 0
@@ -82,7 +86,7 @@ class ZFunc(object):
 
         # prepare z function
         f = np.poly1d(z)
-        pairs = pair_f(f, self.rtimes, self.sizes, deviation=True)
+        pairs = pair_f(f, self.rtimes, self.sizes, self.similarity, deviation=True)
 
 
         # calculate anchors
