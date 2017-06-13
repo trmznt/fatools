@@ -349,7 +349,7 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
                 plt.scatter( [p.rtime for p in peaks], [p.theta for p in peaks])
                 plt.show()
 
-            q_theta = lambda x: x.theta >= math_func(x.rtime, *popt)
+            q_theta = lambda x: x.theta >= math_func(x.rtime, *popt) or x.theta > 100
 
         else:
             q_theta = lambda x: x.theta >= min(theta_peaks[-1].theta, params.min_theta)
@@ -390,6 +390,11 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
     for p in peaks:
         #filtered_peaks.append(p); continue
         print(p)
+
+        if len(filtered_peaks) < 2 and p.area > 50:
+            # first two real peaks might be a bit lower
+            filtered_peaks.append(p)
+            continue
 
         if not q_omega(p):
             print('! q_omega')
