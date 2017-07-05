@@ -67,6 +67,8 @@ class Allele(AlleleMixIn):
 
 class Channel(ChannelMixIn):
 
+    __slots__ = []
+
     Allele = Allele
 
     def __init__(self, data, dye, wavelen, status, fsa):
@@ -116,15 +118,19 @@ class FSA(FSAMixIn):
         if cache and os.path.exists(cache_file):
             if os.stat(fsa_filename).st_mtime < os.stat(cache_file).st_mtime:
                 cerr('I: uploading channel cache for %s' % fsa_filename)
-                fsa.channels = pickle.load( open(cache_file, 'rb') )
-                for c in fsa.channels:
-                    c.fsa = fsa
-        else:
-            fsa.create_channels()
-            if cache and os.path.exists('.fatools_caches/channels'):
-                for c in fsa.channels: c.fsa = None
-                pickle.dump(fsa.channels, open(cache_file, 'wb'))
-                for c in fsa.channels: c.fsa = fsa
+                try:
+                    fsa.channels = pickle.load( open(cache_file, 'rb') )
+                    for c in fsa.channels:
+                        c.fsa = fsa
+                    return fsa
+                except:
+                    cerr('E: uploading failed, will recreate cache')
+
+        fsa.create_channels()
+        if cache and os.path.exists('.fatools_caches/channels'):
+            for c in fsa.channels: c.fsa = None
+            pickle.dump(fsa.channels, open(cache_file, 'wb'))
+            for c in fsa.channels: c.fsa = fsa
         return fsa
 
 
