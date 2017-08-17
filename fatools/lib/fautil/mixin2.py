@@ -31,6 +31,7 @@ class ChannelMixIn(object):
     """
 
     __slots__ = [   'data', 'dye', 'wavelen', 'alleles', 'fsa', 'status', 'marker',
+                    'mma', 'mmb', 'p80',
                 ]
 
     def add_allele(self, allele):
