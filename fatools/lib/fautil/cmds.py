@@ -50,7 +50,7 @@ def init_argparser(parser=None):
     # semi-mandatory
 
     p.add_argument('--panel', default="",
-            help = 'comma-separated panel code(s)')
+            help = 'comma-separated panel code(s) (prebuilt options: GS600LIZ, GS500LIZ')
 
     p.add_argument('--marker', default="",
             help = 'comma-separated marker code(s)')
