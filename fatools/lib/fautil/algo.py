@@ -487,7 +487,7 @@ def size_peaks( channel, params, ladders, qcfunc = None ):
 
     scores.append( (score_1, msg_1, result_1, method_1) )
 
-    scores.sort()
+    scores.sort( key = lambda x: x[0] )
     return scores[-1]
 
 
