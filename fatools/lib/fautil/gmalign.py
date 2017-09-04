@@ -19,17 +19,20 @@ class ZFunc(object):
         """
         peaks, sizes and anchor_pairs must be in ascending order
         """
-        self.sizes = list(sorted(sizes))
+        self.set_sizes(sizes)
         self.peaks = list(sorted(peaks))
         self.rtimes = [ p.rtime for p in self.peaks]
         self.anchor_rtimes = [ a[0] for a in anchor_pairs]
         self.anchor_sizes = [ a[1] for a in anchor_pairs]
         self.anchor_pairs = anchor_pairs
         self.penalty = 4 if estimate else 2
-        if estimate:
-            self.similarity = generate_similarity( self.peaks )
-        else:
-            self.similarity = [ 1.0 ] * len(self.peaks)
+        #if estimate:
+        self.similarity = generate_similarity( self.peaks )
+        #else:
+        #self.similarity = [ 1.0 ] * len(self.peaks)
+
+    def set_sizes(self, sizes):
+        self.sizes = list(sorted(sizes))
 
 
     def get_initial_z(self):
