@@ -309,6 +309,9 @@ def math_func(x, a, b):
     #return a*np.exp(x*b)
     return a*x + b
 
+def quadratic_math_func(x, a, b, c):
+    return a*x**2 + b*x + c
+
 
 def filter_for_artifact(peaks, params, expected_peak_number = 0):
     """
@@ -358,21 +361,39 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
         if omega_peaks[-1].omega < 200:
             omega_peaks.sort()
             omegas = np.array([ p.omega for p in omega_peaks ])
-            rtimes = [ p.rtime for p in omega_peaks ]
+            rtimes = np.array([ p.rtime for p in omega_peaks ])
 
-            popt, pcov = curve_fit( math_func, rtimes, 0.25 * omegas, p0 = [ -1, 1 ])
+            # generate a quadratic threshold for omega
+
+            # generate a quadratic ratio series first
+            popt, pcov = curve_fit( quadratic_math_func,
+                    [rtimes[0], (rtimes[0] + rtimes[-1])/2, rtimes[-1]],
+                    [0.1, 0.3, 0.1])
+            ratios = quadratic_math_func(rtimes, *popt)
+            if is_verbosity(4):
+                plt.plot(rtimes, ratios)
+                plt.show()
+
+            # use the ratios to enforce quadratic threshold
+            popt, pcov = curve_fit( quadratic_math_func, rtimes, ratios * omegas,
+                                        p0 = [ -1, 1, 0 ])
+            if popt[0] > 0:
+                # enforce small flat ratio
+                popt, pcov = curve_fit( math_func, rtimes, 0.25 * omegas, p0 = [ 1, 0 ])
+                popt = np.insert(popt, 0, 0.0)  # convert to 3 params
             if is_verbosity(4):
                 plt.scatter(rtimes, omegas)
                 xx = np.linspace( rtimes[0], rtimes[-1]+2000, 100 )
-                yy = math_func(xx, *popt)
+                yy = quadratic_math_func(xx, *popt)
                 plt.plot(xx, yy)
                 plt.scatter( [p.rtime for p in peaks], [p.omega for p in peaks])
                 plt.show()
 
-            q_omega = lambda x: ( x.omega >= math_func(x.rtime, *popt) or x.omega >= 100) #and
-                                    #math_func(x.rtime, *popt) > 0)
+            q_omega = lambda x: (   x.omega >= 100 or
+                                    x.omega >= quadratic_math_func(x.rtime, *popt) )
 
         else:
+
             q_omega = lambda x: x.omega >= min(omega_peaks[-1].omega, 125)
 
 
