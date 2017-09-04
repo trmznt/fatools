@@ -16,6 +16,9 @@ requires = [
     'pandas',
     'leveldb',
     'attrs',
+    'transaction',
+    'sortedcontainers',
+    'peakutils',
     ]
 
 setup(name='fatools',
@@ -23,8 +26,7 @@ setup(name='fatools',
       description='fatools',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
-        "Programming Language :: Python",
-        ],
+          "Programming Language :: Python", ],
       author='Hidayat Trimarsanto',
       author_email='anto@eijkman.go.id',
       url='',
@@ -38,5 +40,4 @@ setup(name='fatools',
       entry_points="""\
       [console_scripts]
       fatools = fatools.scripts.run:main
-      """,
-      )
+      """, )
