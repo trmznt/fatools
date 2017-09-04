@@ -27,6 +27,7 @@ def align_pm(peaks, ladder, anchor_pairs=None):
 
     anchor_pairs.sort()
     pairs, z, rss, f = align_upper_pm(peaks, ladder, anchor_pairs, initial_z)
+    print(pairs)
     pairs, z, rss, f = align_lower_pm(peaks, ladder, pairs, initial_z)
 
     #print(rss)
@@ -101,7 +102,8 @@ def align_pm(peaks, ladder, anchor_pairs=None):
 def align_lower_pm(peaks, ladder, anchor_pairs, anchor_z):
 
     # anchor pairs must be in asceding order
-
+    print(anchor_pairs)
+    raise RuntimeError
 
     last_rtime = anchor_pairs[-1][0]
     last_size = anchor_pairs[-1][1]
@@ -109,6 +111,7 @@ def align_lower_pm(peaks, ladder, anchor_pairs, anchor_z):
     anchor_rtimes = list(anchor_rtimes)
     anchor_bpsizes = list(anchor_bpsizes)
 
+    # preparing all "lower peaks", including anchor peaks
     lower_peaks= [ p for p in peaks if p.rtime <= last_rtime ]
     lower_sizes = [ s for s in ladder['sizes'] if s <= last_size]
 
@@ -149,6 +152,60 @@ def align_lower_pm(peaks, ladder, anchor_pairs, anchor_z):
 
 
     raise RuntimeError
+
+
+def align_lower_pm(peaks, ladder, anchor_pairs, anchor_z):
+
+    # this is another attempt to perform ladder - size standard alignment one peak by one
+
+
+    while True:
+
+        anchor_pairs = sorted(anchor_pairs)
+        anchor_rtimes, anchor_bpsizes = zip( *anchor_pairs )
+        anchor_rtimes = list(anchor_rtimes)
+        anchor_bpsizes = list(anchor_bpsizes)
+        remaining_sizes = [x for x in ladder['sizes'] if x < anchor_bpsizes[0]]
+        print('anchor_bpsizes', anchor_bpsizes)
+        print('remaining_sizes', remaining_sizes)
+        if not remaining_sizes:
+            return pairs, z, rss, f
+
+        current_sizes = [ remaining_sizes[-1] ] + anchor_bpsizes
+        print('current_sizes:', current_sizes)
+        f = ZFunc(peaks, current_sizes, anchor_pairs, estimate=True)
+        zres = estimate_z(anchor_rtimes, anchor_bpsizes, 3)
+        score, z = minimize_score(f, zres.z, 3)
+        pairs, rss = f.get_pairs(z)
+        plot(f.rtimes, f.sizes, z, pairs )
+        anchor_pairs = pairs
+
+
+def align_lower_pm(peaks, ladder, anchor_pairs, anchor_z):
+
+    # this is another attempt to perform ladder - size standard alignment one peak by one
+
+    anchor_pairs = sorted(anchor_pairs)
+    anchor_rtimes, anchor_bpsizes = zip( *anchor_pairs )
+    anchor_rtimes = list(anchor_rtimes)
+    anchor_bpsizes = list(anchor_bpsizes)
+    remaining_sizes = [x for x in ladder['sizes'] if x < anchor_bpsizes[0]]
+    current_sizes = anchor_bpsizes
+    z = estimate_z(anchor_rtimes, anchor_bpsizes, 3).z
+    f = ZFunc(peaks, current_sizes, anchor_pairs, estimate=True)
+
+    while True:
+
+        if not remaining_sizes:
+            return pairs, z, rss, f
+
+        current_sizes.insert(0, remaining_sizes.pop(-1))
+        f.set_sizes(current_sizes)
+        score, z = minimize_score(f, z, 3)
+        pairs, rss = f.get_pairs(z)
+        if is_verbosity(5):
+            plot(f.rtimes, f.sizes, z, pairs )
+
 
 
 
@@ -205,6 +262,35 @@ def align_upper_pm(peaks, ladder, anchor_pairs, anchor_z):
     #plot(f.rtimes, f.sizes, z, pairs )
 
     return pairs, z, rss, f
+
+
+def align_upper_pm(peaks, ladder, anchor_pairs, anchor_z):
+
+    # this is another attempt to perform ladder - size standard alignment one peak by one
+
+    anchor_pairs = sorted(anchor_pairs)
+    anchor_rtimes, anchor_bpsizes = zip( *anchor_pairs )
+    anchor_rtimes = list(anchor_rtimes)
+    anchor_bpsizes = list(anchor_bpsizes)
+    remaining_sizes = [x for x in ladder['sizes'] if x > anchor_bpsizes[-1]]
+    current_sizes = anchor_bpsizes
+    order = ladder['order']
+    z = estimate_z(anchor_rtimes, anchor_bpsizes, order).z
+    f = ZFunc(peaks, current_sizes, anchor_pairs, estimate=True)
+
+    while True:
+
+        if not remaining_sizes:
+            return pairs, z, rss, f
+
+        current_sizes.append( remaining_sizes.pop(0) )
+        f.set_sizes(current_sizes)
+        score, next_z = minimize_score(f, z, order)
+        pairs, rss = f.get_pairs(z)
+        if rss < 100:
+            z = next_z
+        if is_verbosity(5):
+            plot(f.rtimes, f.sizes, z, pairs )
 
 
 
