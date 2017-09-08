@@ -166,8 +166,6 @@ def align_lower_pm(peaks, ladder, anchor_pairs, anchor_z):
         anchor_rtimes = list(anchor_rtimes)
         anchor_bpsizes = list(anchor_bpsizes)
         remaining_sizes = [x for x in ladder['sizes'] if x < anchor_bpsizes[0]]
-        print('anchor_bpsizes', anchor_bpsizes)
-        print('remaining_sizes', remaining_sizes)
         if not remaining_sizes:
             return pairs, z, rss, f
 
@@ -191,8 +189,10 @@ def align_lower_pm(peaks, ladder, anchor_pairs, anchor_z):
     anchor_bpsizes = list(anchor_bpsizes)
     remaining_sizes = [x for x in ladder['sizes'] if x < anchor_bpsizes[0]]
     current_sizes = anchor_bpsizes
-    z = estimate_z(anchor_rtimes, anchor_bpsizes, 3).z
-    f = ZFunc(peaks, current_sizes, anchor_pairs, estimate=True)
+    zscore = estimate_z(anchor_rtimes, anchor_bpsizes, 3)
+    z = zscore.z
+    rss = zscore.rss
+    f = ZFunc(peaks, current_sizes, anchor_pairs)
 
     while True:
 
@@ -201,12 +201,19 @@ def align_lower_pm(peaks, ladder, anchor_pairs, anchor_z):
 
         current_sizes.insert(0, remaining_sizes.pop(-1))
         f.set_sizes(current_sizes)
-        score, z = minimize_score(f, z, 3)
-        pairs, rss = f.get_pairs(z)
+        score, next_z = minimize_score(f, z, 3)
+        next_pairs, next_rss = f.get_pairs(next_z)
+
+        # if delta rss (current rss - prev rss) is above certain threshold,
+        # then assume the latest peak standar is not appropriate, and
+        # use previous z and rss
+        if (next_rss - rss) < 20:
+            z = next_z
+            rss = next_rss
+            pairs = next_pairs
+
         if is_verbosity(5):
             plot(f.rtimes, f.sizes, z, pairs )
-
-
 
 
 def align_upper_pm(peaks, ladder, anchor_pairs, anchor_z):
@@ -366,4 +373,3 @@ def prepare_rtimes(rtimes):
 
     mid_size = round(len(rtimes)/2)
     return list( itertools.product(rtimes[:mid_size], rtimes[mid_size-2:]) )
-
