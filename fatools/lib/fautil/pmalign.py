@@ -211,6 +211,8 @@ def align_lower_pm(peaks, ladder, anchor_pairs, anchor_z):
             z = next_z
             rss = next_rss
             pairs = next_pairs
+        else:
+            current_sizes.pop(0)
 
         if is_verbosity(5):
             plot(f.rtimes, f.sizes, z, pairs )
@@ -282,7 +284,8 @@ def align_upper_pm(peaks, ladder, anchor_pairs, anchor_z):
     remaining_sizes = [x for x in ladder['sizes'] if x > anchor_bpsizes[-1]]
     current_sizes = anchor_bpsizes
     order = ladder['order']
-    z = estimate_z(anchor_rtimes, anchor_bpsizes, order).z
+    zres = estimate_z(anchor_rtimes, anchor_bpsizes, order)
+    z,rss = zres.z, zres.rss
     f = ZFunc(peaks, current_sizes, anchor_pairs, estimate=True)
 
     while True:
@@ -293,9 +296,13 @@ def align_upper_pm(peaks, ladder, anchor_pairs, anchor_z):
         current_sizes.append( remaining_sizes.pop(0) )
         f.set_sizes(current_sizes)
         score, next_z = minimize_score(f, z, order)
-        pairs, rss = f.get_pairs(z)
-        if rss < 100:
+        next_pairs, next_rss = f.get_pairs(z)
+
+        if (next_rss - rss) < 70:
             z = next_z
+            rss = next_rss
+            pairs = next_pairs
+
         if is_verbosity(5):
             plot(f.rtimes, f.sizes, z, pairs )
 
