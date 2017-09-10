@@ -207,12 +207,12 @@ def align_lower_pm(peaks, ladder, anchor_pairs, anchor_z):
         # if delta rss (current rss - prev rss) is above certain threshold,
         # then assume the latest peak standar is not appropriate, and
         # use previous z and rss
-        if (next_rss - rss) < 20:
+        if (next_rss - rss) > 20:
+            current_sizes.pop(0)
+        else:
             z = next_z
             rss = next_rss
             pairs = next_pairs
-        else:
-            current_sizes.pop(0)
 
         if is_verbosity(5):
             plot(f.rtimes, f.sizes, z, pairs )
