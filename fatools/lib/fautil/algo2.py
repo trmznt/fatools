@@ -394,7 +394,7 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
 
         else:
 
-            q_omega = lambda x: x.omega >= min(omega_peaks[-1].omega, 125)
+            q_omega = lambda x: x.omega >= min(omega_peaks[-1].omega, 50)
 
 
         min_rfu = rfu_peaks[-1].rfu * 0.125
