@@ -25,7 +25,7 @@ class ZFunc(object):
         self.anchor_rtimes = [ a[0] for a in anchor_pairs]
         self.anchor_sizes = [ a[1] for a in anchor_pairs]
         self.anchor_pairs = anchor_pairs
-        self.penalty = 4 if estimate else 2
+        self.penalty = 4 if estimate else 1
         #if estimate:
         self.similarity = generate_similarity( self.peaks )
         #else:
