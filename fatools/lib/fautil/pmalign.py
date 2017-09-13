@@ -288,12 +288,12 @@ def align_upper_pm(peaks, ladder, anchor_pairs, anchor_z):
     z,rss = zres.z, zres.rss
     f = ZFunc(peaks, current_sizes, anchor_pairs, estimate=True)
 
-    while True:
-
-        if not remaining_sizes:
-            return pairs, z, rss, f
+    while remaining_sizes:
 
         current_sizes.append( remaining_sizes.pop(0) )
+        if remaining_sizes and (remaining_sizes[0] - current_sizes[-1]) < 11:
+            current_sizes.append( remaining_sizes.pop(0) )
+
         f.set_sizes(current_sizes)
         score, next_z = minimize_score(f, z, order)
         next_pairs, next_rss = f.get_pairs(z)
@@ -306,6 +306,7 @@ def align_upper_pm(peaks, ladder, anchor_pairs, anchor_z):
         if is_verbosity(5):
             plot(f.rtimes, f.sizes, z, pairs )
 
+    return pairs, z, rss, f
 
 
 def minimize_score( f, z, order ):
