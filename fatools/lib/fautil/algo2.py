@@ -368,7 +368,7 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
             # generate a quadratic ratio series first
             popt, pcov = curve_fit( quadratic_math_func,
                     [rtimes[0], (rtimes[0] + rtimes[-1])/2, rtimes[-1]],
-                    [0.1, 0.3, 0.1])
+                    [0.05, 0.25, 0.05])
             ratios = quadratic_math_func(rtimes, *popt)
             if is_verbosity(4):
                 plt.plot(rtimes, ratios)

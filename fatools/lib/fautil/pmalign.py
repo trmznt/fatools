@@ -291,7 +291,7 @@ def align_upper_pm(peaks, ladder, anchor_pairs, anchor_z):
     while remaining_sizes:
 
         current_sizes.append( remaining_sizes.pop(0) )
-        if remaining_sizes and (remaining_sizes[0] - current_sizes[-1]) < 11:
+        if remaining_sizes and current_sizes[-1] > 400 and (remaining_sizes[0] - current_sizes[-1]) < 11:
             current_sizes.append( remaining_sizes.pop(0) )
 
         f.set_sizes(current_sizes)
@@ -308,11 +308,13 @@ def align_upper_pm(peaks, ladder, anchor_pairs, anchor_z):
 
     # finalize the alignment with stringent criteria
     dp_result = align_dp(f.rtimes, f.sizes, f.similarity, z, rss)
-    pairs = [(x[1], x[0]) for x in dp_result.sized_peaks]
+    if dp_result.rss - rss > 50:
+        return pairs, z, rss, f
+    dp_pairs = [(x[1], x[0]) for x in dp_result.sized_peaks]
     if is_verbosity(5):
-        plot(f.rtimes, f.sizes, dp_result.z, pairs)
+        plot(f.rtimes, f.sizes, dp_result.z, dp_pairs)
 
-    return pairs, dp_result.z, dp_result.rss, f
+    return dp_pairs, dp_result.z, dp_result.rss, f
 
 
 def minimize_score( f, z, order ):
