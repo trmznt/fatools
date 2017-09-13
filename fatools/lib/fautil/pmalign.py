@@ -291,7 +291,9 @@ def align_upper_pm(peaks, ladder, anchor_pairs, anchor_z):
     while remaining_sizes:
 
         current_sizes.append( remaining_sizes.pop(0) )
-        if remaining_sizes and current_sizes[-1] > 400 and (remaining_sizes[0] - current_sizes[-1]) < 11:
+        if ( remaining_sizes and
+             (remaining_sizes[-1] - current_sizes[-1]) < 100 and
+             (remaining_sizes[0] - current_sizes[-1]) < 11 ):
             current_sizes.append( remaining_sizes.pop(0) )
 
         f.set_sizes(current_sizes)
