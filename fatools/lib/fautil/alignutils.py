@@ -225,7 +225,7 @@ def align_dp( rtimes, sizes, similarity, z, rss, order = 3):
 
         S = generate_scores( sizes, rtimes, similarity, np.poly1d(z))
 
-        result = dp(S, -5e-3)
+        result = dp(S, -2) #-5e-3)
 
         cur_dpscore = result['D'][-1][-1]
         matches = result['matches']

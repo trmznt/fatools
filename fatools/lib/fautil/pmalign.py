@@ -286,7 +286,7 @@ def align_upper_pm(peaks, ladder, anchor_pairs, anchor_z):
     order = ladder['order']
     zres = estimate_z(anchor_rtimes, anchor_bpsizes, order)
     z,rss = zres.z, zres.rss
-    f = ZFunc(peaks, current_sizes, anchor_pairs, estimate=True)
+    f = ZFunc(peaks, current_sizes, anchor_pairs)
 
     while remaining_sizes:
 
@@ -306,7 +306,13 @@ def align_upper_pm(peaks, ladder, anchor_pairs, anchor_z):
         if is_verbosity(5):
             plot(f.rtimes, f.sizes, z, pairs )
 
-    return pairs, z, rss, f
+    # finalize the alignment with stringent criteria
+    dp_result = align_dp(f.rtimes, f.sizes, f.similarity, z, rss)
+    pairs = [(x[1], x[0]) for x in dp_result.sized_peaks]
+    if is_verbosity(5):
+        plot(f.rtimes, f.sizes, dp_result.z, pairs)
+
+    return pairs, dp_result.z, dp_result.rss, f
 
 
 def minimize_score( f, z, order ):
