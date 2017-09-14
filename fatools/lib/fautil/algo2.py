@@ -115,10 +115,24 @@ def align_peaks(channel, params, ladder, anchor_pairs=None):
     # reset all peaks first
     for p in channel.get_alleles():
         p.size = -1
-        p.status = const.peaktype.scanned
+        p.type = const.peaktype.scanned
         print(p)
 
     #anchor_pairs = pairs
+
+    alignresult = align_ladder( alleles, ladder, anchor_pairs)
+
+    f = np.poly1d( alignresult.dpresult.z )
+    for (size, allele) in alignresult.dpresult.sized_peaks:
+        allele.dev = abs( f(allele.rtime) - size)
+        allele.size = size
+        allele.type = const.peaktype.ladder
+
+    return alignresult
+
+
+
+def align_ladder( alleles, ladder, anchor_pairs):
 
     if anchor_pairs:
         return align_pm( alleles, ladder, anchor_pairs)
@@ -130,6 +144,8 @@ def align_peaks(channel, params, ladder, anchor_pairs=None):
             return result
 
     return align_pm( alleles, ladder )
+
+    # end of function,
 
     if result.initial_pairs:
         result = align_gm( alleles, ladder, result.initial_pairs )
