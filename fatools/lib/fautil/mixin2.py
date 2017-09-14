@@ -11,6 +11,12 @@ import time
 
 class AlleleMixIn(object):
 
+    __slots__ = [   'rtime', 'rfu',
+                    'area', 'brtime', 'ertime', 'wrtime', 'srtime',
+                    'beta', 'theta', 'omega',
+                    'size', 'bin', 'dev', 'type', 'method', 'marker',
+                ]
+
     def __repr__(self):
         return "<A: %3d | %4d | %5d | %2d | %+3.1f | %4.1f | %5.1f | %6d | %4.2f >" % (
                     self.size, self.rtime, self.rfu, self.wrtime,
@@ -97,6 +103,7 @@ class ChannelMixIn(object):
         fsa.nladder = len(dpresult.sized_peaks)
         fsa.score = result.score
         fsa.duration = time.process_time() - start_time
+        fsa.status = const.assaystatus.aligned
 
         #import pprint; pprint.pprint(dpresult.sized_peaks)
         #print(fsa.z)

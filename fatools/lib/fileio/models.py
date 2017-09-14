@@ -12,6 +12,8 @@ import os, pickle
 
 class Marker(MarkerMixIn):
 
+    __slots__ = []
+
     container = {}
 
     @classmethod
@@ -28,6 +30,8 @@ class Marker(MarkerMixIn):
 
 
 class Panel(PanelMixIn):
+
+    __slots__ = []
 
     container = {}
 
@@ -46,6 +50,8 @@ class Panel(PanelMixIn):
 
 
 class Allele(AlleleMixIn):
+
+    __slots__ = []
 
     def __init__(self, rtime, rfu, area, brtime, ertime, wrtime, srtime,
                     beta, theta, omega):
