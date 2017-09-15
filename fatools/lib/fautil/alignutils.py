@@ -6,6 +6,7 @@ import numpy as np
 import attr
 import math
 
+
 @attr.s
 class AlignResult(object):
     score = attr.ib()
@@ -14,12 +15,24 @@ class AlignResult(object):
     method = attr.ib()
     initial_pairs = attr.ib(default=None)
 
+
 @attr.s
 class DPResult(object):
     dpscore = attr.ib()
     rss = attr.ib()
     z = attr.ib()
     sized_peaks = attr.ib()
+
+    @property
+    def ztranspose(self):
+        if self.sized_peaks:
+            sizes = [], rtimes = []
+            for size, allele in self.sized_peaks:
+                sizes.append(sizes)
+                rtimes.append(allele.rtime)
+            zres = estimate_z(sizes, rtimes, len(self.z))
+            return zres.z
+        return []
 
 
 @attr.s
