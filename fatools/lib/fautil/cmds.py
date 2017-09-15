@@ -72,8 +72,8 @@ def init_argparser(parser=None):
     p.add_argument('--verbose', default=0, type=int,
             help = 'show verbosity')
 
-    p.add_argument('--use-cache', default=False, action='store_true',
-            help = 'prepare to use caches')
+    p.add_argument('--cache-path',
+            help='store cache in other location (defaults to home)')
 
     p.add_argument('--no-cache', default=False, action='store_true',
             help = 'do not use caches')
@@ -252,14 +252,18 @@ def open_fsa( args ):
     index = 1
 
     # prepare caching
-    if args.use_cache:
-        if not os.path.exists('.fatools_caches/channels'):
-            os.makedirs('.fatools_caches/channels')
+    if not args.no_cache:
+        cache_path = os.path.join(os.path.expanduser('~'), '.fatools_caches', 'channels')
+        if args.cache_path is not None:
+            cache_path = os.path.join(args.cache_path, '.fatools_caches', 'channels')
+        if not os.path.exists(cache_path):
+            os.makedirs(cache_path)
 
     if args.file:
         for fsa_filename in args.file.split(','):
             fsa_filename = fsa_filename.strip()
-            fsa = FSA.from_file(fsa_filename, panel, cache = not args.no_cache)
+            fsa = FSA.from_file(fsa_filename, panel, cache=not args.no_cache,
+                                cache_path=cache_path)
             # yield (fsa, str(i))
             fsa_list.append( (fsa, str(index)) )
             index += 1
@@ -288,7 +292,8 @@ def open_fsa( args ):
             panel_code = r.get('PANEL', None) or args.panel
             panel = Panel.get_panel(panel_code)
 
-            fsa = FSA.from_file( fsa_filename, panel, options, cache = not args.no_cache )
+            fsa = FSA.from_file(fsa_filename, panel, options, cache=not args.no_cache,
+                                cache_path=cache_path)
             if 'SAMPLE' in inrows.fieldnames:
 
                 # yield (fsa, r['SAMPLE'])
