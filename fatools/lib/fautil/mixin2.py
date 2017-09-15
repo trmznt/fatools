@@ -104,6 +104,7 @@ class ChannelMixIn(object):
         fsa.score = result.score
         fsa.duration = time.process_time() - start_time
         fsa.status = const.assaystatus.aligned
+        fsa.ztranspose = dpresult.ztranspose
 
         #import pprint; pprint.pprint(dpresult.sized_peaks)
         #print(fsa.z)
@@ -114,7 +115,11 @@ class ChannelMixIn(object):
 
 
     def call(self, parameters=None):
-        pass
+
+        if parameters:
+            self.scan( parameters )
+
+        algo.call_peaks(self, parameters)
 
 
 
@@ -126,7 +131,7 @@ class FSAMixIn(object):
     """
 
     __slots__ = [   'panel', 'channels', 'excluded_markers', 'filename',
-                    'rss', 'z', 'score', 'nladder', 'duration', 'status',
+                    'rss', 'z', 'score', 'nladder', 'duration', 'status', 'ztranspose',
                 ]
 
     def get_data_stream(self):
@@ -199,6 +204,10 @@ class MarkerMixIn(object):
     attrs: id, code, species, min_size, max_size, repeats, z_params
     """
 
+    __slots__ = [   'id', 'code', 'species',
+                    'repeats', 'min_size', 'max_size',
+                ]
+
     def update(self, obj):
 
         if isinstance(obj, dict):
@@ -248,6 +257,9 @@ class PanelMixIn(object):
     """
     attrs: id, code, data, dyes, Marker
     """
+
+    __slots__ = [   'id', 'code', 'data', 'dyes',
+                ]
 
     def set_ladder_dye(self, ladder):
         raise NotImplementedError()
