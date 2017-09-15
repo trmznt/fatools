@@ -116,13 +116,13 @@ default_panels = {
 
 default_markers = {
 
-    'x/ladder': dict( code='ladder', species='x' ),
+    'x/ladder': dict( code='ladder', species='x', min_size=-1, max_size=-1 ),
 
-    'x/VIC': dict( code='VIC', species='x' ),
+    'x/VIC': dict( code='VIC', species='x', min_size=80, max_size=500 ),
 
-    'x/PET': dict( code='PET', species='x' ),
+    'x/PET': dict( code='PET', species='x', min_size=80, max_size=500 ),
 
-    'x/NED': dict( code='NED', species='x' ),
+    'x/NED': dict( code='NED', species='x', min_size=80, max_size=500 ),
 
-    'x/6-FAM': dict( code='6-FAM', species='x' ),
+    'x/6-FAM': dict( code='6-FAM', species='x', min_size=80, max_size=500 ),
 }
