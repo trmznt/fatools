@@ -44,6 +44,9 @@ def init_argparser(parser=None):
     p.add_argument('--plot', default=False, action='store_true',
             help = 'plot normalized trace')
 
+    p.add_argument('--split-plot', action='store_true',
+            help='plot dye separately')
+
     p.add_argument('--dendogram', default=False, action='store_true',
             help = 'plot dendograms of ladders and alleles')
 
@@ -74,6 +77,9 @@ def init_argparser(parser=None):
 
     p.add_argument('--no-cache', default=False, action='store_true',
             help = 'do not use caches')
+
+    p.add_argument('--plot-file',
+            help='save --split-plot result into a file')
 
     p.add_argument('--commit', default=False, action='store_true',
             help = 'commit to database')
@@ -129,6 +135,9 @@ def do_facmds(args, fsa_list, dbh=None):
     if args.plot:
         do_plot( args, fsa_list, dbh )
         executed += 1
+    if args.split_plot:
+        do_split_plot(args, fsa_list, dbh)
+        executed += 1
     if args.dendogram:
         do_dendogram( args, fsa_list, dbh)
         executed += 1
@@ -172,6 +181,14 @@ def do_plot( args, fsa_list, dbh ):
             plt.plot(c.data)
 
         plt.show()
+
+
+def do_split_plot(args, fsa_list, dbh):
+    cerr('I: Separating dye and creating plot...')
+
+    from fatools.lib.fautil import plot
+
+    plot.split_plot(args, fsa_list, dbh)
 
 
 def do_dendogram( args, fsa_list, dbh ):
