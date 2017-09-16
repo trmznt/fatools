@@ -26,11 +26,12 @@ class DPResult(object):
     @property
     def ztranspose(self):
         if self.sized_peaks:
-            sizes = [], rtimes = []
+            sizes = []
+            rtimes = []
             for size, allele in self.sized_peaks:
-                sizes.append(sizes)
+                sizes.append(size)
                 rtimes.append(allele.rtime)
-            zres = estimate_z(sizes, rtimes, len(self.z))
+            zres = estimate_z(sizes, rtimes, len(self.z) - 1)
             return zres.z
         return []
 
