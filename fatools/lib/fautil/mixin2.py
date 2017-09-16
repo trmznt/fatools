@@ -259,6 +259,7 @@ class PanelMixIn(object):
     """
 
     __slots__ = [   'id', 'code', 'data', 'dyes',
+                    '_dyes',
                 ]
 
     def set_ladder_dye(self, ladder):
