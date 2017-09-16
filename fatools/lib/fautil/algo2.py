@@ -77,6 +77,13 @@ def scan_peaks(channel, params, offset=0):
     expected_peak_number = params.expected_peak_number
     if channel.is_ladder():
         expected_peak_number = len(channel.fsa.panel.get_ladder()['sizes'])
+    else:
+        # otherwise, calculate min_rtime for offset
+        if not channel.fsa.ztranspose:
+            raise RuntimeError('ztranspose has not been calculated!')
+        min_size = channel.marker.min_size
+        f = np.poly1d( channel.fsa.ztranspose )
+        offset = f(min_size)
 
     initial_peaks = find_peaks(channel.data, params, offset, expected_peak_number)
 
@@ -176,6 +183,10 @@ def align_ladder( alleles, ladder, anchor_pairs):
     #import pprint; pprint.pprint( aligned_peaks )
     return result
 
+
+def call_peaks(channel, params):
+
+    for allele in channel.alleles:
 
 
 
@@ -637,6 +648,36 @@ def generate_scoring_function( strict_params, relax_params ):
 
 
     return _scoring_func
+
+
+def local_southern( ladder_alleles ):
+    """ southern local interpolation """
+
+    ladder_allele_sorted = SortedListWithKey( ladder_alleles, key = lambda k: k.rtime )
+    x = [ p.rtime for p in ladder_allele_sorted ]
+    y = [ p.size for p in ladder_allele_sorted ]
+
+    def _f( rtime ):
+        """ return (size, deviation)
+            deviation is calculated as delta square between curve1 and curve2
+        """
+
+        idx = ladder_allele_sorted.bisect_key_right( rtime )
+
+        # left curve
+        z1 = np.polyfit( x[idx-2:idx+1], y[idx-2:idx+1], 2)
+        size1 = np.poly1d( z1 )(rtime)
+        min_score1 = min( x.qscore for x in ladder_allele_sorted[idx-2:idx+1] )
+
+        # right curve
+        z2 = np.polyfit( x[idx-1:idx+2], y[idx-1:idx+2], 2)
+        size2 = np.poly1d( z2 )(rtime)
+        min_score2 = min( x.qscore for x in ladder_allele_sorted[idx-1:idx+2] )
+
+        return ( (size1 + size2)/2, (size1 - size2) ** 2, (min_score1 + min_score2)/2,
+                allelemethod.localsouthern)
+
+    return _f
 
 ## this is a new algorithm and steps to perform peak analysis
 ##
