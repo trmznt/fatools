@@ -184,10 +184,12 @@ def align_ladder( alleles, ladder, anchor_pairs):
     return result
 
 
-def call_peaks(channel, params):
+def call_peaks(channel, params, func):
 
     for allele in channel.alleles:
-
+        allele.size, allele.dev, allele.qcall, method = func(allele.rtime)
+        if allele.type == const.peaktype.scanned:
+            allele.type = const.peaktype.called
 
 
 
