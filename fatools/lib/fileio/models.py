@@ -6,6 +6,7 @@
 
 from fatools.lib.utils import cout, cerr
 from fatools.lib.fautil.mixin2 import MarkerMixIn, PanelMixIn, ChannelMixIn, FSAMixIn, AlleleMixIn
+from fatools.lib import const
 
 import os, pickle
 
@@ -129,6 +130,8 @@ class FSA(FSAMixIn):
                     fsa.channels = pickle.load( open(cache_file, 'rb') )
                     for c in fsa.channels:
                         c.fsa = fsa
+                    # assume channels are already normalized
+                    fsa.status = const.assaystatus.normalized
                     return fsa
                 except Exception:
                     cerr('E: uploading failed, will recreate cache')
