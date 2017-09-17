@@ -132,11 +132,8 @@ def do_facmds(args, fsa_list, dbh=None):
     if args.call:
         do_call( args, fsa_list, dbh )
         executed += 1
-    if args.plot:
-        do_plot( args, fsa_list, dbh )
-        executed += 1
-    if args.split_plot:
-        do_split_plot(args, fsa_list, dbh)
+    if args.plot or args.split_plot:
+        do_plot(args, fsa_list, dbh)
         executed += 1
     if args.dendogram:
         do_dendogram( args, fsa_list, dbh)
@@ -170,25 +167,13 @@ def do_call( args, fsa_list, dbh ):
         fsa.call(params.Params(), args.marker)
 
 
-def do_plot( args, fsa_list, dbh ):
+def do_plot(args, fsa_list, dbh):
 
     cerr('I: Creating plot...')
 
-    from matplotlib import pylab as plt
-
-    for (fsa, sample_code) in fsa_list:
-        for c in fsa.channels:
-            plt.plot(c.data)
-
-        plt.show()
-
-
-def do_split_plot(args, fsa_list, dbh):
-    cerr('I: Separating dye and creating plot...')
-
     from fatools.lib.fautil import plot
 
-    plot.split_plot(args, fsa_list, dbh)
+    plot.plot(args, fsa_list, dbh)
 
 
 def do_dendogram( args, fsa_list, dbh ):

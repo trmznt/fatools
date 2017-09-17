@@ -2,6 +2,7 @@
 Collection of functions to do assay plotting using matplotlib.
 """
 import matplotlib.pyplot as plt
+from fatools.lib.utils import cerr
 
 
 def align_fsa(fsa):
@@ -111,6 +112,31 @@ def prepare_second_x_axis(channel_axis, size_rtime):
     second_x_axis.set_xticklabels(sizes, rotation='vertical', fontsize=8)
 
 
+def save_or_show(figure, plot_file):
+    """
+    Determine if the plot is to be saved or shown.
+
+    Input
+
+    figure: class of figure from matplotlib
+    plot_file: location and file name for saving plot
+
+    Output
+
+    If plot_file is None, then show plot to user.
+    If plot_file is supplied, then the plot is saved to file.
+    """
+    plt.tight_layout()
+    if plot_file is not None:
+        # HACK: to reduce complexity, the figure size is set to
+        # approximately 22" monitor (16:19)
+        figure.set_size_inches(19, 11)
+        plt.savefig(plot_file, dpi=150, bbox_inches='tight')
+        plt.close()
+    else:
+        plt.show()
+
+
 def do_split_plot(fsa, plot_file=None):
     """
     Plot an assay dye, in every subplot.
@@ -122,8 +148,7 @@ def do_split_plot(fsa, plot_file=None):
 
     Output
 
-    If plot_file is None, then show plot to user.
-    If plot_file is supplied, then the plot is saved to file.
+    a figure class ready to be saved/shown
     """
     align_fsa(fsa)
     channels = fsa.channels
@@ -142,15 +167,28 @@ def do_split_plot(fsa, plot_file=None):
             channel_axis.set_ylim((0, max_rfu))
 
     plt.suptitle(fsa.filename)
-    plt.tight_layout()
+    save_or_show(whole_fig, plot_file)
 
-    if plot_file is not None:
-        # HACK: to reduce complexity, the figure size is set to
-        # approximately 22" monitor (16:19)
-        whole_fig.set_size_inches(19, 11)
-        plt.savefig(plot_file, dpi=150, bbox_inches='tight')
-    else:
-        plt.show()
+
+def do_plot(fsa, plot_file=None):
+    """
+    Plot an assay in a plot.
+
+    Input
+
+    fsa: class of fsa
+    plot_file: path for saving plot to file
+    """
+    channels = fsa.channels
+    fig = plt.figure()
+
+    for channel in channels:
+        color = colorize_wavelength(channel.wavelen)
+        plt.plot(channel.data, color=color, label=channel.dye)
+
+    plt.legend(framealpha=0.5)
+    plt.title(fsa.filename)
+    save_or_show(fig, plot_file)
 
 
 def file_handler(fsa_list):
@@ -169,7 +207,7 @@ def file_handler(fsa_list):
         yield fsa
 
 
-def split_plot(args, fsa_list, dbh=None):
+def plot(args, fsa_list, dbh=None):
     """
     The main function to handle all arguments given.
 
@@ -183,6 +221,13 @@ def split_plot(args, fsa_list, dbh=None):
 
     Calling do_split_plot function for every fsa file passed
     """
+    if args.plot and args.split_plot and args.plot_file:
+        cerr('W: --plot, --split-plot, and --plot-file are flagged')
+        cerr('W: This will default to saving only the --split-plot results!')
+
     fsas = file_handler(fsa_list)
     for fsa in fsas:
-        do_split_plot(fsa, args.plot_file)
+        if args.plot:
+            do_plot(fsa, args.plot_file)
+        if args.split_plot:
+            do_split_plot(fsa, args.plot_file)
