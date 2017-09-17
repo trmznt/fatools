@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from fatools.lib.utils import cverr, is_verbosity
+from fatools.lib.utils import cerr, cverr, is_verbosity
 from fatools.lib import const
 from fatools.lib.fautil.hcalign import align_hc
 from fatools.lib.fautil.gmalign import align_gm, align_sh, align_de
@@ -12,6 +12,8 @@ from scipy import signal, ndimage
 from scipy.optimize import curve_fit
 from peakutils import indexes
 from matplotlib import pyplot as plt
+from sortedcontainers import SortedListWithKey
+
 
 import attr
 
@@ -72,6 +74,7 @@ class Channel(object):
 def scan_peaks(channel, params, offset=0):
     """
     """
+    cerr('I: scanning peaks for: %s' % channel)
 
     # check if channel is ladder channel, and adjust expected_peak_number accordingly
     expected_peak_number = params.expected_peak_number
@@ -79,11 +82,12 @@ def scan_peaks(channel, params, offset=0):
         expected_peak_number = len(channel.fsa.panel.get_ladder()['sizes'])
     else:
         # otherwise, calculate min_rtime for offset
-        if not channel.fsa.ztranspose:
+        if len(channel.fsa.ztranspose) <= 0:
             raise RuntimeError('ztranspose has not been calculated!')
         min_size = channel.marker.min_size
         f = np.poly1d( channel.fsa.ztranspose )
-        offset = f(min_size)
+        offset = int(round(f(min_size)))
+        channel.offset = offset
 
     initial_peaks = find_peaks(channel.data, params, offset, expected_peak_number)
 
@@ -123,7 +127,6 @@ def align_peaks(channel, params, ladder, anchor_pairs=None):
     for p in channel.get_alleles():
         p.size = -1
         p.type = const.peaktype.scanned
-        print(p)
 
     #anchor_pairs = pairs
 
@@ -184,9 +187,10 @@ def align_ladder( alleles, ladder, anchor_pairs):
     return result
 
 
-def call_peaks(channel, params, func):
+def call_peaks(channel, params, func, min_rtime, max_rtime):
 
     for allele in channel.alleles:
+        if not min_rtime < allele.rtime < max_rtime: continue
         allele.size, allele.dev, allele.qcall, method = func(allele.rtime)
         if allele.type == const.peaktype.scanned:
             allele.type = const.peaktype.called
@@ -202,7 +206,7 @@ def find_raw_peaks(data, params, offset, expected_peak_number=0):
     params.min_rfu
     params.max_peak_number
     """
-    print("expected:", expected_peak_number)
+    #print("expected:", expected_peak_number)
     # cut and pad data to overcome peaks at the end of array
     obs_data = np.append(data[offset:], [0,0,0])
     if False: #expected_peak_number:
@@ -226,7 +230,7 @@ def find_raw_peaks(data, params, offset, expected_peak_number=0):
 
     # normalize indices
     if offset > 0:
-        indices += offset
+        indices = indices + offset
 
     # filter peaks by minimum rfu, and by maximum peak number after sorted by rfu
     peaks = [ Peak( int(i), int(data[i]) ) for i in indices
@@ -259,8 +263,11 @@ def find_peaks(data, params, offset=0, expected_peak_number=0):
 
     #import pprint; pprint.pprint(peaks)
 
-    # filter artefact peaks
-    non_artifact_peaks = filter_for_artifact(peaks, params, expected_peak_number)
+    # filter artefact peaks if expected peak number is bigger
+    if expected_peak_number > 10:
+        non_artifact_peaks = filter_for_artifact(peaks, params, expected_peak_number)
+    else:
+        non_artifact_peaks = peaks
 
     # for ladder, special filtering is applied
     if params.expected_peak_number:
@@ -439,7 +446,7 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
     filtered_peaks = []
     for p in peaks:
         #filtered_peaks.append(p); continue
-        print(p)
+        cverr(5, p)
 
         if len(filtered_peaks) < 2 and p.area > 50:
             # first two real peaks might be a bit lower
@@ -447,7 +454,7 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
             continue
 
         if not q_omega(p):
-            print('! q_omega')
+            cverr(5, '! q_omega')
             continue
         #if not q_theta(p):
         #    print('! q_theta')
@@ -460,13 +467,13 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
         #    print('! theta_omega')
         #    continue
         if p.theta < 1.0 and p.area < 25 and p.omega < 5:
-            print('! extreme theta & area & omega')
+            cverr(5, '! extreme theta & area & omega')
             continue
         if p.rfu < min_rfu:
-            print('! extreme min_rfu')
+            cverr(5, '! extreme min_rfu')
             continue
         if p.beta > 25 and p.theta < 0.5:
-            print('! extreme beta')
+            cverr(5, '! extreme beta')
             continue
         if p.wrtime < 3:
             continue
@@ -677,7 +684,7 @@ def local_southern( ladder_alleles ):
         min_score2 = min( x.qscore for x in ladder_allele_sorted[idx-1:idx+2] )
 
         return ( (size1 + size2)/2, (size1 - size2) ** 2, (min_score1 + min_score2)/2,
-                allelemethod.localsouthern)
+                const.allelemethod.localsouthern)
 
     return _f
 
