@@ -82,10 +82,9 @@ def generate_similarity( peaks ):
     similarity = list( [ (np.log10( rfu/ highest_rfu ) + N) / N if rfu < highest_rfu
                             else 1.0
                             for rfu in rfus ] )
-    print(N,' =>')
-    print(rfus)
-    print(highest_rfu)
-    print(similarity)
+
+    for (p, score) in zip(peaks, similarity):
+        p.qscore = score
     return similarity
 
 
