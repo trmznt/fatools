@@ -81,7 +81,7 @@ def get_size_rtime(channel):
     for allele in alleles:
         if allele.size == -1:
             continue
-        size_rtime.append((allele.size, allele.rtime))
+        size_rtime.append((allele.size, allele.rtime, allele.rfu))
 
     return size_rtime
 
@@ -101,7 +101,7 @@ def prepare_second_x_axis(channel_axis, size_rtime):
     """
     sizes = []
     rtimes = []
-    for size, rtime in size_rtime:
+    for size, rtime, rfu in size_rtime:
         sizes.append(int(size))
         rtimes.append(rtime)
 
@@ -137,6 +137,9 @@ def do_split_plot(fsa, plot_file=None):
 
         size_rtime = get_size_rtime(channel)
         prepare_second_x_axis(channel_axis, size_rtime)
+        if len(size_rtime) > 0:
+            max_rfu = max( p[2] for p in size_rtime ) * 1.2
+            channel_axis.set_ylim((0, max_rfu))
 
     plt.suptitle(fsa.filename)
     plt.tight_layout()
