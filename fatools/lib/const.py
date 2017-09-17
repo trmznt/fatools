@@ -36,6 +36,7 @@ class assaystatus(object):
     assigned = 'assigned'
     scanned = 'scanned'
     preannotated = 'preannotated'
+    normalized = 'normalized'
     aligned = 'aligned'
     called = 'called'
     binned = 'binned'
