@@ -27,14 +27,15 @@ def align_pm(peaks, ladder, anchor_pairs=None):
 
     anchor_pairs.sort()
     pairs, z, rss, f = align_upper_pm(peaks, ladder, anchor_pairs, initial_z)
-    print(pairs)
+    #print(pairs)
     pairs, z, rss, f = align_lower_pm(peaks, ladder, pairs, initial_z)
 
     #print(rss)
     #plot(f.rtimes, f.sizes, z, pairs)
     # last dp
     dp_result = align_dp(f.rtimes, f.sizes, f.similarity, z, rss)
-    import pprint; pprint.pprint(dp_result.sized_peaks)
+    if is_verbosity(1):
+        import pprint; pprint.pprint(dp_result.sized_peaks)
     if is_verbosity(4):
         plot(f.rtimes, f.sizes, dp_result.z, [(x[1], x[0]) for x in dp_result.sized_peaks])
 
@@ -63,13 +64,13 @@ def align_pm(peaks, ladder, anchor_pairs=None):
         while abs(rss - last_rss) > 1e-3:
 
             niter += 1
-            print('Iter: %d' % niter)
+            cverr(5, 'Iter: %d' % niter)
 
-            print(z)
+            cverr(5, z)
             score = f(z)
             if last_score and last_score < score:
                 # score does not converge; just exit
-                print('does not converge!')
+                cverr(5, 'does not converge!')
                 break
 
             pairs, cur_rss = f.get_pairs(z)
@@ -80,7 +81,7 @@ def align_pm(peaks, ladder, anchor_pairs=None):
             z = zres.z
             last_rss = rss
             rss = zres.rss
-            print(rss)
+            cverr(5, rss)
 
     dp_result = align_dp(f.rtimes, f.sizes, last_z, last_rss)
 
@@ -93,7 +94,7 @@ def align_pm(peaks, ladder, anchor_pairs=None):
     for p in dp_result.sized_peaks:
         if (p[0] - zf(p[1]))**2 < 2:
             new_anchor_pairs.append( (p[1], p[0]) )
-    import pprint; pprint.pprint(dp_result.sized_peaks)
+    #import pprint; pprint.pprint(dp_result.sized_peaks)
     plot(f.rtimes, f.sizes, dp_result.z, [(x[1], x[0]) for x in dp_result.sized_peaks])
 
     return align_gm(peaks, ladder, anchor_pairs, dp_result.z)
@@ -375,7 +376,7 @@ def estimate_pm(peaks, bpsizes):
         #plot(f.rtimes, f.sizes, zres.z, [] )
 
     scores.sort( key = lambda x: x[0] )
-    import pprint; pprint.pprint(scores[:5])
+    #import pprint; pprint.pprint(scores[:5])
     zresult = scores[0][1]
 
     dp_result = align_dp(f.rtimes, f.sizes, f.similarity, zresult.z, zresult.rss)
