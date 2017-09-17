@@ -167,7 +167,7 @@ def do_call( args, fsa_list, dbh ):
 
     for (fsa, sample_code) in fsa_list:
         cverr(3, 'D: calling FSA %s' % fsa.filename)
-        fsa.call(args.marker)
+        fsa.call(params.Params(), args.marker)
 
 
 def do_plot( args, fsa_list, dbh ):
