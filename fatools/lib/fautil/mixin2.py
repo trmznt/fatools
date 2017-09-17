@@ -15,6 +15,7 @@ class AlleleMixIn(object):
                     'area', 'brtime', 'ertime', 'wrtime', 'srtime',
                     'beta', 'theta', 'omega',
                     'size', 'bin', 'dev', 'type', 'method', 'marker',
+                    'qscore', 'qcall',
                 ]
 
     def __repr__(self):
@@ -37,7 +38,7 @@ class ChannelMixIn(object):
     """
 
     __slots__ = [   'data', 'dye', 'wavelen', 'alleles', 'fsa', 'status', 'marker',
-                    'mma', 'mmb', 'p80',
+                    'mma', 'mmb', 'p80', 'offset',
                 ]
 
     def add_allele(self, allele):
@@ -114,15 +115,16 @@ class ChannelMixIn(object):
 
 
 
-    def call(self, parameters=None):
+    def call(self, parameters, func, min_rtime, max_rtime):
 
         if parameters:
             self.scan( parameters )
 
-        algo.call_peaks(self, parameters)
+        algo.call_peaks(self, parameters, func, min_rtime, max_rtime)
 
 
-
+    def __repr__(self):
+        return  "<Channel: %s> " % self.dye
 
 
 class FSAMixIn(object):
@@ -176,9 +178,14 @@ class FSAMixIn(object):
                         fsa=self)
             self.add_channel(channel)
             #channel.status = const.channelstatus.reseted
+        self.status = const.assaystatus.normalized
 
 
     def align(self, parameters=None):
+
+        # check if this FSA has not been aligned previously
+        if self.status != const.assaystatus.normalized:
+            return
 
         c = self.get_ladder_channel()
 
@@ -186,8 +193,25 @@ class FSAMixIn(object):
         alleles = c.get_alleles()
 
 
-    def call(self, parameters):
-        pass
+    def call(self, parameters, marker=None):
+
+        ladder = self.get_ladder_channel()
+
+        # sanity check to ensure FSA has been aligned with size ladders
+        if ladder.status != const.channelstatus.aligned:
+            self.align( parameters )
+
+        # prepare ladders and calling function
+        ladders = [ p for p in ladder.get_alleles() if p.size > 0 ]
+        ladders.sort( key=lambda x: x.size )
+        func = algo.local_southern( ladders )
+        min_rtime = ladders[1].rtime
+        max_rtime = ladders[-2].rtime
+
+        for c in self.channels:
+            if c == ladder: continue
+            c.call( parameters, func, min_rtime, max_rtime )
+        self.status = const.assaystatus.called
 
 
     def get_ladder_channel(self):
