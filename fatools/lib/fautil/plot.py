@@ -2,6 +2,7 @@
 Collection of functions to do assay plotting using matplotlib.
 """
 import matplotlib.pyplot as plt
+
 from fatools.lib.utils import cerr
 
 
@@ -127,16 +128,43 @@ def save_or_show(figure, plot_file):
 
     If plot_file is None, then show plot to user.
     If plot_file is supplied, then the plot is saved to file.
+    If plot_file is PdfPages object, save to PdfPages object.
     """
+    saving_params = {'dpi': 150}
     plt.tight_layout()
-    if plot_file is not None:
-        # HACK: to reduce complexity, the figure size is set to
-        # approximately 22" monitor (16:19)
-        figure.set_size_inches(19, 11)
-        plt.savefig(plot_file, dpi=150, bbox_inches='tight')
+    # HACK: to reduce complexity, the figure size is set to
+    # approximately 22" monitor (21.3:9)
+    figure.set_size_inches(20, 9)
+    try:
+        plot_file.savefig(**saving_params)
+    except AttributeError:
+        if plot_file is not None:
+            plt.savefig(plot_file, **saving_params)
+        else:
+            plt.show()
+    finally:
         plt.close()
-    else:
-        plt.show()
+
+
+def do_plot(fsa, plot_file=None):
+    """
+    Plot an assay in a plot.
+
+    Input
+
+    fsa: class of fsa
+    plot_file: path for saving plot to file
+    """
+    channels = fsa.channels
+    fig = plt.figure()
+
+    for channel in channels:
+        color = colorize_wavelength(channel.wavelen)
+        plt.plot(channel.data, color=color, label=channel.dye)
+
+    plt.legend(framealpha=0.5)
+    plt.title(fsa.filename)
+    save_or_show(fig, plot_file)
 
 
 def do_split_plot(fsa, plot_file=None):
@@ -180,27 +208,6 @@ def do_split_plot(fsa, plot_file=None):
     save_or_show(whole_fig, plot_file)
 
 
-def do_plot(fsa, plot_file=None):
-    """
-    Plot an assay in a plot.
-
-    Input
-
-    fsa: class of fsa
-    plot_file: path for saving plot to file
-    """
-    channels = fsa.channels
-    fig = plt.figure()
-
-    for channel in channels:
-        color = colorize_wavelength(channel.wavelen)
-        plt.plot(channel.data, color=color, label=channel.dye)
-
-    plt.legend(framealpha=0.5)
-    plt.title(fsa.filename)
-    save_or_show(fig, plot_file)
-
-
 def ladder_plot(args, fsa_list, dbh=None):
 
     # filter FSAs
@@ -242,9 +249,45 @@ def file_handler(fsa_list):
         yield fsa
 
 
+def prepare_multi_page_pdf(plot_file):
+    """
+    Preparing PdfPages object for plotting to multi page pdf.
+
+    Input
+
+    plot_file: string name of plot file
+
+    Output
+
+    pdf: PdfPages object with plot_file name
+    """
+    from matplotlib.backends.backend_pdf import PdfPages
+
+    pdf = PdfPages(plot_file)
+
+    return pdf
+
+
+def command_block(args, fsas, plot_file):
+    """
+    Commands that needs to be done.
+
+    Input
+
+    args: arguments namespace from argparse
+    fsas: list of fsa files
+    plot_file: PdfPages object, string, or None
+    """
+    for fsa in fsas:
+        if args.plot:
+            do_plot(fsa, plot_file)
+        if args.split_plot:
+            do_split_plot(fsa, plot_file)
+
+
 def plot(args, fsa_list, dbh=None):
     """
-    The main function to handle all arguments given.
+    The main function to handle all plot arguments given.
 
     Input
 
@@ -254,16 +297,22 @@ def plot(args, fsa_list, dbh=None):
 
     Output
 
-    Calling do_split_plot function for every fsa file passed
+    Determine if a PdfPages object needs to be created, then
+    passing the plot file to the commands.
     """
     if args.plot and args.split_plot and args.plot_file:
         cerr('W: --plot, --split-plot, and --plot-file are flagged')
-        cerr('W: This will default to saving only the --split-plot results!')
+        cerr('W: This will only save the --split-plot results if format is not pdf')
+
+    plot_file = args.plot_file
+    if plot_file is not None:
+        plot_file_ext = plot_file.split('.')[-1]
+        if plot_file_ext == 'pdf':
+            plot_file = prepare_multi_page_pdf(plot_file)
 
     fsas = file_handler(fsa_list)
-    for fsa in fsas:
-        if args.plot:
-            do_plot(fsa, args.plot_file)
-        elif args.split_plot:
-            do_split_plot(fsa, args.plot_file)
-
+    try:
+        with plot_file as pdf:
+            command_block(args, fsas, pdf)
+    except AttributeError:
+        command_block(args, fsas, plot_file)
