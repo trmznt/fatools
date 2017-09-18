@@ -198,6 +198,31 @@ def do_plot(fsa, plot_file=None):
     save_or_show(fig, plot_file)
 
 
+def ladder_plot(args, fsa_list, dbh=None):
+
+    # filter FSAs
+    plotted_fsas = []
+    for (fsa, idx) in fsa_list:
+        score, rss, nladder = fsa.align()
+        if score < args.score:
+            plotted_fsas.append( (score, rss, nladder, fsa) )
+        elif args.rss > 0 and rss > args.rss:
+            plotted_fsas.append( (score, rss, nladder, fsa) )
+
+    # sort FSAs by score (ascending) and rss (descending)
+    plotted_fsas.sort( key = lambda k: (k[0], -k[1]) )
+
+    # for all fsas in plotted_fsas, create a plot
+    whole_fig, whole_axes = determine_number_of_subplots(plotted_fsas)
+    for fsa_axis_num, fsa_item in enumerate(plotted_fsas):
+        fsa = fsa_item[3]
+
+        # continue to prepare the plot
+
+
+    # save the plot
+
+
 def file_handler(fsa_list):
     """
     Generate fsa file from list of fsa to plot.
@@ -236,5 +261,6 @@ def plot(args, fsa_list, dbh=None):
     for fsa in fsas:
         if args.plot:
             do_plot(fsa, args.plot_file)
-        if args.split_plot:
+        elif args.split_plot:
             do_split_plot(fsa, args.plot_file)
+

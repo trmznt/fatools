@@ -50,6 +50,9 @@ def init_argparser(parser=None):
     p.add_argument('--dendogram', default=False, action='store_true',
             help = 'plot dendograms of ladders and alleles')
 
+    p.add_argument('--ladder-plot', action='store_true',
+            help='report and plot ladder alignment for assessment purposes')
+
     # semi-mandatory
 
     p.add_argument('--panel', default="",
@@ -66,6 +69,12 @@ def init_argparser(parser=None):
 
     # options
 
+    p.add_argument('--score', default=1.0, type=float,
+            help = 'minimum alignment score threshold to be plotted')
+
+    p.add_argument('--rss', default=-1, type=float,
+            help = 'maximum rss threshold to be plotted')
+
     p.add_argument('--cluster', default=0, type=int,
             help = 'number of cluster for hierarchical clustering alignment')
 
@@ -80,6 +89,9 @@ def init_argparser(parser=None):
 
     p.add_argument('--plot-file',
             help='save --split-plot result into a file')
+
+    p.add_argument('--outfile',
+            help = 'output filename')
 
     p.add_argument('--commit', default=False, action='store_true',
             help = 'commit to database')
@@ -132,7 +144,7 @@ def do_facmds(args, fsa_list, dbh=None):
     if args.call:
         do_call( args, fsa_list, dbh )
         executed += 1
-    if args.plot or args.split_plot:
+    if args.plot or args.split_plot or args.ladder_plot:
         do_plot(args, fsa_list, dbh)
         executed += 1
     if args.dendogram:
@@ -173,7 +185,10 @@ def do_plot(args, fsa_list, dbh):
 
     from fatools.lib.fautil import plot
 
-    plot.plot(args, fsa_list, dbh)
+    if args.ladder_plot:
+        plot.ladder_plot(args, fsa_list, dbh)
+    else:
+        plot.plot(args, fsa_list, dbh)
 
 
 def do_dendogram( args, fsa_list, dbh ):
