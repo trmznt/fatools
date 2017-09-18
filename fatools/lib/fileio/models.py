@@ -133,7 +133,7 @@ class FSA(FSAMixIn):
                     # assume channels are already normalized
                     fsa.status = const.assaystatus.normalized
                     return fsa
-                except Exception:
+                except AttributeError:
                     cerr('E: uploading failed, will recreate cache')
 
         fsa.create_channels()
