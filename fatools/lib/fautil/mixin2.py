@@ -182,15 +182,19 @@ class FSAMixIn(object):
 
 
     def align(self, parameters=None):
+        """ return (score, rss, nladder)
+        """
 
         # check if this FSA has not been aligned previously
         if self.status != const.assaystatus.normalized:
-            return
+            return (self.score, self.rss, self.nladder)
 
         c = self.get_ladder_channel()
 
         c.align( parameters )
         alleles = c.get_alleles()
+
+        return (self.score, self.rss, self.nladder)
 
 
     def call(self, parameters, marker=None):
