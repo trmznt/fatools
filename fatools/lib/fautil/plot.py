@@ -11,12 +11,12 @@ def align_fsa(fsa):
     Align fsa to prepare for size and retention time extraction from each allele.
 
     Input
-
+    -----
     fsa: class of fsa
     import Params() from fatools.lib.params for parameter in fsa alignment
 
     Output
-
+    ------
     fsa that has been aligned
     """
     from fatools.lib import params
@@ -30,11 +30,11 @@ def determine_number_of_subplots(channels):
     The subplots are x and y-axis bound, allowing to be zoomed at the same time.
 
     Input
-
+    -----
     channels: attribute from fsa class containing list of fsa channel
 
     Output
-
+    ------
     matplotlib.figure containing N rows of axes in a column.
     """
     return plt.subplots(len(channels), 1, 'all')
@@ -45,11 +45,11 @@ def colorize_wavelength(wavelength):
     Find dye color by using wavelen2rgb.
 
     Input
-
+    -----
     wavelength: int of a dye wavelength
 
     Output
-
+    ------
     RGB value in 3-tuple divided by 100: (R, G, B)
 
     The division by 100 is necessary because matplotlib color parameter
@@ -65,11 +65,11 @@ def get_size_rtime_rfu(channel):
     Get size, retention time, and RFU from the align method of fsa.
 
     Input
-
+    -----
     channel: a channel class from one of the channels attribute in fsa class
 
     Output
-
+    ------
     size_rtime_rfu: 3-tuples of size, rtime, and RFU from alleles in channel
 
     Size with value '-1' are not included in the collection.
@@ -93,12 +93,12 @@ def prepare_second_x_axis(channel_axes, size_rtime_rfu):
     Create a second x-axis to indicate the size of alleles.
 
     Input
-
+    -----
     channel_axes: the channel axis to be marked
     size_rtime_rfu: the data for marking the second x-axis
 
     Output
-
+    ------
     channel_axes that have size markings (if available)
     """
     sizes = []
@@ -120,12 +120,12 @@ def save_or_show(figure, plot_file):
     Determine if the plot is to be saved or shown.
 
     Input
-
+    -----
     figure: class of figure from matplotlib
     plot_file: location and file name for saving plot
 
     Output
-
+    ------
     If plot_file is None, then show plot to user.
     If plot_file is supplied, then the plot is saved to file.
     If plot_file is PdfPages object, save to PdfPages object.
@@ -151,9 +151,13 @@ def do_plot(fsa, plot_file=None):
     Plot an assay in a plot.
 
     Input
-
+    -----
     fsa: class of fsa
     plot_file: path for saving plot to file
+
+    Output
+    ------
+    a figure class ready to be saved/shown
     """
     channels = fsa.channels
     fig = plt.figure()
@@ -172,12 +176,12 @@ def do_split_plot(fsa, plot_file=None):
     Plot an assay dye, in every subplot.
 
     Input
-
+    -----
     fsa: class of fsa
     plot_file: path for saving plot to file
 
     Output
-
+    ------
     a figure class ready to be saved/shown
     """
     align_fsa(fsa)
@@ -238,11 +242,11 @@ def file_handler(fsa_list):
     Generate fsa file from list of fsa to plot.
 
     Input
-
+    -----
     fsa_list: list containing tuples of fsa and index
 
     Output
-
+    ------
     A generator object returning fsa file
     """
     for fsa, index in fsa_list:
@@ -254,11 +258,11 @@ def prepare_multi_page_pdf(plot_file):
     Preparing PdfPages object for plotting to multi page pdf.
 
     Input
-
+    -----
     plot_file: string name of plot file
 
     Output
-
+    ------
     pdf: PdfPages object with plot_file name
     """
     from matplotlib.backends.backend_pdf import PdfPages
@@ -270,10 +274,10 @@ def prepare_multi_page_pdf(plot_file):
 
 def command_block(args, fsas, plot_file):
     """
-    Commands that needs to be done.
+    Commands to be done.
 
     Input
-
+    -----
     args: arguments namespace from argparse
     fsas: list of fsa files
     plot_file: PdfPages object, string, or None
@@ -290,13 +294,13 @@ def plot(args, fsa_list, dbh=None):
     The main function to handle all plot arguments given.
 
     Input
-
+    -----
     args: arguments namespace from argparse
     fsa_list: list containing tuples of fsa and index
     dbh: *reserved for database handling*
 
     Output
-
+    ------
     Determine if a PdfPages object needs to be created, then
     passing the plot file to the commands.
     """
