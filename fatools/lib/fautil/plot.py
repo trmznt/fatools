@@ -59,9 +59,9 @@ def colorize_wavelength(wavelength):
     return tuple([color / 100 for color in wavelen2rgb(wavelength)])
 
 
-def get_size_rtime(channel):
+def get_size_rtime_rfu(channel):
     """
-    Get size and retention time from the align method of fsa.
+    Get size, retention time, and RFU from the align method of fsa.
 
     Input
 
@@ -69,45 +69,45 @@ def get_size_rtime(channel):
 
     Output
 
-    size_rtime: pairs of size and rtime from alleles in channel
+    size_rtime_rfu: 3-tuples of size, rtime, and RFU from alleles in channel
 
     Size with value '-1' are not included in the collection.
     """
     alleles = channel.alleles
-    size_rtime = []
+    size_rtime_rfu = []
 
     if alleles == []:
-        return size_rtime
+        return size_rtime_rfu
 
     for allele in alleles:
         if allele.size == -1:
             continue
-        size_rtime.append((allele.size, allele.rtime, allele.rfu))
+        size_rtime_rfu.append((allele.size, allele.rtime, allele.rfu))
 
-    return size_rtime
+    return size_rtime_rfu
 
 
-def prepare_second_x_axis(channel_axis, size_rtime):
+def prepare_second_x_axis(channel_axes, size_rtime_rfu):
     """
     Create a second x-axis to indicate the size of alleles.
 
     Input
 
-    channel_axis: the channel axis to be marked
-    size_rtime: the data for marking the second x-axis
+    channel_axes: the channel axis to be marked
+    size_rtime_rfu: the data for marking the second x-axis
 
     Output
 
-    channel_axis that have size markings (if available)
+    channel_axes that have size markings (if available)
     """
     sizes = []
     rtimes = []
-    for size, rtime, rfu in size_rtime:
+    for size, rtime, rfu in size_rtime_rfu:
         sizes.append(int(size))
         rtimes.append(rtime)
 
-    second_x_axis = channel_axis.twiny()
-    second_x_axis.set_xlim(channel_axis.get_xlim())
+    second_x_axis = channel_axes.twiny()
+    second_x_axis.set_xlim(channel_axes.get_xlim())
     second_x_axis.set_xticks(rtimes)
     second_x_axis.set_xticklabels(sizes, rotation='vertical', fontsize=8)
 
@@ -157,18 +157,21 @@ def do_split_plot(fsa, plot_file=None):
     whole_fig, whole_axes = determine_number_of_subplots(channels)
     twiny_axes = []
 
-    for channel_axis_num, channel in enumerate(channels):
+    for channel_axes_num, channel in enumerate(channels):
         color = colorize_wavelength(channel.wavelen)
-        channel_axis = whole_axes[channel_axis_num]
-        channel_axis.plot(channel.data, color=color, label=channel.dye)
-        channel_axis.legend(framealpha=0.5)
+        channel_axes = whole_axes[channel_axes_num]
+        channel_axes.plot(channel.data, color=color, label=channel.dye)
+        channel_axes.legend(framealpha=0.5)
 
-        size_rtime = get_size_rtime(channel)
-        second_x_axis = prepare_second_x_axis(channel_axis, size_rtime)
+        size_rtime_rfu = get_size_rtime_rfu(channel)
+        if size_rtime_rfu:
+            max_rfu = max(p[2] for p in size_rtime_rfu) * 1.2
+        else:
+            max_rfu = max(channel.data) * 1.2
+        channel_axes.set_ylim((0, max_rfu))
+
+        second_x_axis = prepare_second_x_axis(channel_axes, size_rtime_rfu)
         twiny_axes.append(second_x_axis)
-        if len(size_rtime) > 0:
-            max_rfu = max( p[2] for p in size_rtime ) * 1.2
-            channel_axis.set_ylim((0, max_rfu))
 
     for axes in whole_axes:
         axes.get_shared_x_axes().join(*twiny_axes)
