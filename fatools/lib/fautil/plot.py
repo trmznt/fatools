@@ -111,6 +111,8 @@ def prepare_second_x_axis(channel_axis, size_rtime):
     second_x_axis.set_xticks(rtimes)
     second_x_axis.set_xticklabels(sizes, rotation='vertical', fontsize=8)
 
+    return second_x_axis
+
 
 def save_or_show(figure, plot_file):
     """
@@ -153,6 +155,7 @@ def do_split_plot(fsa, plot_file=None):
     align_fsa(fsa)
     channels = fsa.channels
     whole_fig, whole_axes = determine_number_of_subplots(channels)
+    twiny_axes = []
 
     for channel_axis_num, channel in enumerate(channels):
         color = colorize_wavelength(channel.wavelen)
@@ -161,10 +164,14 @@ def do_split_plot(fsa, plot_file=None):
         channel_axis.legend(framealpha=0.5)
 
         size_rtime = get_size_rtime(channel)
-        prepare_second_x_axis(channel_axis, size_rtime)
+        second_x_axis = prepare_second_x_axis(channel_axis, size_rtime)
+        twiny_axes.append(second_x_axis)
         if len(size_rtime) > 0:
             max_rfu = max( p[2] for p in size_rtime ) * 1.2
             channel_axis.set_ylim((0, max_rfu))
+
+    for axes in whole_axes:
+        axes.get_shared_x_axes().join(*twiny_axes)
 
     plt.suptitle(fsa.filename)
     save_or_show(whole_fig, plot_file)
