@@ -118,7 +118,8 @@ class FSA(FSAMixIn):
                   cache=True, cache_path=None):
         fsa = cls()
         fsa.filename = os.path.basename(fsa_filename)
-        fsa._fhdl = open(fsa_filename, 'rb')
+        with open(fsa_filename, 'rb') as fsa_file:
+            fsa._fhdl = fsa_file
         fsa.set_panel(panel, excluded_markers)
 
         # with fileio, we need to prepare channels everytime or seek from cache
