@@ -88,7 +88,7 @@ def init_argparser(parser=None):
             help = 'do not use caches')
 
     p.add_argument('--plot-file',
-            help='save --split-plot result into a file')
+            help='save --plot or --split-plot result into a file')
 
     p.add_argument('--outfile',
             help = 'output filename')
