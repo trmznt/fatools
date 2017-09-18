@@ -118,8 +118,7 @@ class FSA(FSAMixIn):
                   cache=True, cache_path=None):
         fsa = cls()
         fsa.filename = os.path.basename(fsa_filename)
-        with open(fsa_filename, 'rb') as fsa_file:
-            fsa._fhdl = fsa_file
+        fsa._fhdl = open(fsa_filename, 'rb')
         fsa.set_panel(panel, excluded_markers)
 
         # with fileio, we need to prepare channels everytime or seek from cache
@@ -142,6 +141,9 @@ class FSA(FSAMixIn):
             for c in fsa.channels: c.fsa = None
             pickle.dump(fsa.channels, open(cache_file, 'wb'))
             for c in fsa.channels: c.fsa = fsa
+
+        # close filehandle as we already read all the data
+        fsa._fhdl.close()
         return fsa
 
 
