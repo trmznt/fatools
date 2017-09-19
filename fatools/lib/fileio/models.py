@@ -121,7 +121,10 @@ class FSA(FSAMixIn):
         fsa.set_panel(panel, excluded_markers)
 
         # with fileio, we need to prepare channels everytime or seek from cache
-        cache_file = os.path.join(cache_path, fsa.filename)
+        if cache_path is None:
+            cache = False
+        else:
+            cache_file = os.path.join(cache_path, fsa.filename)
         if cache and os.path.exists(cache_file):
             if os.stat(fsa_filename).st_mtime < os.stat(cache_file).st_mtime:
                 cerr('I: uploading channel cache for %s' % fsa_filename)

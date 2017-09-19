@@ -252,6 +252,7 @@ def open_fsa( args ):
     index = 1
 
     # prepare caching
+    cache_path = None
     if not args.no_cache:
         cache_path = os.path.join(os.path.expanduser('~'), '.fatools_caches', 'channels')
         if args.cache_path is not None:
