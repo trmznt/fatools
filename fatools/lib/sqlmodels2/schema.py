@@ -18,9 +18,9 @@ from sqlalchemy.sql.functions import current_timestamp
 from zope.sqlalchemy import ZopeTransactionExtension
 
 from fatools.lib.utils import cout, cerr
-from fatools.lib.fautil.mixin import ( PanelMixIn, AssayMixIn, ChannelMixIn, MarkerMixIn,
+from fatools.lib.fautil.mixin2 import ( PanelMixIn, FSAMixIn, ChannelMixIn, MarkerMixIn,
                 BinMixIn, AlleleSetMixIn, AlleleMixIn, SampleMixIn, BatchMixIn,
-                NoteMixIn, BatchNoteMixIn, SampleNoteMixIn, AssayNoteMixIn,
+                NoteMixIn, BatchNoteMixIn, SampleNoteMixIn, FSANoteMixIn,
                 ChannelNoteMixIn, AlleleSetNoteMixIn, PanelNoteMixIn, MarkerNoteMixIn )
 
 import os, io, yaml
@@ -144,7 +144,7 @@ class Batch(Base, BatchMixIn):
     __tablename__ = 'batches'
     id = Column(types.Integer, primary_key=True)
     code = Column(types.String(16), nullable=False, unique=True)
-    assay_provider = Column(types.String(32), nullable=False)
+    fsa_provider = Column(types.String(32), nullable=False)
     species = Column(types.String(16), nullable=False)
     description = Column(types.String(1024), nullable=False, default='')
     remark = deferred(Column(types.String(1024), nullable=True))
@@ -231,14 +231,14 @@ class Sample(Base, SampleMixIn):
                         UniqueConstraint( 'altcode', 'batch_id')
                     )
 
-    def new_assay(self, raw_data, filename, status, panel=None):
-        assay = Assay( raw_data = raw_data, filename = filename )
+    def new_fsa(self, raw_data, filename, status, panel=None):
+        fsa = FSA( raw_data = raw_data, filename = filename )
         if panel is None:
             panel = Panel.search('undefined', object_session(self))
-        assay.panel = panel
-        assay.sample = self
-        assay.status = status
-        return assay
+        fsa.panel = panel
+        fsa.sample = self
+        fsa.status = status
+        return fsa
 
 
 
@@ -263,7 +263,7 @@ class Panel(Base, PanelMixIn):
 
     def update(self, obj):
 
-        self._update(obj)
+        super().update(obj)
 
         # verify that each marker in data exists
         session = object_session(self) or self._dbh_session_
@@ -337,7 +337,7 @@ class Marker(Base, MarkerMixIn):
 
     def update(self, obj):
 
-        self._update( obj )
+        super().update( obj )
         if type(obj) == dict and 'related_to' in obj:
             related_marker = Marker.search( d['related_to'],
                     session = object_session(self) or self.__dbh_session )
@@ -432,9 +432,9 @@ class Bin(Base, BinMixIn):
             return None
 
 
-class Assay(Base, AssayMixIn):
+class FSA(Base, FSAMixIn):
 
-    __tablename__ = 'assays'
+    __tablename__ = 'fsas'
     id = Column(types.Integer, primary_key=True)
     filename = Column(types.String(128), nullable=False, index=True)
     runtime = Column(types.DateTime, nullable=False)
@@ -448,7 +448,7 @@ class Assay(Base, AssayMixIn):
 
     sample_id = Column(types.Integer, ForeignKey('samples.id', ondelete='CASCADE'),
                         nullable=False)
-    sample = relationship(Sample, uselist=False, backref=backref('assays', lazy='dynamic'))
+    sample = relationship(Sample, uselist=False, backref=backref('fsas', lazy='dynamic'))
 
     panel_id = Column(types.Integer, ForeignKey('panels.id'), nullable=False)
     panel = relationship(Panel, uselist=False)
@@ -463,7 +463,7 @@ class Assay(Base, AssayMixIn):
     #                    backref = backref('assay', uselist=False))
 
     ladder = relationship('Channel', uselist=False,
-                primaryjoin = "Assay.ladder_id == Channel.id")
+                primaryjoin = "FSA.ladder_id == Channel.id")
 
     status = Column(types.String(32), nullable=False)
     method = deferred(Column(types.String(16), nullable=False))
@@ -489,7 +489,7 @@ class Assay(Base, AssayMixIn):
                             status = status, median = median, mean = mean,
                             max_height = max_height, min_height = min_height,
                             std_dev = std_dev )
-        channel.assay = self
+        channel.fsa = self
         channel.marker = initial_marker
         channel.panel = initial_panel
 
@@ -504,11 +504,11 @@ class Assay(Base, AssayMixIn):
 
 
 
-class AssayNote(Base, AssayNoteMixIn):
+class FSANote(Base, FSANoteMixIn):
 
-    __tablename__ = 'assaynotes'
+    __tablename__ = 'fsanotes'
     id = Column(types.Integer, primary_key=True)
-    assay_id = Column(types.Integer, ForeignKey('assays.id', ondelete='CASCADE'),
+    fsa_id = Column(types.Integer, ForeignKey('fsas.id', ondelete='CASCADE'),
                 nullable=False)
     note_id = Column(types.Integer, ForeignKey('notes.id', ondelete='CASCADE'),
                 nullable=False)
@@ -520,9 +520,9 @@ class Channel(Base, ChannelMixIn):
     __tablename__ = 'channels'
     id = Column(types.Integer, primary_key=True)
 
-    assay_id = Column(types.Integer, ForeignKey('assays.id', ondelete='CASCADE'),
+    fsa_id = Column(types.Integer, ForeignKey('fsas.id', ondelete='CASCADE'),
                         nullable=False)
-    assay = relationship(Assay, uselist=False, primaryjoin = assay_id == Assay.id,
+    fsa = relationship(FSA, uselist=False, primaryjoin = fsa_id == FSA.id,
                     backref=backref('channels', lazy='dynamic'))
 
     marker_id = Column(types.Integer, ForeignKey('markers.id'), nullable=False)
@@ -532,19 +532,15 @@ class Channel(Base, ChannelMixIn):
 
     markers = relationship(Marker, secondary='channels_markers', viewonly=True)
 
-    raw_data = deferred(Column(NPArray, nullable=False))
-    """ raw data from channel as numpy array, can have empty array to accomodate
-        allele data from CSV uploading """
-
     status = Column(types.String(32), nullable=False)
 
     wavelen = Column(types.Integer, nullable=False, default=0)
-    median = Column(types.Integer, nullable=False, default=0)
-    mean = Column(types.Float, nullable=False, default=0.0)
-    std_dev = Column(types.Float, nullable=False, default=0.0)
-    max_height = Column(types.Integer, nullable=False, default=-1)
-    min_height = Column(types.Integer, nullable=False, default=-1)
     """ basic descriptive statistics for data"""
+
+    mma = Column(types.Float, nullable=False, default=-1)
+    mmb = Column(types.Float, nullable=False, default=-1)
+    p80 = Column(types.Integer, nullable=False, default=-1)
+    """ michaelis-menten variable a and b for assessment """
 
     data = deferred(Column(NPArray, nullable=False))
     """ data after smoothed using savitzky-golay algorithm and baseline correction
@@ -555,7 +551,7 @@ class Channel(Base, ChannelMixIn):
 
 
     def new_alleleset(self, revision=-1):
-        return AlleleSet( channel = self, sample = self.assay.sample,
+        return AlleleSet( channel = self, sample = self.fsa.sample,
                             marker = self.marker )
 
 
