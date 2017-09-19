@@ -32,6 +32,9 @@ class AlleleMixIn(object):
         return self.rtime < other.rtime
 
 
+class AlleleSetMixIn(object):
+    pass
+
 class ChannelMixIn(object):
     """
     attrs: alleles, fsa, status
@@ -331,6 +334,9 @@ class PanelMixIn(object):
         return panel
 
 
+class BinMixIn(object):
+    pass
+
 # Sample
 
 
@@ -339,4 +345,39 @@ class SampleMixIn(object):
 
 
 class BatchMixIn(object):
+    pass
+
+
+# Auxiliary mixin, probably should be in separate file when fully implemented
+
+class NoteMixIn(object):
+
+    pass
+
+class BatchNoteMixIn(object):
+
+    pass
+
+class SampleNoteMixIn(object):
+
+    pass
+
+class MarkerNoteMixIn(object):
+
+    pass
+
+class PanelNoteMixIn(object):
+
+    pass
+
+class FSANoteMixIn(object):
+
+    pass
+
+class ChannelNoteMixIn(object):
+
+    pass
+
+class AlleleSetNoteMixIn(object):
+
     pass
