@@ -16,6 +16,9 @@ def init_argparser( parser=None ):
     p.add_argument('--sqldb', default=False,
             help = 'Sqlite3 database filename')
 
+    p.add_argument('--schema', default=1, type=int,
+            help = 'SQL schema version')
+
     p.add_argument('--fsdb', default=False,
             help = 'directory for filesystem-based database')
 
@@ -130,9 +133,6 @@ def init_argparser( parser=None ):
 
     p.add_argument('--fsaid', default='',
             help = 'assay id list (comma separated, no space, integers')
-
-    p.add_argument('--dye', default='',
-            help = 'dye name')
 
     p.add_argument('--assayprovider', default='',
             help = 'assay provider vendor/group')
