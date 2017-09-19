@@ -86,6 +86,14 @@ class Params(object):
 
 
 default_panels = {
+    'undefined': {
+        'code': 'undefined',
+        'data': {
+            'ladder': '',
+            'markers': {},
+        }
+    },
+
     'GS600LIZ': {
         'code': 'GS600LIZ',
         'data': {
@@ -115,6 +123,10 @@ default_panels = {
 }
 
 default_markers = {
+
+    'x/undefined': dict( code='undefined', species='x'),
+
+    'x/combined': dict( code='combined', species='x'),
 
     'x/ladder': dict( code='ladder', species='x', min_size=-1, max_size=-1 ),
 
