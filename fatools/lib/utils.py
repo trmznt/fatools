@@ -36,9 +36,20 @@ def get_dbhandler(args, initial=False):
 
     if args.sqldb:
 
-        from fatools.lib.sqlmodels.handler import SQLHandler
+        if args.schema == 1:
 
-        return SQLHandler(args.sqldb, initial)
+            from fatools.lib.sqlmodels.handler import SQLHandler
+
+            return SQLHandler(args.sqldb, initial)
+
+        elif args.schema == 2:
+
+            from fatools.lib.sqlmodels2.handler import SQLHandler
+
+            return SQLHandler(args.sqldb, initial)
+
+        else:
+            cexit('Please provide correct sql schema version!')
 
     elif args.fsdb is not False:
         # we use filesystem-based database system
