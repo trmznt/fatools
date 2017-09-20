@@ -36,6 +36,7 @@ def determine_figure_size(list_of_data):
     ------
     matplotlib.figure with size to accomodate subplots
     """
+    # Every axes are given 2" in height
     height = 2 * len(list_of_data)
     figure = plt.figure()
     figure.set_size_inches(20, height)
@@ -206,7 +207,7 @@ def do_split_plot(fsa, plot_file=None):
         twiny_axes.append(second_x_axis)
 
         if channel_axes_num == 0:
-            channel_axes.set_title(fsa.filename, y=1.25)
+            channel_axes.set_title(fsa.filename, y=1.3)
 
     for axes in fsa_subplots:
         axes.get_shared_x_axes().join(*fsa_subplots)
@@ -215,13 +216,14 @@ def do_split_plot(fsa, plot_file=None):
     save_or_show(plot_file)
 
 
-def determine_included_fsa_to_plot(args, fsas):
+def determine_included_fsa_to_plot(score, rss, fsas):
     """
     Separate based on score and RSS value.
 
     Input
     -----
-    args: arguments namespace from argparse
+    score: int/float score threshold for fsa exclusion
+    rss: int/float RSS threshold for fsa exclusion
     fsas: list of fsa files
 
     Output
@@ -233,9 +235,9 @@ def determine_included_fsa_to_plot(args, fsas):
     included_fsas = []
     for fsa in fsas:
         align_fsa(fsa)
-        if fsa.score < args.score:
+        if fsa.score < score:
             included_fsas.append(fsa)
-        elif args.rss > 0 and fsa.rss > args.rss:
+        elif rss > 0 and fsa.rss > rss:
             included_fsas.append(fsa)
 
     # sort FSAs by score (ascending) and rss (descending)
@@ -246,7 +248,7 @@ def determine_included_fsa_to_plot(args, fsas):
     return included_fsas
 
 
-def do_ladder_plot(args, fsas, plot_file):
+def do_ladder_plot(fsas, plot_file):
     """
     Create a plot of the ladder channel from fsa files.
 
@@ -260,13 +262,12 @@ def do_ladder_plot(args, fsas, plot_file):
     ------
     a figure class ready to be saved/shown
     """
-    included_fsas = determine_included_fsa_to_plot(args, fsas)
+    figure = determine_figure_size(fsas)
 
-    figure = determine_figure_size(included_fsas)
-    for ladder_axes_num, fsa in enumerate(included_fsas):
+    for ladder_axes_num, fsa in enumerate(fsas):
         ladder = fsa.get_ladder_channel()
         color = colorize_wavelength(ladder.wavelen)
-        ladder_axes = figure.add_subplot(len(included_fsas), 1, ladder_axes_num + 1)
+        ladder_axes = figure.add_subplot(len(fsas), 1, ladder_axes_num + 1)
         ladder_axes.plot(ladder.data, color=color, label=ladder.dye)
         ladder_axes.legend(framealpha=0.5)
 
@@ -276,12 +277,14 @@ def do_ladder_plot(args, fsas, plot_file):
         else:
             max_rfu = max(ladder.data) * 1.2
         ladder_axes.set_ylim((0, max_rfu))
+
         prepare_second_x_axis(ladder_axes, size_rtime_rfu)
-        ladder_axes.set_title('{filename} | Score: {score:.2f} | RSS: {rss:.2f}'.format(
-                                  filename=fsa.filename,
-                                  score=fsa.score,
-                                  rss=fsa.rss),
-                              y=1.25)
+
+        title = '{filename} | Score: {score:.2f} | RSS: {rss:.2f}'.format(
+            filename=fsa.filename,
+            score=fsa.score,
+            rss=fsa.rss)
+        ladder_axes.set_title(title, y=1.3)
 
     save_or_show(plot_file)
 
@@ -302,9 +305,9 @@ def file_handler(fsa_list):
         yield fsa
 
 
-def prepare_multi_page_pdf(plot_file):
+def check_and_prepare_pdf(plot_file):
     """
-    Preparing PdfPages object for plotting to multi page pdf.
+    Preparing PdfPages object for plotting to pdf.
 
     Input
     -----
@@ -312,18 +315,22 @@ def prepare_multi_page_pdf(plot_file):
 
     Output
     ------
-    pdf: PdfPages object with plot_file name
+    plot_file: PdfPages object with plot_file name if format is '.pdf'
     """
     from matplotlib.backends.backend_pdf import PdfPages
 
-    pdf = PdfPages(plot_file)
+    if plot_file is not None:
+        plot_file_ext = plot_file.split('.')[-1]
+        if plot_file_ext == 'pdf':
+            plot_file = PdfPages(plot_file)
 
-    return pdf
+    return plot_file
 
 
 def command_block(args, fsas, plot_file):
     """
-    Commands to be done.
+    Prepare the necessary data and hold the commands to be done.
+    Give warnings if there are overlapping arguments.
 
     Input
     -----
@@ -332,12 +339,25 @@ def command_block(args, fsas, plot_file):
     plot_file: PdfPages object, string, or None
     """
     if args.ladder_plot:
-        do_ladder_plot(args, fsas, plot_file)
-    for fsa in fsas:
-        if args.plot:
-            do_plot(fsa, plot_file)
-        if args.split_plot:
-            do_split_plot(fsa, plot_file)
+        if args.plot or args.split_plot:
+            cerr('W: --plot, --split-plot and --ladder-plot are flagged')
+            cerr('W: Only the --ladder-plot option will be done')
+
+        included_fsas = determine_included_fsa_to_plot(args.score, args.rss, fsas)
+        do_ladder_plot(included_fsas, plot_file)
+
+        return
+
+    elif args.plot or args.split_plot:
+        if args.plot and args.split_plot and args.plot_file:
+            cerr('W: --plot, --split-plot, and --plot-file are flagged')
+            cerr('W: This will only save the --split-plot results if format is not in pdf')
+
+        for fsa in fsas:
+            if args.plot:
+                do_plot(fsa, plot_file)
+            if args.split_plot:
+                do_split_plot(fsa, plot_file)
 
 
 def plot(args, fsa_list, dbh=None):
@@ -353,21 +373,12 @@ def plot(args, fsa_list, dbh=None):
     Output
     ------
     Determine if a PdfPages object needs to be created, then
-    passing the plot file to the commands.
+    passing the args, fsas, and plot file to the commands.
     """
-    if args.plot and args.split_plot and args.plot_file:
-        cerr('W: --plot, --split-plot, and --plot-file are flagged')
-        cerr('W: This will only save the --split-plot results if format is not pdf')
+    plot_file = check_and_prepare_pdf(args.plot_file)
 
-    plot_file = args.plot_file
-    if plot_file is not None:
-        plot_file_ext = plot_file.split('.')[-1]
-        if plot_file_ext == 'pdf':
-            plot_file = prepare_multi_page_pdf(plot_file)
-
-    fsas = file_handler(fsa_list)
     try:
         with plot_file as pdf:
-            command_block(args, fsas, pdf)
+            command_block(args, file_handler(fsa_list), pdf)
     except AttributeError:
-        command_block(args, fsas, plot_file)
+        command_block(args, file_handler(fsa_list), plot_file)
