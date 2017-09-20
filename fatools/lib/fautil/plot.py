@@ -24,20 +24,23 @@ def align_fsa(fsa):
     fsa.align(params.Params())
 
 
-def determine_number_of_subplots(channels):
+def determine_figure_size(list_of_data):
     """
-    Prepare the subplots needed by getting number of channels.
-    The subplots are x and y-axis bound, allowing to be zoomed at the same time.
+    Prepare the figure size needed by getting number of data.
 
     Input
     -----
-    channels: attribute from fsa class containing list of fsa channel
+    list_of_data: list for determining the data amount
 
     Output
     ------
-    matplotlib.figure containing N rows of axes in a column.
+    matplotlib.figure with size to accomodate subplots
     """
-    return plt.subplots(len(channels), 1, 'all')
+    height = 2 * len(list_of_data)
+    figure = plt.figure()
+    figure.set_size_inches(20, height)
+
+    return figure
 
 
 def colorize_wavelength(wavelength):
@@ -103,7 +106,7 @@ def prepare_second_x_axis(channel_axes, size_rtime_rfu):
     """
     sizes = []
     rtimes = []
-    for size, rtime, rfu in size_rtime_rfu:
+    for size, rtime, _ in size_rtime_rfu:
         sizes.append(int(size))
         rtimes.append(rtime)
 
@@ -115,7 +118,7 @@ def prepare_second_x_axis(channel_axes, size_rtime_rfu):
     return second_x_axis
 
 
-def save_or_show(figure, plot_file):
+def save_or_show(plot_file):
     """
     Determine if the plot is to be saved or shown.
 
@@ -130,16 +133,12 @@ def save_or_show(figure, plot_file):
     If plot_file is supplied, then the plot is saved to file.
     If plot_file is PdfPages object, save to PdfPages object.
     """
-    saving_params = {'dpi': 150}
     plt.tight_layout()
-    # HACK: to reduce complexity, the figure size is set to
-    # approximately 22" monitor (21.3:9)
-    figure.set_size_inches(20, 9)
     try:
-        plot_file.savefig(**saving_params)
+        plot_file.savefig(dpi=150)
     except AttributeError:
         if plot_file is not None:
-            plt.savefig(plot_file, **saving_params)
+            plt.savefig(plot_file, dpi=150)
         else:
             plt.show()
     finally:
@@ -160,7 +159,6 @@ def do_plot(fsa, plot_file=None):
     a figure class ready to be saved/shown
     """
     channels = fsa.channels
-    fig = plt.figure()
 
     for channel in channels:
         color = colorize_wavelength(channel.wavelen)
@@ -168,7 +166,7 @@ def do_plot(fsa, plot_file=None):
 
     plt.legend(framealpha=0.5)
     plt.title(fsa.filename)
-    save_or_show(fig, plot_file)
+    save_or_show(plot_file)
 
 
 def do_split_plot(fsa, plot_file=None):
@@ -186,14 +184,16 @@ def do_split_plot(fsa, plot_file=None):
     """
     align_fsa(fsa)
     channels = fsa.channels
-    whole_fig, whole_axes = determine_number_of_subplots(channels)
+    figure = determine_figure_size(channels)
+    fsa_subplots = []
     twiny_axes = []
 
     for channel_axes_num, channel in enumerate(channels):
         color = colorize_wavelength(channel.wavelen)
-        channel_axes = whole_axes[channel_axes_num]
+        channel_axes = figure.add_subplot(len(channels), 1, channel_axes_num + 1)
         channel_axes.plot(channel.data, color=color, label=channel.dye)
         channel_axes.legend(framealpha=0.5)
+        fsa_subplots.append(channel_axes)
 
         size_rtime_rfu = get_size_rtime_rfu(channel)
         if size_rtime_rfu:
@@ -205,36 +205,85 @@ def do_split_plot(fsa, plot_file=None):
         second_x_axis = prepare_second_x_axis(channel_axes, size_rtime_rfu)
         twiny_axes.append(second_x_axis)
 
-    for axes in whole_axes:
+        if channel_axes_num == 0:
+            channel_axes.set_title(fsa.filename, y=1.25)
+
+    for axes in fsa_subplots:
+        axes.get_shared_x_axes().join(*fsa_subplots)
         axes.get_shared_x_axes().join(*twiny_axes)
 
-    plt.suptitle(fsa.filename)
-    save_or_show(whole_fig, plot_file)
+    save_or_show(plot_file)
 
 
-def ladder_plot(args, fsa_list, dbh=None):
+def determine_included_fsa_to_plot(args, fsas):
+    """
+    Separate based on score and RSS value.
 
-    # filter FSAs
-    plotted_fsas = []
-    for (fsa, idx) in fsa_list:
-        score, rss, nladder = fsa.align()
-        if score < args.score:
-            plotted_fsas.append( (score, rss, nladder, fsa) )
-        elif args.rss > 0 and rss > args.rss:
-            plotted_fsas.append( (score, rss, nladder, fsa) )
+    Input
+    -----
+    args: arguments namespace from argparse
+    fsas: list of fsa files
+
+    Output
+    ------
+    included_fsas: list of fsa that is lower than the score threshold
+                   set in --score parameter and higher than the RSS
+                   threshold set in --rss parameter
+    """
+    included_fsas = []
+    for fsa in fsas:
+        align_fsa(fsa)
+        if fsa.score < args.score:
+            included_fsas.append(fsa)
+        elif args.rss > 0 and fsa.rss > args.rss:
+            included_fsas.append(fsa)
 
     # sort FSAs by score (ascending) and rss (descending)
-    plotted_fsas.sort( key = lambda k: (k[0], -k[1]) )
+    included_fsas.sort(key=lambda fsa: (fsa.score, -fsa.rss))
+    # Limit to the top 100 worst fsa score & RSS
+    included_fsas = included_fsas[:100]
 
-    # for all fsas in plotted_fsas, create a plot
-    whole_fig, whole_axes = determine_number_of_subplots(plotted_fsas)
-    for fsa_axis_num, fsa_item in enumerate(plotted_fsas):
-        fsa = fsa_item[3]
-
-        # continue to prepare the plot
+    return included_fsas
 
 
-    # save the plot
+def do_ladder_plot(args, fsas, plot_file):
+    """
+    Create a plot of the ladder channel from fsa files.
+
+    Input
+    -----
+    args: arguments namespace from argparse
+    fsas: list of fsa files
+    plot_file: path for saving plot to file
+
+    Output
+    ------
+    a figure class ready to be saved/shown
+    """
+    included_fsas = determine_included_fsa_to_plot(args, fsas)
+
+    figure = determine_figure_size(included_fsas)
+    for ladder_axes_num, fsa in enumerate(included_fsas):
+        ladder = fsa.get_ladder_channel()
+        color = colorize_wavelength(ladder.wavelen)
+        ladder_axes = figure.add_subplot(len(included_fsas), 1, ladder_axes_num + 1)
+        ladder_axes.plot(ladder.data, color=color, label=ladder.dye)
+        ladder_axes.legend(framealpha=0.5)
+
+        size_rtime_rfu = get_size_rtime_rfu(ladder)
+        if size_rtime_rfu:
+            max_rfu = max(p[2] for p in size_rtime_rfu) * 1.2
+        else:
+            max_rfu = max(ladder.data) * 1.2
+        ladder_axes.set_ylim((0, max_rfu))
+        prepare_second_x_axis(ladder_axes, size_rtime_rfu)
+        ladder_axes.set_title('{filename} | Score: {score:.2f} | RSS: {rss:.2f}'.format(
+                                  filename=fsa.filename,
+                                  score=fsa.score,
+                                  rss=fsa.rss),
+                              y=1.25)
+
+    save_or_show(plot_file)
 
 
 def file_handler(fsa_list):
@@ -282,6 +331,8 @@ def command_block(args, fsas, plot_file):
     fsas: list of fsa files
     plot_file: PdfPages object, string, or None
     """
+    if args.ladder_plot:
+        do_ladder_plot(args, fsas, plot_file)
     for fsa in fsas:
         if args.plot:
             do_plot(fsa, plot_file)

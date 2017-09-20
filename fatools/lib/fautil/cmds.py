@@ -185,10 +185,7 @@ def do_plot(args, fsa_list, dbh):
 
     from fatools.lib.fautil import plot
 
-    if args.ladder_plot:
-        plot.ladder_plot(args, fsa_list, dbh)
-    else:
-        plot.plot(args, fsa_list, dbh)
+    plot.plot(args, fsa_list, dbh)
 
 
 def do_dendogram( args, fsa_list, dbh ):
