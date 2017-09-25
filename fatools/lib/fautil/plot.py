@@ -3,7 +3,7 @@ Collection of functions to do assay plotting using matplotlib.
 """
 import matplotlib.pyplot as plt
 
-from fatools.lib.utils import cerr
+from fatools.lib.utils import cerr, cexit
 
 
 def align_fsa(fsa):
@@ -307,11 +307,12 @@ def file_handler(fsa_list):
 
 def check_and_prepare_pdf(plot_file):
     """
-    Preparing PdfPages object for plotting to pdf.
+    Check if format is supported by matplotlib, then determine if
+    PdfPages object needs to be prepared for plotting to pdf.
 
     Input
     -----
-    plot_file: string name of plot file
+    plot_file: string of plot file name and format
 
     Output
     ------
@@ -323,6 +324,12 @@ def check_and_prepare_pdf(plot_file):
         plot_file_ext = plot_file.split('.')[-1]
         if plot_file_ext == 'pdf':
             plot_file = PdfPages(plot_file)
+        else:
+            try:
+                plt.savefig(plot_file)
+            except ValueError:
+                cerr('E: Format {} is not supported!'.format(plot_file_ext))
+                cexit('Exiting...')
 
     return plot_file
 
