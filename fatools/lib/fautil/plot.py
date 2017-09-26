@@ -1,9 +1,14 @@
 """
 Collection of functions to do assay plotting using matplotlib.
 """
-import matplotlib.pyplot as plt
+from os.path import splitext
 
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+
+from fatools.lib import params
 from fatools.lib.utils import cerr, cexit
+from fatools.lib.fautil.wavelen2rgb import wavelen2rgb
 
 
 def align_fsa(fsa):
@@ -19,8 +24,6 @@ def align_fsa(fsa):
     ------
     fsa that has been aligned
     """
-    from fatools.lib import params
-
     fsa.align(params.Params())
 
 
@@ -59,8 +62,6 @@ def colorize_wavelength(wavelength):
     The division by 100 is necessary because matplotlib color parameter
     only accepts value from 0-1.
     """
-    from fatools.lib.fautil.wavelen2rgb import wavelen2rgb
-
     return tuple([color / 100 for color in wavelen2rgb(wavelength)])
 
 
@@ -318,11 +319,9 @@ def check_and_prepare_pdf(plot_file):
     ------
     plot_file: PdfPages object with plot_file name if format is '.pdf'
     """
-    from matplotlib.backends.backend_pdf import PdfPages
-
     if plot_file is not None:
-        plot_file_ext = plot_file.split('.')[-1]
-        if plot_file_ext == 'pdf':
+        plot_file_ext = splitext(plot_file)[-1]
+        if plot_file_ext == '.pdf':
             plot_file = PdfPages(plot_file)
         else:
             try:
