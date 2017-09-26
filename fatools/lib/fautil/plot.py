@@ -318,11 +318,13 @@ def check_and_prepare_pdf(plot_file):
     ------
     plot_file: PdfPages object with plot_file name if format is '.pdf'
     """
+    from os.path import splitext
+
     from matplotlib.backends.backend_pdf import PdfPages
 
     if plot_file is not None:
-        plot_file_ext = plot_file.split('.')[-1]
-        if plot_file_ext == 'pdf':
+        plot_file_ext = splitext(plot_file)[-1]
+        if plot_file_ext == '.pdf':
             plot_file = PdfPages(plot_file)
         else:
             try:
