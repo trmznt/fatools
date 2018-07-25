@@ -191,8 +191,10 @@ def read_abif_stream(istream):
         etype_fmt = abitypes.get( alt_type )
         if not etype_fmt:
             raise RuntimeError('unknown alt_type: %d with de.num: %d' % (alt_type, de.num))
-        if alt_type not in (10, 11):
+        if alt_type not in (10, 11, 1024):
             etype_fmt = etype_fmt % de.num
+        elif alt_type == 1024:
+            etype_fmt = etype_fmt % (de.esize * de.num)
         #D( etype_fmt, alt_type )
         if de.dsize <= 4:
             de.data = struct.unpack( etype_fmt, de.drec[:de.dsize] )
@@ -201,7 +203,7 @@ def read_abif_stream(istream):
         else:
             offset = struct.unpack('>l', de.drec)[0]
             buf = bdata[offset : offset + de.dsize]
-            #print de.tag, de.no, de.etype, de.esize, etype_fmt, de.dsize
+            #print(de.tag, de.no, de.etype, de.esize, etype_fmt, de.dsize)
             de.data = struct.unpack( etype_fmt, buf )
         if de.num == 1 or alt_type in (18, 19, 2):
             de.data = de.data[0]
