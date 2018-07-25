@@ -236,9 +236,7 @@ def determine_included_fsa_to_plot(score, rss, fsas):
     included_fsas = []
     for fsa in fsas:
         align_fsa(fsa)
-        if fsa.score <= score:
-            included_fsas.append(fsa)
-        elif rss >= 0 and fsa.rss >= rss:
+        if fsa.score <= score and fsa.rss >= rss:
             included_fsas.append(fsa)
 
     # sort FSAs by score (ascending) and rss (descending)
