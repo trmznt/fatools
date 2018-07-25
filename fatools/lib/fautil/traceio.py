@@ -141,7 +141,13 @@ class ABIF(object):
         for (idx, data_idx) in [ (1,1), (2,2), (3,3), (4,4), (5,105) ]:
             try:
                 dye_name = self.get_data(b('DyeN%d' % idx)).decode('ASCII')
-                dye_wavelength = self.get_data(b('DyeW%d' % idx))
+                # below is to workaround on some strange dye name
+                if dye_name == 'PAT': dye_name = 'LIZ'
+                elif dye_name == 'Bn Joda': dye_name = 'PET'
+                try:
+                    dye_wavelength = self.get_data(b('DyeW%d' % idx))
+                except KeyError:
+                    dye_wavelength = WAVELENGTH[dye_name]
                 raw_channel = np.array( self.get_data(b('DATA%d' % data_idx)) )
 
                 results[dye_name] = ABIF_Channel( dye_name, dye_wavelength, raw_channel )
@@ -221,6 +227,13 @@ FILTER_SETS = {
     }
 }
 
+WAVELENGTH = {
+    '6-FAM': 522,
+    'VIC': 554,
+    'NED': 575,
+    'PET': 595,
+    'LIZ': 655,
+}
 
 if __name__ == '__main__':
     """ write spectra in abif file to tab-separated text file """
