@@ -142,8 +142,9 @@ class ABIF(object):
             try:
                 dye_name = self.get_data(b('DyeN%d' % idx)).decode('ASCII')
                 # below is to workaround on some strange dye name
-                if dye_name == 'PAT': dye_name = 'LIZ'
-                elif dye_name == 'Bn Joda': dye_name = 'PET'
+                if dye_name == '6FAM': dye_name = '6-FAM'
+                elif dye_name == 'PAT': dye_name = 'PET'
+                elif dye_name == 'Bn Joda': dye_name = 'LIZ'
                 try:
                     dye_wavelength = self.get_data(b('DyeW%d' % idx))
                 except KeyError:
@@ -228,6 +229,7 @@ FILTER_SETS = {
 }
 
 WAVELENGTH = {
+    ''
     '6-FAM': 522,
     'VIC': 554,
     'NED': 575,
