@@ -13,7 +13,7 @@ from fatools.lib.fautil.alignutils import (estimate_z, pair_f, align_dp,
 from fatools.lib.fautil.gmalign import ZFunc, align_gm
 from fatools.lib import const
 
-ANCHOR_RTIME_LOWER_BOUND = 1500
+ANCHOR_RTIME_LOWER_BOUND = 1400
 ANCHOR_RTIME_UPPER_BOUND = 5000
 PEAK_RTIME_UPPER_BOUND = 11000
 
