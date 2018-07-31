@@ -373,7 +373,8 @@ def estimate_pm(peaks, bpsizes):
         zres = estimate_z(rtime_pair, bpsize_pair, 1)
         score = f(zres.z)
         scores.append( (score, zres) )
-        #plot(f.rtimes, f.sizes, zres.z, [] )
+        if is_verbosity(5):
+            plot(f.rtimes, f.sizes, zres.z, [] )
 
     scores.sort( key = lambda x: x[0] )
     #import pprint; pprint.pprint(scores[:5])
@@ -381,7 +382,8 @@ def estimate_pm(peaks, bpsizes):
 
     dp_result = align_dp(f.rtimes, f.sizes, f.similarity, zresult.z, zresult.rss)
     #import pprint; pprint.pprint(dp_result.sized_peaks)
-    #plot(f.rtimes, f.sizes, dp_result.z, [(x[1], x[0]) for x in dp_result.sized_peaks])
+    if is_verbosity(5):
+        plot(f.rtimes, f.sizes, dp_result.z, [(x[1], x[0]) for x in dp_result.sized_peaks])
 
     return ( [(x[1], x[0]) for x in dp_result.sized_peaks], dp_result.z )
 

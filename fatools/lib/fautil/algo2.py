@@ -446,7 +446,7 @@ def filter_for_artifact(peaks, params, expected_peak_number = 0):
     filtered_peaks = []
     for p in peaks:
         #filtered_peaks.append(p); continue
-        cverr(5, p)
+        cverr(5, str(p))
 
         if len(filtered_peaks) < 2 and p.area > 50:
             # first two real peaks might be a bit lower
