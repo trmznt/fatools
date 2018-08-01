@@ -13,12 +13,23 @@ from fatools.lib.fautil.alignutils import (estimate_z, pair_f, align_dp,
 from fatools.lib.fautil.gmalign import ZFunc, align_gm
 from fatools.lib import const
 
+ANCHOR_RTIME_LOWER_BOUND = 1400
+ANCHOR_RTIME_UPPER_BOUND = 5000
+PEAK_RTIME_UPPER_BOUND = 11000
 
 
 def align_pm(peaks, ladder, anchor_pairs=None):
 
     if not anchor_pairs:
-        anchor_peaks = [ p for p in peaks if 1500 < p.rtime < 5000 ]
+        longest_rtime_peak = max([p.rtime for p in peaks])
+        if longest_rtime_peak > PEAK_RTIME_UPPER_BOUND:
+            bound_adjust_ratio = longest_rtime_peak / PEAK_RTIME_UPPER_BOUND
+            anchor_start = ANCHOR_RTIME_LOWER_BOUND * bound_adjust_ratio
+            anchor_end = ANCHOR_RTIME_UPPER_BOUND * bound_adjust_ratio
+        else:
+            anchor_start = ANCHOR_RTIME_LOWER_BOUND
+            anchor_end = ANCHOR_RTIME_UPPER_BOUND
+        anchor_peaks = [ p for p in peaks if anchor_start < p.rtime < anchor_end ]
         anchor_pairs, initial_z = estimate_pm( anchor_peaks, ladder['signature'] )
 
     else:

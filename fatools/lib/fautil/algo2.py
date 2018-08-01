@@ -233,8 +233,8 @@ def find_raw_peaks(data, params, offset, expected_peak_number=0):
         indices = indices + offset
 
     # filter peaks by minimum rfu, and by maximum peak number after sorted by rfu
-    peaks = [ Peak( int(i), int(data[i]) ) for i in indices
-            if (data[i] >= params.min_rfu and params.min_rtime < i < params.max_rtime) ]
+    peaks = [Peak(int(i), int(data[i])) for i in indices
+             if data[i] >= params.min_rfu and params.min_rtime < i]
     #peaks = sorted( peaks, key = lambda x: x.rfu )[:params.max_peak_number * 2]
 
     #import pprint; pprint.pprint(peaks)
