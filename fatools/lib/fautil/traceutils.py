@@ -53,7 +53,11 @@ def normalize_baseline( raw ):
     # perform michaelis-menten equation for baseline assessment
     mm_line = signal.medfilt(raw, [ _MEDMMSIZE ])
     xx = np.linspace(0, len(raw) )
-    popt, pcov = optimize.curve_fit(func_mm, xx, mm_line)
+    try:
+        popt, pcov = optimize.curve_fit(func_mm, xx, mm_line)
+    except:
+        # michaelis menten are not appropriate for this scale
+        popt = pcov = [0, 0]
 
     return NormalizedTrace( signal=smooth, baseline = baseline, mma = popt[0], mmb = popt[1] )
 
