@@ -151,6 +151,7 @@ class TraceChannel(object):
     max_height = attr.ib()
     min_height = attr.ib()
 
+from fatools.lib.fautil.traceio import WAVELENGTH
 
 def separate_channels( trace ):
     # return a list of [ 'dye name', dye_wavelength, numpy_array, numpy_smooth_baseline ]
@@ -159,7 +160,18 @@ def separate_channels( trace ):
     for (idx, data_idx) in [ (1,1), (2,2), (3,3), (4,4), (5,105) ]:
         try:
             dye_name = trace.get_data(b('DyeN%d' % idx)).decode('UTF-8')
-            dye_wavelength = trace.get_data(b('DyeW%d' % idx))
+            #dye_wavelength = trace.get_data(b('DyeW%d' % idx))
+
+            # below is to workaround on some strange dye names
+            if dye_name == '6FAM': dye_name = '6-FAM'
+            elif dye_name == 'PAT': dye_name = 'PET'
+            elif dye_name == 'Bn Joda': dye_name = 'LIZ'
+
+            try:
+                dye_wavelength = trace.get_data(b('DyeW%d' % idx))
+            except KeyError:
+                dye_wavelength = WAVELENGTH[dye_name]
+
             raw_channel = np.array( trace.get_data(b('DATA%d' % data_idx)) )
             nt = normalize_baseline( raw_channel )
 
